@@ -2,7 +2,7 @@
 import socket
 import sys
 
-EV3_IP = "10.42.0.182"   # replace with the EV3's WiFi IP
+EV3_IP = "10.127.155.57"   # replace with the EV3's WiFi IP
 EV3_PORT = 9999
 
 def send_command(cmd: str):
