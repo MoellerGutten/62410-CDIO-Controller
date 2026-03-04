@@ -5,6 +5,22 @@ import movement
 EV3_IP = "10.33.112.57" 
 EV3_PORT = 9999
 
+
+def send_instruction_file(sock):
+    with open('instructions.txt', 'r') as f:
+        for line in f:
+            instruction = line.strip()
+            
+            if not instruction: 
+                continue # Skip empty lines
+
+            print(f"Executing from file: {instruction}")
+            sock.sendall((instruction + "\n").encode("utf-8"))
+            
+            data = sock.recv(1024)
+            print("Robot:", data.decode("utf-8").strip())
+
+
 def start_interactive_session():
     # The 'with' block starts HERE so the connection stays open
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
@@ -24,18 +40,7 @@ def start_interactive_session():
                     continue # Skip empty lines
 
                 if cmd.lower() == "execute 1":
-                    with open('instructions.txt', 'r') as f:
-                        for line in f:
-                            instruction = line.strip()
-                            
-                            if not instruction: 
-                                continue # Skip empty lines
-
-                            print(f"Executing from file: {instruction}")
-                            sock.sendall((instruction + "\n").encode("utf-8"))
-                            
-                            data = sock.recv(1024)
-                            print("Robot:", data.decode("utf-8").strip())
+                    send_instruction_file(sock)
                 else:
                     # Send the command
                     sock.sendall((cmd + "\n").encode("utf-8"))
