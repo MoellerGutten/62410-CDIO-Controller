@@ -17,4 +17,4 @@ right
 right
 right
 right
-right
+rightleft

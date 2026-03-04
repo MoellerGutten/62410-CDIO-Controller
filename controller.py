@@ -39,7 +39,7 @@ def start_interactive_session():
                 if not cmd:
                     continue # Skip empty lines
 
-                if cmd.lower() == "execute 1":
+                if cmd.lower() == "execute order 66":
                     send_instruction_file(sock)
                 else:
                     # Send the command
@@ -54,4 +54,5 @@ def start_interactive_session():
             print("\nClosing connection.")
 
 if __name__ == "__main__":
+    # movement.insert_instruction(movement.turn_left())
     start_interactive_session()
