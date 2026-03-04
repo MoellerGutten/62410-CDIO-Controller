@@ -1,30 +1,39 @@
-# controller.py
 import socket
 import sys
-import movement
 
-EV3_IP = "10.33.112.57"   # replace with the EV3's WiFi IP
+EV3_IP = "10.33.112.57" 
 EV3_PORT = 9999
 
-def send_command(cmd: str):
+def start_interactive_session():
+    # The 'with' block starts HERE so the connection stays open
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
-        sock.connect((EV3_IP, EV3_PORT))
-        # Send command with newline for readability
-        sock.sendall((cmd + "\n").encode("utf-8"))
+        try:
+            print(f"Connecting to {EV3_IP}...")
+            sock.connect((EV3_IP, EV3_PORT))
+            print("Connected! Type 'exit' to quit.")
 
-        # Read optional reply (up to 1 KB)
-        data = sock.recv(1024)
-        if data:
-            print("Reply:", data.decode("utf-8").strip())
+            while True:
+                # Get user input from the terminal
+                cmd = input("Robot command > ").strip()
+
+                if cmd.lower() == 'exit':
+                    break
+                
+                if not cmd:
+                    continue
+
+                # Send the command
+                sock.sendall((cmd + "\n").encode("utf-8"))
+
+                # Wait for the Robot to finish and reply
+                # This is important so you don't send 2 commands at once
+                data = sock.recv(1024)
+                print("Robot:", data.decode("utf-8").strip())
+
+        except ConnectionRefusedError:
+            print("Error: Could not connect. Is the robot script running?")
+        except KeyboardInterrupt:
+            print("\nClosing connection.")
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage: python pc_client.py <command string>")
-        sys.exit(1)
-
-    command = " ".join(sys.argv[1:])
-    send_command(command)
-    send_command(movement.turn_90_right)
-    send_command(movement.drive_forward)
-    send_command(movement.turn_90_left)
-    send_command(movement.drive_backward)
+    start_interactive_session()
