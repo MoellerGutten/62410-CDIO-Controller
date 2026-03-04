@@ -1,5 +1,6 @@
 import socket
 import sys
+import movement
 
 EV3_IP = "10.33.112.57" 
 EV3_PORT = 9999
@@ -16,22 +17,34 @@ def start_interactive_session():
                 # Get user input from the terminal
                 cmd = input("Robot command > ").strip()
 
-                if cmd.lower() == 'exit':
+                if cmd.lower() == "exit" or cmd.lower() == "quit":
                     break
-                
+
                 if not cmd:
-                    continue
+                    continue # Skip empty lines
 
-                # Send the command
-                sock.sendall((cmd + "\n").encode("utf-8"))
+                if cmd.lower() == "execute 1":
+                    with open('instructions.txt', 'r') as f:
+                        for line in f:
+                            instruction = line.strip()
+                            
+                            if not instruction: 
+                                continue # Skip empty lines
 
-                # Wait for the Robot to finish and reply
-                # This is important so you don't send 2 commands at once
-                data = sock.recv(1024)
-                print("Robot:", data.decode("utf-8").strip())
+                            print(f"Executing from file: {instruction}")
+                            sock.sendall((instruction + "\n").encode("utf-8"))
+                            
+                            data = sock.recv(1024)
+                            print("Robot:", data.decode("utf-8").strip())
+                else:
+                    # Send the command
+                    sock.sendall((cmd + "\n").encode("utf-8"))
+
+                    data = sock.recv(1024)
+                    print("Robot:", data.decode("utf-8").strip())
 
         except ConnectionRefusedError:
-            print("Error: Could not connect. Is the robot script running?")
+            print("Error: Could not connect. Is the robot running?")
         except KeyboardInterrupt:
             print("\nClosing connection.")
 
