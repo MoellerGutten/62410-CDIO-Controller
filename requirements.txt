@@ -1,2 +1,4 @@
 socket
 sys
+inference-sdk
+cv2

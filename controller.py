@@ -20,6 +20,15 @@ def send_instruction_file(sock):
             data = sock.recv(1024)
             print("Robot:", data.decode("utf-8").strip())
 
+            
+def insert_instruction(instruction):
+    with open('instructions.txt', 'a') as f:
+        f.write(instruction)
+
+def insert_instructionln(instruction=""):
+    with open('instructions.txt', 'a') as f:
+        f.write(instruction + "\n")
+
 
 def start_interactive_session():
     # The 'with' block starts HERE so the connection stays open
@@ -54,5 +63,9 @@ def start_interactive_session():
             print("\nClosing connection.")
 
 if __name__ == "__main__":
-    # movement.insert_instruction(movement.turn_left())
-    start_interactive_session()
+    insert_instructionln(movement.turn_left(30, False))
+    insert_instruction(movement.turn_left(30))
+    insert_instruction(movement.turn_left(30))
+    insert_instruction(movement.drive_backward(30))
+    insert_instructionln()
+    # start_interactive_session()
