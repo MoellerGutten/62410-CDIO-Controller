@@ -11,10 +11,6 @@ def send_command(cmd: str):
         sock.connect((EV3_IP, EV3_PORT))
         # Send command with newline for readability
         sock.sendall((cmd + "\n").encode("utf-8"))
-        sock.sendall(movement.turn_90_right())
-        sock.sendall(movement.drive_forward())
-        sock.sendall(movement.turn_90_left())
-        sock.sendall(movement.drive_backward())
 
         # Read optional reply (up to 1 KB)
         data = sock.recv(1024)
@@ -28,3 +24,7 @@ if __name__ == "__main__":
 
     command = " ".join(sys.argv[1:])
     send_command(command)
+    send_command(movement.turn_90_right)
+    send_command(movement.drive_forward)
+    send_command(movement.turn_90_left)
+    send_command(movement.drive_backward)
