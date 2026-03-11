@@ -1,10 +1,7 @@
 import socket
 import sys
 import movement
-
-EV3_IP = "10.33.112.57" 
-EV3_PORT = 9999
-
+from config import Config
 
 def send_instruction_file(sock):
     with open('instructions.txt', 'r') as f:
@@ -30,12 +27,14 @@ def insert_instructionln(instruction=""):
         f.write(instruction + "\n")
 
 
-def start_interactive_session():
+def start_interactive_session(config: Config):
     # The 'with' block starts HERE so the connection stays open
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
-            print(f"Connecting to {EV3_IP}...")
-            sock.connect((EV3_IP, EV3_PORT))
+            host = config.getStr("EV3_HOST")
+            port = config.getNum("EV3_PORT")
+            print(f"Connecting to {host}:{port}...")
+            sock.connect((host, port))
             print("Connected! Type 'exit' to quit.")
 
             while True:
@@ -63,9 +62,5 @@ def start_interactive_session():
             print("\nClosing connection.")
 
 if __name__ == "__main__":
-    insert_instructionln(movement.turn_left(30, False))
-    insert_instruction(movement.turn_left(30))
-    insert_instruction(movement.turn_left(30))
-    insert_instruction(movement.drive_backward(30))
-    insert_instructionln()
-    # start_interactive_session()
+    config = Config()
+    start_interactive_session(config)
