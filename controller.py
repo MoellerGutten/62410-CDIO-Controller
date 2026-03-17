@@ -1,7 +1,6 @@
 import socket
-import sys
-import movement
 from config import Config
+from penis import PENISInstruction, PENISArguments, CommandName, serialize_message
 
 def send_instruction_file(sock):
     with open('instructions.txt', 'r') as f:
@@ -31,6 +30,7 @@ def start_interactive_session(config: Config):
     # The 'with' block starts HERE so the connection stays open
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
+            print(serialize_message(PENISInstruction(name="c_fwd", args = PENISArguments(speed=50,seconds=2,brake=True,block=True))))
             host = config.getStr("EV3_HOST")
             port = config.getNum("EV3_PORT")
             print(f"Connecting to {host}:{port}...")
