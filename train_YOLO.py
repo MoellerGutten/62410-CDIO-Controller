@@ -4,4 +4,4 @@ from ultralytics import YOLO
 model = YOLO('yolo11n.pt') 
 
 # Train for 50-100 rounds (epochs)
-model.train(data='path/to/data.yaml', epochs=100, imgsz=640)    
+model.train(data='YOLO_data/data.yaml', epochs=100, imgsz=640)    
