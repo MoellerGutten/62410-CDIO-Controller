@@ -1,6 +1,6 @@
 import socket
 from config import Config
-from penis import PENISInstruction, PENISArguments, CommandName, serialize_message
+from protocol import PENISInstruction, PENISArguments, serialize_message
 
 def send_instruction_file(sock):
     with open('instructions.txt', 'r') as f:
