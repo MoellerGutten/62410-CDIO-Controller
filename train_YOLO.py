@@ -1,7 +1,5 @@
 from ultralytics import YOLO
 
-# Load the smallest, fastest model (perfect for real-time EV3)
-model = YOLO('yolo11n.pt') 
+model = YOLO('yolo11n-seg.pt')
 
-# Train for 50-100 rounds (epochs)
-model.train(data='YOLO_data/data.yaml', epochs=100, imgsz=640)    
+model.train(data='YOLO_data_2.0/data.yaml', epochs=100, imgsz=640)

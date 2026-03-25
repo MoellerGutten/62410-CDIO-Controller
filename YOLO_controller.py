@@ -1,44 +1,41 @@
 import cv2
 from ultralytics import YOLO
 
-MODEL_PATH = "runs/detect/train7/weights/best.pt"  # Pretrained COCO model (80 classes)
+MODEL_PATH = "runs/segment/train3/weights/best.pt"
+# IMAGE_PATH = "YOLO_data_2.0/images/val/WIN_20260318_12_30_30_Pro.jpg" 
+IMAGE_PATH  = "WIN_20260318_12_31_35_Pro.jpg"
 
 def main():
     model = YOLO(MODEL_PATH)
-    cap = cv2.VideoCapture(0)
+
+    image = cv2.imread(IMAGE_PATH)
     
-    if not cap.isOpened():
-        print("Error: Could not open webcam (try index 1 or 2)")
+    if image is None:
+        print(f"Error: Could not read image at {IMAGE_PATH}. Check the path!")
         return
 
-    print("Starting YOLO webcam test... Press 'q' to quit")
-    print("Detected classes:", list(model.names.values())[:10], "...")  # Show first 10 classes
+    print("Running YOLO inference on the image...")
 
-    frame_count = 0
-    while True:
-        success, frame = cap.read()
-        if not success:
-            print("Error: Failed to read frame")
-            break
+    results = model(image, verbose=True, conf=0.25)[0] 
+    
+    if len(results.boxes) > 0:
+        print(f"Success! {len(results.boxes)} objects detected.")
+    else:
+        print("No objects detected above the confidence threshold.")
 
-        # Run inference (fast on CPU)
-        results = model(frame, verbose=False, conf=0.25)[0]  # conf=0.25 filters weak detections
-        
-        # Show detections info
-        if len(results.boxes) > 0:
-            print(f"Frame {frame_count}: {len(results.boxes)} objects detected")
+    vis_image = results.plot()
+    
+    window_name = "YOLO Image Test (Press any key to close)"
+    
+    cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
+    
+    cv2.resizeWindow(window_name, 800, 600) 
+    
+    cv2.imshow(window_name, vis_image)
 
-        # Visualize
-        vis_frame = results.plot()
-        cv2.imshow("YOLO Webcam Test (q=quit)", vis_frame)
-
-        frame_count += 1
-        if cv2.waitKey(1) & 0xFF == ord('q'):
-            break
-
-    cap.release()
+    cv2.waitKey(0) 
     cv2.destroyAllWindows()
-    print("Webcam test complete!")
+    print("Test complete!")
 
 if __name__ == "__main__":
     main()
