@@ -1,6 +1,10 @@
 import socket
 from config import Config
+<<<<<<< Updated upstream
 from protocol import Instruction, Arguments, Message, serialize_message
+=======
+from protocol import Instruction, Arguments, serialize_message, CommandName
+>>>>>>> Stashed changes
 
 def send_instruction_file(sock):
     with open('instructions.txt', 'r') as f:
@@ -36,6 +40,13 @@ def start_interactive_session(config: Config):
             print(f"Connecting to {host}:{port}...")
             sock.connect((host, port))
             print("Connected! Type 'exit' to quit.")
+            
+            print("sending forward")
+            sock.sendall(serialize_message(Instruction(name="c_fwd", args=Arguments())).encode("utf-8"))
+            print("sent forward")
+            
+            data = sock.recv(1024)
+            print(f"ack: {data.decode("utf-8").strip()}")
 
             while True:
                 # Get user input from the terminal
