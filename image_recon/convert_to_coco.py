@@ -3,7 +3,7 @@ import json
 import cv2
 
 # --- Your exact paths ---
-IMAGES_DIR = "data/data_2.0/rest_of_photos_2.0" 
+IMAGES_DIR = "image_recon/data/data_2.0/rest_of_photos_2.0" 
 LABELS_DIR = "runs/segment/predict/labels" 
 
 # Matches your data.yaml perfectly
