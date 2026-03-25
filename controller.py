@@ -1,10 +1,6 @@
 import socket
 from config import Config
-<<<<<<< Updated upstream
 from protocol import Instruction, Arguments, Message, serialize_message
-=======
-from protocol import Instruction, Arguments, serialize_message, CommandName
->>>>>>> Stashed changes
 
 def send_instruction_file(sock):
     with open('instructions.txt', 'r') as f:
@@ -19,7 +15,6 @@ def send_instruction_file(sock):
             
             data = sock.recv(1024)
             print("Robot:", data.decode("utf-8").strip())
-
             
 def insert_instruction(instruction):
     with open('instructions.txt', 'a') as f:
@@ -34,7 +29,7 @@ def start_interactive_session(config: Config):
     # The 'with' block starts HERE so the connection stays open
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
-            print(serialize_message(Message(Instruction(name="fwd", type_="c_", args = Arguments(speed=50,seconds=2,brake=True,block=True)))))
+            print(serialize_message(Message(Instruction(name="fwd", type="c_", args = Arguments(speed=50,seconds=2,brake=True,block=True)))))
             host = config.getStr("EV3_HOST")
             port = config.getNum("EV3_PORT")
             print(f"Connecting to {host}:{port}...")
