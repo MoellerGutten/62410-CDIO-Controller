@@ -37,7 +37,7 @@ def start_interactive_session(config: Config):
             print("Connected! Type 'exit' to quit.")
             
             print("sending forward")
-            sock.sendall(serialize_message(Instruction(name="c_fwd", args=Arguments())).encode("utf-8"))
+            sock.sendall(serialize_message(Message(Instruction(name="fwd", type="c_", args=Arguments()))).encode("utf-8"))
             print("sent forward")
             
             data = sock.recv(1024)
