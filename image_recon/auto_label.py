@@ -1,9 +1,9 @@
 from ultralytics import YOLO
 
-MODEL_PATH = "runs/segment/train3/weights/best.pt"
+MODEL_PATH = "../runs/segment/train3/weights/best.pt"
 model = YOLO(MODEL_PATH)
 
-NEW_IMAGES_FOLDER = "data/data_2.0/rest_of_photos_2.0"
+NEW_IMAGES_FOLDER = "../data/data_2.0/rest_of_photos_2.0"
 
 def main():
     print(f"Starting auto-labeling for images in: {NEW_IMAGES_FOLDER}")
