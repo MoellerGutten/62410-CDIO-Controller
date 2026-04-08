@@ -14,7 +14,7 @@ def start_interactive_session():
             print("Connected! Type 'exit' to exit.")
 
             while True:
-                inp = input("Robot command > ").strip()
+                inp = input("Robot instruction > ").strip()
 
                 if inp.lower() == "exit":
                     break
@@ -22,9 +22,11 @@ def start_interactive_session():
                 if not inp:
                     continue # Skip empty lines
                 else:
-                    # Send the command
                     name, kwargs = parse_input(inp)
-                    sock.sendall((serialize_message(build_message_from_short_command(name, kwargs)) + "\n").encode("utf-8"))
+                    msg = build_message_from_short_command(name, kwargs)
+                    serialized = serialize_message(msg) + "\n"
+                    encoded = serialized.encode("utf-8")
+                    sock.sendall(encoded)
 
                     data = sock.recv(1024)
                     print("Robot response:", data.decode("utf-8").strip())
