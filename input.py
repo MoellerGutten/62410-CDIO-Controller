@@ -10,6 +10,7 @@ COMMAND_MAP = {
     "bout": ("command", CommandName.BALL_OUT),
     "boff": ("command", CommandName.BALL_OFF),
     "t":    ("command", CommandName.TALK),
+    "panic": ("command", CommandName.PANIC),
     # sequences
     "bust": ("sequence", SequenceName.EJECT),
 }
