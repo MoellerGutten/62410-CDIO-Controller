@@ -1,4 +1,0 @@
-left;30
-left;30,left;30,backward;30,
-left;30
-left;30,left;30,backward;30,
