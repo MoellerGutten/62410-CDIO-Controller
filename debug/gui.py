@@ -58,6 +58,8 @@ C_PANEL_BG      = ( 22,  30,  38)
 # ---------------------------------------------------------------------------
 # Layout constants
 # ---------------------------------------------------------------------------
+
+# TODO: Scale this field to the field from camera
 WINDOW_W, WINDOW_H = 1100, 760
 PANEL_W             = 260
 FIELD_MARGIN        = 60            # pixels from window edge to field corners
@@ -183,9 +185,9 @@ def draw_corners(surf, corners: list[Corner]):
         pygame.draw.circle(surf, C_CORNER, (x, y), 5)
 
 
-def draw_balls(surf, balls: list[Ball]):
+def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
     for ball in balls:
-        x, y = ball.position
+        x, y = field_to_screen(ball.position, corners)
         r    = 8
         if ball.is_vip:
             # glow ring
@@ -202,11 +204,11 @@ def draw_balls(surf, balls: list[Ball]):
             pygame.draw.circle(surf, C_BALL_OUTLINE,  (x, y), r, 1)
 
 
-def draw_cross(surf, cross: Cross):
-    draw_cross_shape(surf, cross.position, 22, cross.orientation,
+def draw_cross(surf, cross: Cross, corners: list[Corner]):
+    draw_cross_shape(surf, field_to_screen(cross.position, corners), 22, cross.orientation,
                      C_CROSS, C_CROSS_OUTLINE, width=6)
-    pygame.draw.circle(surf, C_CROSS_OUTLINE, cross.position, 6)
-    pygame.draw.circle(surf, C_CROSS,         cross.position, 4)
+    pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
+    pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 
 def draw_robot(surf, robot: Robot):
@@ -218,6 +220,11 @@ def draw_robot(surf, robot: Robot):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
+def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
+    tl, tr, br, bl = [c.position for c in corners]
+    x = int(lerp(tl[0], tr[0], pos[0] / FIELD_W))
+    y = int(lerp(bl[1], tl[1], pos[1] / FIELD_H))  # y flipped: 0 = bottom
+    return (x, y)
 
 # ---------------------------------------------------------------------------
 # Side panel
@@ -325,21 +332,27 @@ def run_gui(state: FieldState):
             if event.type == pygame.QUIT:
                 running = False
 
+        with state.lock:
+            robot = state.robot
+            balls = list(state.balls)
+            cross = state.cross
+            corners = list(state.corners)
+
         # ------------------------------------------------------------------
         # Draw
         # ------------------------------------------------------------------
         screen.fill(C_BG)
 
-        draw_field_surface(screen, state.corners)
-        draw_borders(screen, state.corners)
-        draw_corners(screen, state.corners)
-        draw_cross(screen, state.cross)
-        draw_balls(screen, state.balls)
-        draw_robot(screen, state.robot)
-        draw_panel(screen, font_sm, font_md, font_lg, state.robot, state.balls, state.cross, state.corners)
+        draw_field_surface(screen, corners)
+        draw_borders(screen, corners)
+        draw_corners(screen, corners)
+        draw_cross(screen, cross, corners)
+        draw_balls(screen, balls, corners)
+        draw_robot(screen, robot)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # Title
-        title = font_lg.render("FIELD RENDERER  —  demo.py", True, C_LABEL)
+        title = font_lg.render("Controller GUI", True, C_LABEL)
         screen.blit(title, (FIELD_X0, 14))
 
         # Controls hint
