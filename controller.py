@@ -7,6 +7,8 @@ import threading
 import sys
 import os
 
+from model.ball import Ball
+
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
 
@@ -22,12 +24,29 @@ def start(args):
     )
     controller_thread.start()
 
+    state_thread = threading.Thread(
+        target=update_state,
+        kwargs={"state": state, "newState": str},
+        daemon=True
+    )
+    state_thread.start()
+
     if (args.gui):
         print("Running controller with GUI")
         run_gui(state)
+        
     else:
         print("Running controller")
         controller_thread.join()
+
+def update_state(state: FieldState, newState: str):
+    while True:
+            # If some update
+            if True:
+                setState(state, newState)
+
+def setState(state: FieldState, newState: str):
+    state.balls = [Ball(newState.balls.orange.x, newState.balls.orange.y, is_vip=True)]
 
 def run_controller(state: FieldState):
     start_interactive_session()
