@@ -25,7 +25,7 @@ def start(args):
     )
     controller_thread.start()
 
-    with open("robot_coords.json", mode="r", encoding="utf-8") as read_file:
+    with open("image_recon/robot_coords.json", mode="r", encoding="utf-8") as read_file:
         state_data = json.load(read_file)
 
     state_thread = threading.Thread(
@@ -44,19 +44,24 @@ def start(args):
         controller_thread.join()
 
 def update_state(state: FieldState, newState):
-    while True:
-            # If some update
-            if True:
-                setState(state, newState)
+    # If some update
+    if True:
+        setState(state, newState)
 
 def setState(state: FieldState, newState):
     with state.lock:
-        for ball in newState.balls:
-            print("Ball: " + ball.label + "Is at pos: " + ball.x + "," + ball.y)
-            if ball.label == "OBall":
-                state.balls = [Ball(ball.x, ball.y, is_vip=True)]
+        # Removes balls from previous state
+        tempBalls = []
+        for ball in newState["balls"]:
+            print("Ball: " + ball["label"] + "Is at pos: " + str(ball["x"]) + "," + str(ball["y"]))
+            if ball["label"] == "OBall":
+                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=True))
             else:
-                state.balls = [Ball(ball.x, ball.y, is_vip=False)]
+                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=False))
+        state.balls = tempBalls
+        # TODO: Corners
+        # TODO: Cross
+        # TODO: Robot
 
 def run_controller(state: FieldState):
     start_interactive_session()
