@@ -341,7 +341,7 @@ def main():
             print(json_output)
             
             # Save JSON to file
-            with open("robot_coords.json", "w") as json_file:
+            with open("image_recon/robot_coords.json", "w") as json_file:
                 json_file.write(json_output)
 
             # ----- HANDLE VISUALS -----
@@ -350,7 +350,7 @@ def main():
                 vis_frame = draw_arena_overlay(vis_frame)
                 vis_frame = draw_positions(vis_frame, detections)
                 
-                cv2.imwrite("latest_scan.jpg", vis_frame)
+                cv2.imwrite("image_recon/latest_scan.jpg", vis_frame)
                 
                 result_window = "Screenshot Result (Press ANY KEY to resume)"
                 cv2.namedWindow(result_window, cv2.WINDOW_NORMAL)
@@ -363,7 +363,7 @@ def main():
                 vis_frame = results.plot()
                 vis_frame = draw_arena_overlay(vis_frame)
                 vis_frame = draw_positions(vis_frame, detections)
-                cv2.imwrite("latest_scan_silent.jpg", vis_frame)
+                cv2.imwrite("image_recon/latest_scan_silent.jpg", vis_frame)
                 print("-> Scan complete. (Image saved to latest_scan_silent.jpg, JSON saved to robot_coords.json)")
 
     cap.release()
