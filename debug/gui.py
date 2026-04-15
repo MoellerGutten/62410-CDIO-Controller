@@ -58,6 +58,8 @@ C_PANEL_BG      = ( 22,  30,  38)
 # ---------------------------------------------------------------------------
 # Layout constants
 # ---------------------------------------------------------------------------
+
+# TODO: Scale this field to the field from camera
 WINDOW_W, WINDOW_H = 1100, 760
 PANEL_W             = 260
 FIELD_MARGIN        = 60            # pixels from window edge to field corners
@@ -202,11 +204,11 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
             pygame.draw.circle(surf, C_BALL_OUTLINE,  (x, y), r, 1)
 
 
-def draw_cross(surf, cross: Cross):
-    draw_cross_shape(surf, cross.position, 22, cross.orientation,
+def draw_cross(surf, cross: Cross, corners: list[Corner]):
+    draw_cross_shape(surf, field_to_screen(cross.position, corners), 22, cross.orientation,
                      C_CROSS, C_CROSS_OUTLINE, width=6)
-    pygame.draw.circle(surf, C_CROSS_OUTLINE, cross.position, 6)
-    pygame.draw.circle(surf, C_CROSS,         cross.position, 4)
+    pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
+    pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 
 def draw_robot(surf, robot: Robot):
@@ -344,7 +346,7 @@ def run_gui(state: FieldState):
         draw_field_surface(screen, corners)
         draw_borders(screen, corners)
         draw_corners(screen, corners)
-        draw_cross(screen, cross)
+        draw_cross(screen, cross, corners)
         draw_balls(screen, balls, corners)
         draw_robot(screen, robot)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
