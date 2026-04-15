@@ -1,0 +1,11 @@
+path: ./YOLO_data_2.0
+train: images/train
+val: images/val
+nc: 6
+names:
+  0: WBall
+  1: Border
+  2: X
+  3: GoalA
+  4: GoalB
+  5: OBall
