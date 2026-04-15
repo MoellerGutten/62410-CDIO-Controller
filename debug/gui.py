@@ -350,7 +350,7 @@ def run_gui(state: FieldState):
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # Title
-        title = font_lg.render("FIELD RENDERER  —  demo.py", True, C_LABEL)
+        title = font_lg.render("Controller GUI", True, C_LABEL)
         screen.blit(title, (FIELD_X0, 14))
 
         # Controls hint
