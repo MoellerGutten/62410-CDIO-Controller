@@ -50,11 +50,12 @@ def update_state(state: FieldState, newState):
                 setState(state, newState)
 
 def setState(state: FieldState, newState):
-    for ball in newState.balls:
-        if ball.label == "OBall":
-            state.balls = [Ball(ball.x, ball.y, is_vip=True)]
-        else:
-            state.balls = [Ball(ball.x, ball.y, is_vip=False)]
+    with state.lock:
+        for ball in newState.balls:
+            if ball.label == "OBall":
+                state.balls = [Ball(ball.x, ball.y, is_vip=True)]
+            else:
+                state.balls = [Ball(ball.x, ball.y, is_vip=False)]
 
 def run_controller(state: FieldState):
     start_interactive_session()
