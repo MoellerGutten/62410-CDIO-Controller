@@ -1,3 +1,4 @@
+import json
 import socket
 from config import Config
 from protocol import serialize_message
@@ -24,9 +25,12 @@ def start(args):
     )
     controller_thread.start()
 
+    with open("robot_coords.json", mode="r", encoding="utf-8") as read_file:
+        state_data = json.load(read_file)
+
     state_thread = threading.Thread(
         target=update_state,
-        kwargs={"state": state, "newState": str},
+        kwargs={"state": state, "newState": state_data},
         daemon=True
     )
     state_thread.start()
@@ -39,14 +43,18 @@ def start(args):
         print("Running controller")
         controller_thread.join()
 
-def update_state(state: FieldState, newState: str):
+def update_state(state: FieldState, newState):
     while True:
             # If some update
             if True:
                 setState(state, newState)
 
-def setState(state: FieldState, newState: str):
-    state.balls = [Ball(newState.balls.orange.x, newState.balls.orange.y, is_vip=True)]
+def setState(state: FieldState, newState):
+    for ball in newState.balls:
+        if ball.label == "OBall":
+            state.balls = [Ball(ball.x, ball.y, is_vip=True)]
+        else:
+            state.balls = [Ball(ball.x, ball.y, is_vip=False)]
 
 def run_controller(state: FieldState):
     start_interactive_session()
