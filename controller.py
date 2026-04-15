@@ -52,6 +52,7 @@ def update_state(state: FieldState, newState):
 def setState(state: FieldState, newState):
     with state.lock:
         for ball in newState.balls:
+            print("Ball: " + ball.label + "Is at pos: " + ball.x + "," + ball.y)
             if ball.label == "OBall":
                 state.balls = [Ball(ball.x, ball.y, is_vip=True)]
             else:
