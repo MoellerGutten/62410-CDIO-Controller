@@ -30,6 +30,7 @@ from ball import Ball
 from corner import Corner
 from cross import Cross
 from robot import Robot
+from state import FieldState
 
 # ---------------------------------------------------------------------------
 # Colours
@@ -302,7 +303,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 # Main
 # ---------------------------------------------------------------------------
 
-def run_gui():
+def run_gui(state: FieldState):
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
     pygame.display.set_caption("Robot Field — Demo Renderer")

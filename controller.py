@@ -8,25 +8,28 @@ import sys
 import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
 
 from gui import run_gui
+from state import FieldState
 
 def start(args):
+    state = FieldState()
     controller_thread = threading.Thread(
         target=run_controller,
-        kwargs={"args": args},
+        kwargs={"state": state},
         daemon=True
     )
     controller_thread.start()
 
     if (args.gui):
         print("Running controller with GUI")
-        run_gui()
+        run_gui(state)
     else:
         print("Running controller")
         controller_thread.join()
 
-def run_controller():
+def run_controller(state: FieldState):
     start_interactive_session()
 
 def start_interactive_session():
