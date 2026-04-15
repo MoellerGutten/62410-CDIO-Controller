@@ -21,7 +21,7 @@ def start(args):
     state = get_test_field_state()
     controller_thread = threading.Thread(
         target=run_controller,
-        kwargs={"state": state},
+        kwargs={"state": state, "args": args},
         daemon=True
     )
     controller_thread.start()
@@ -79,12 +79,13 @@ def setState(state: FieldState, newState):
         # TODO: Corners
         # TODO: Robot
 
-        #Corners are fixed
+def run_controller(state: FieldState, args):
+    if (args.it):
+        start_interactive_session()
+    else:
+        start_autonomous_session()
 
-def run_controller(state: FieldState):
-    start_interactive_session()
-
-def start_interactive_session():
+def connect():
     config = Config()
     with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
         try:
@@ -94,32 +95,39 @@ def start_interactive_session():
             sock.connect((host, port))
             print("Connected! Type 'exit' to exit.")
 
-            while True:
-                inp = input("Robot instruction > ").strip()
-
-                if inp.lower() == "exit":
-                    break
-
-                if not inp:
-                    continue # Skip empty lines
-                else:
-                    name, kwargs = parse_input(inp)
-                    msg = build_message_from_short_command(name, kwargs)
-                    serialized = serialize_message(msg) + "\n"
-                    encoded = serialized.encode("utf-8")
-                    sock.sendall(encoded)
-
-                    data = sock.recv(1024)
-                    print("Robot response:", data.decode("utf-8").strip())
+            return sock
 
         except ConnectionRefusedError:
             print("Error: Could not connect. Is the robot running?")
         except KeyboardInterrupt:
             print("\nClosing connection.")
 
+def start_autonomous_session():
+    print("autonomous")
+    pass
+
+def start_interactive_session():
+    sock = connect()
+    while True:
+        inp = input("Robot instruction > ").strip()
+        if inp.lower() == "exit":
+            break
+        if not inp:
+            continue # Skip empty lines
+        else:
+            name, kwargs = parse_input(inp)
+            msg = build_message_from_short_command(name, kwargs)
+            serialized = serialize_message(msg) + "\n"
+            encoded = serialized.encode("utf-8")
+            sock.sendall(encoded)
+            data = sock.recv(1024)
+            print("Robot response:", data.decode("utf-8").strip())
+    print("\nClosing connection.")
+
 def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
+    parser.add_argument("--it", action="store_true", help="Run interactive session")
     args = parser.parse_args()
     return args
 

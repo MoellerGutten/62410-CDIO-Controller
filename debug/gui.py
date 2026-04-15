@@ -183,9 +183,9 @@ def draw_corners(surf, corners: list[Corner]):
         pygame.draw.circle(surf, C_CORNER, (x, y), 5)
 
 
-def draw_balls(surf, balls: list[Ball]):
+def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
     for ball in balls:
-        x, y = ball.position
+        x, y = field_to_screen(ball.position, corners)
         r    = 8
         if ball.is_vip:
             # glow ring
@@ -218,6 +218,11 @@ def draw_robot(surf, robot: Robot):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
+def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
+    tl, tr, br, bl = [c.position for c in corners]
+    x = int(lerp(tl[0], tr[0], pos[0] / FIELD_W))
+    y = int(lerp(bl[1], tl[1], pos[1] / FIELD_H))  # y flipped: 0 = bottom
+    return (x, y)
 
 # ---------------------------------------------------------------------------
 # Side panel
@@ -340,7 +345,7 @@ def run_gui(state: FieldState):
         draw_borders(screen, corners)
         draw_corners(screen, corners)
         draw_cross(screen, cross)
-        draw_balls(screen, balls)
+        draw_balls(screen, balls, corners)
         draw_robot(screen, robot)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
