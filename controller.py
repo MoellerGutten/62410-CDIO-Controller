@@ -9,6 +9,7 @@ import sys
 import os
 
 from model.ball import Ball
+from model.cross import Cross
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
@@ -50,6 +51,7 @@ def update_state(state: FieldState, newState):
 
 def setState(state: FieldState, newState):
     with state.lock:
+        ### BALLS ###
         # Removes balls from previous state
         tempBalls = []
         for ball in newState["balls"]:
@@ -59,9 +61,25 @@ def setState(state: FieldState, newState):
             else:
                 tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=False))
         state.balls = tempBalls
+        ### CROSS ### 
+        cross = newState["cross"]
+        crossX = 0
+        crossY = 0
+        
+        for point in cross["corners"]:
+            crossX += point["x"]
+            crossY += point["y"]
+
+        crossX = crossX/4
+        crossY = crossY/4
+
+        # TODO Fix cross orientation
+        state.cross = Cross((crossX, crossY), 0)
+
         # TODO: Corners
-        # TODO: Cross
         # TODO: Robot
+
+        #Corners are fixed
 
 def run_controller(state: FieldState):
     start_interactive_session()
