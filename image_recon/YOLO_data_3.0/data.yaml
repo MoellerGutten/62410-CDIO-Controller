@@ -1,0 +1,14 @@
+path: image_recon/YOLO_data_3.0
+train: images/train
+val: images/val
+nc: 9
+names:
+  0: WBall
+  1: OBall
+  2: GoalA
+  3: GoalB
+  4: TopRight
+  5: TopLeft
+  6: BottomRight
+  7: BottomLeft
+  8: X
