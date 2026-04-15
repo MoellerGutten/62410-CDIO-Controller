@@ -325,18 +325,24 @@ def run_gui(state: FieldState):
             if event.type == pygame.QUIT:
                 running = False
 
+        with state.lock:
+            robot = state.robot
+            balls = list(state.balls)
+            cross = state.cross
+            corners = list(state.corners)
+
         # ------------------------------------------------------------------
         # Draw
         # ------------------------------------------------------------------
         screen.fill(C_BG)
 
-        draw_field_surface(screen, state.corners)
-        draw_borders(screen, state.corners)
-        draw_corners(screen, state.corners)
-        draw_cross(screen, state.cross)
-        draw_balls(screen, state.balls)
-        draw_robot(screen, state.robot)
-        draw_panel(screen, font_sm, font_md, font_lg, state.robot, state.balls, state.cross, state.corners)
+        draw_field_surface(screen, corners)
+        draw_borders(screen, corners)
+        draw_corners(screen, corners)
+        draw_cross(screen, cross)
+        draw_balls(screen, balls)
+        draw_robot(screen, robot)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # Title
         title = font_lg.render("FIELD RENDERER  —  demo.py", True, C_LABEL)
