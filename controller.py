@@ -10,11 +10,11 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
 
-from gui import run_gui
+from gui import run_gui, get_test_field_state
 from state import FieldState
 
 def start(args):
-    state = FieldState()
+    state = get_test_field_state()
     controller_thread = threading.Thread(
         target=run_controller,
         kwargs={"state": state},

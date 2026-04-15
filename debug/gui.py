@@ -313,31 +313,6 @@ def run_gui(state: FieldState):
     font_md = pygame.font.SysFont("monospace", 15, bold=True)
     font_lg = pygame.font.SysFont("monospace", 20, bold=True)
 
-    # ------------------------------------------------------------------
-    # Demo scene — replace these with live model output
-    # ------------------------------------------------------------------
-    corners = [
-        Corner((FIELD_X0, FIELD_Y0)),   # top-left
-        Corner((FIELD_X1, FIELD_Y0)),   # top-right
-        Corner((FIELD_X1, FIELD_Y1)),   # bottom-right
-        Corner((FIELD_X0, FIELD_Y1)),   # bottom-left
-    ]
-
-    balls = [
-        Ball((FIELD_X0 + 120, FIELD_Y0 + 90),  is_vip=False),
-        Ball((FIELD_X0 + 280, FIELD_Y0 + 200), is_vip=False),
-        Ball((FIELD_X0 + 420, FIELD_Y0 + 310), is_vip=True),   # VIP ball
-        Ball((FIELD_X0 + 180, FIELD_Y0 + 380), is_vip=False),
-        Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
-        Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
-    ]
-
-    cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
-                   orientation=25.0)
-
-    robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
-                   orientation=35.0)
-
     # Animation state
     t = 0.0
 
@@ -355,13 +330,13 @@ def run_gui(state: FieldState):
         # ------------------------------------------------------------------
         screen.fill(C_BG)
 
-        draw_field_surface(screen, corners)
-        draw_borders(screen, corners)
-        draw_corners(screen, corners)
-        draw_cross(screen, cross)
-        draw_balls(screen, balls)
-        draw_robot(screen, robot)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
+        draw_field_surface(screen, state.corners)
+        draw_borders(screen, state.corners)
+        draw_corners(screen, state.corners)
+        draw_cross(screen, state.cross)
+        draw_balls(screen, state.balls)
+        draw_robot(screen, state.robot)
+        draw_panel(screen, font_sm, font_md, font_lg, state.robot, state.balls, state.cross, state.corners)
 
         # Title
         title = font_lg.render("FIELD RENDERER  —  demo.py", True, C_LABEL)
@@ -375,3 +350,25 @@ def run_gui(state: FieldState):
 
     pygame.quit()
     sys.exit()
+
+def get_test_field_state():
+    state = FieldState()
+    state.corners = [
+        Corner((FIELD_X0, FIELD_Y0)),   # top-left
+        Corner((FIELD_X1, FIELD_Y0)),   # top-right
+        Corner((FIELD_X1, FIELD_Y1)),   # bottom-right
+        Corner((FIELD_X0, FIELD_Y1)),   # bottom-left
+    ]
+    state.balls = [
+        Ball((FIELD_X0 + 120, FIELD_Y0 + 90),  is_vip=False),
+        Ball((FIELD_X0 + 280, FIELD_Y0 + 200), is_vip=False),
+        Ball((FIELD_X0 + 420, FIELD_Y0 + 310), is_vip=True),   # VIP ball
+        Ball((FIELD_X0 + 180, FIELD_Y0 + 380), is_vip=False),
+        Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
+        Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
+    ]
+    state.cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
+                   orientation=25.0)
+    state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
+                   orientation=35.0)
+    return state
