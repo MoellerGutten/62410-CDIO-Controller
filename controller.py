@@ -2,6 +2,32 @@ import socket
 from config import Config
 from protocol import serialize_message
 from input import build_message_from_short_command, parse_input
+import argparse
+import threading
+import sys
+import os
+
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
+
+from gui import run_gui
+
+def start(args):
+    controller_thread = threading.Thread(
+        target=run_controller,
+        kwargs={"args": args},
+        daemon=True
+    )
+    controller_thread.start()
+
+    if (args.gui):
+        print("Running controller with GUI")
+        run_gui()
+    else:
+        print("Running controller")
+        controller_thread.join()
+
+def run_controller():
+    start_interactive_session()
 
 def start_interactive_session():
     config = Config()
@@ -36,5 +62,12 @@ def start_interactive_session():
         except KeyboardInterrupt:
             print("\nClosing connection.")
 
+def parse_args():
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
+    args = parser.parse_args()
+    return args
+
 if __name__ == "__main__":
-    start_interactive_session()
+    args = parse_args()
+    start(args)
