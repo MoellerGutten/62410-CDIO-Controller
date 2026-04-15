@@ -1,6 +1,7 @@
 import cv2
 import numpy as np
 import json
+import os
 from ultralytics import YOLO
 
 MODEL_PATH = "runs/segment/train5/weights/best.pt"
@@ -15,26 +16,32 @@ goal_a_pts = []
 goal_b_pts = []
 setup_step = "CORNERS"  # States: CORNERS, GOAL_A, GOAL_B, DONE
 
-# Helper function for highly visible text without blocking the screen
+# --- ARUCO MARKER SETUP ---
+# Handling OpenCV version differences for ArUco
+try:
+    ARUCO_DICT = cv2.aruco.Dictionary_get(cv2.aruco.DICT_4X4_50)
+    ARUCO_PARAMS = cv2.aruco.DetectorParameters_create()
+    def detect_markers(frame):
+        return cv2.aruco.detectMarkers(frame, ARUCO_DICT, parameters=ARUCO_PARAMS)
+except AttributeError:
+    # For OpenCV 4.7+
+    ARUCO_DICT = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+    ARUCO_PARAMS = cv2.aruco.DetectorParameters()
+    ARUCO_DETECTOR = cv2.aruco.ArucoDetector(ARUCO_DICT, ARUCO_PARAMS)
+    def detect_markers(frame):
+        return ARUCO_DETECTOR.detectMarkers(frame)
+
+# Helper function for highly visible text
 def draw_text_with_outline(img, text, pos, font_scale, color, thickness):
-    # Draw thick black outline
     cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness + 3)
-    # Draw colored text over it
     cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color, thickness)
 
 def handle_mouse(event, x, y, flags, param):
-    global corners, goal_a_pts, goal_b_pts, setup_step
+    global goal_a_pts, goal_b_pts, setup_step
     
     if event == cv2.EVENT_LBUTTONDOWN:
-        if setup_step == "CORNERS":
-            if len(corners) < 4:
-                corners.append((x, y))
-                print(f"✓ Corner {len(corners)}/4 set: ({x}, {y})")
-                if len(corners) == 4:
-                    setup_step = "GOAL_A"
-                    print("\n-> Next: Click Top-Left then Bottom-Right of GOAL A (Right, Small)")
-                    
-        elif setup_step == "GOAL_A":
+        # We no longer click corners, so we only listen for Goal clicks
+        if setup_step == "GOAL_A":
             if len(goal_a_pts) < 2:
                 goal_a_pts.append((x, y))
                 print(f"✓ Goal A Pt {len(goal_a_pts)}/2 set: ({x}, {y})")
@@ -62,24 +69,50 @@ def setup_arena(cap):
     for _ in range(5):
         ret, frame = cap.read()
 
-    if not ret:
-        print("Error: Could not grab frame.")
-        return False
-
     window = "Arena Setup"
     cv2.namedWindow(window, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window, 1280, 720)
     cv2.setMouseCallback(window, handle_mouse)
 
-    print("Step 1: Click 4 corners (BL, BR, TR, TL)")
+    print("Step 1: Scanning for ArUco Markers 0, 1, 2, and 3...")
 
     while True:
+        ret, frame = cap.read()
+        if not ret: continue
         display = frame.copy()
 
-        # Dynamic Instructions using outlined text (No black bars)
         if setup_step == "CORNERS":
-            draw_text_with_outline(display, f"1. Click 4 Corners (BL, BR, TR, TL): {len(corners)}/4", 
+            draw_text_with_outline(display, "1. Scanning for ArUco Markers (0, 1, 2, 3)...", 
                                    (20, 40), 0.7, (0, 255, 255), 2)
+            
+            # Run ArUco Detection
+            corners_detected, ids, rejected = detect_markers(frame)
+            
+            if ids is not None:
+                cv2.aruco.drawDetectedMarkers(display, corners_detected, ids)
+                ids = ids.flatten()
+                
+                # Check if all 4 required markers are visible
+                if all(req_id in ids for req_id in [0, 1, 2, 3]):
+                    marker_centers = {}
+                    # Calculate the center of each marker
+                    for i, marker_id in enumerate(ids):
+                        if marker_id in [0, 1, 2, 3]:
+                            c = corners_detected[i][0]
+                            cx = int(c[:, 0].mean())
+                            cy = int(c[:, 1].mean())
+                            marker_centers[marker_id] = (cx, cy)
+                            
+                    # Lock them into the corners array in the strict geometric order
+                    corners.clear()
+                    corners.append(marker_centers[0]) # Bottom-Left
+                    corners.append(marker_centers[1]) # Bottom-Right
+                    corners.append(marker_centers[2]) # Top-Right
+                    corners.append(marker_centers[3]) # Top-Left
+                    
+                    print("\n✓ All 4 ArUco markers locked automatically!")
+                    setup_step = "GOAL_A"
+
         elif setup_step == "GOAL_A":
             draw_text_with_outline(display, f"2. GOAL A (Right, Small) - Click Top-Left then Bottom-Right: {len(goal_a_pts)}/2", 
                                    (20, 40), 0.7, (255, 150, 0), 2)
@@ -90,21 +123,20 @@ def setup_arena(cap):
             draw_text_with_outline(display, "Setup Complete! Press ENTER to start | 'R' to reset", 
                                    (20, 40), 0.7, (0, 255, 0), 2)
 
-        # Draw Corners
-        for i, (px, py) in enumerate(corners):
-            cv2.circle(display, (px, py), 7, (0, 255, 0), -1)
-        if len(corners) > 1:
+        # Draw the locked Arena Polygon once found
+        if len(corners) == 4:
+            for i, (px, py) in enumerate(corners):
+                cv2.circle(display, (px, py), 7, (0, 255, 0), -1)
             pts = np.array(corners, dtype=np.int32)
-            cv2.polylines(display, [pts], isClosed=(len(corners) == 4), color=(0, 255, 0), thickness=2)
+            cv2.polylines(display, [pts], isClosed=True, color=(0, 255, 0), thickness=2)
 
-        # Draw Goal A (Blueish)
+        # Draw Goals
         if len(goal_a_pts) >= 1:
             cv2.circle(display, goal_a_pts[0], 5, (255, 150, 0), -1)
         if len(goal_a_pts) == 2:
             cv2.rectangle(display, goal_a_pts[0], goal_a_pts[1], (255, 150, 0), 2)
             draw_text_with_outline(display, "Goal A", (goal_a_pts[0][0], goal_a_pts[0][1] - 10), 0.5, (255, 150, 0), 2)
 
-        # Draw Goal B (Red)
         if len(goal_b_pts) >= 1:
             cv2.circle(display, goal_b_pts[0], 5, (0, 0, 255), -1)
         if len(goal_b_pts) == 2:
@@ -119,7 +151,7 @@ def setup_arena(cap):
             goal_a_pts.clear()
             goal_b_pts.clear()
             setup_step = "CORNERS"
-            print("\n--- Setup Reset ---")
+            print("\n--- Setup Reset: Show the 4 markers to the camera ---")
         elif key == 13 and setup_step == "DONE":
             break
         elif key == ord('q'):
@@ -132,10 +164,10 @@ def setup_arena(cap):
 def get_perspective_transform():
     src = np.array(corners, dtype=np.float32)
     dst = np.array([
-        [0,          0         ],   # Bottom-left  -> (0, 0)
-        [ARENA_W_CM, 0         ],   # Bottom-right -> (167, 0)
-        [ARENA_W_CM, ARENA_H_CM],   # Top-right    -> (167, 121.5)
-        [0,          ARENA_H_CM],   # Top-left     -> (0, 121.5)
+        [0,          0         ],   # ID 0 -> (0, 0)
+        [ARENA_W_CM, 0         ],   # ID 1 -> (167, 0)
+        [ARENA_W_CM, ARENA_H_CM],   # ID 2 -> (167, 121.5)
+        [0,          ARENA_H_CM],   # ID 3 -> (0, 121.5)
     ], dtype=np.float32)
     M = cv2.getPerspectiveTransform(src, dst)
     return M
@@ -158,7 +190,6 @@ def get_yolo_detections(results, model, M):
             cls = int(results.boxes[i].cls[0].item())
             label = model.names[cls]
             
-            # Determine center (mask if available, otherwise bounding box)
             if results.masks is not None and len(results.masks.xy) > i:
                 mask = results.masks.xy[i]
                 cx = int(np.mean(mask[:, 0]))
@@ -173,7 +204,6 @@ def get_yolo_detections(results, model, M):
                 
             ax, ay = to_arena_coords(cx, cy, M)
             
-            # Extract the 4 corners of the YOLO bounding box
             x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
             tl = to_arena_coords(x1, y1, M)
             tr = to_arena_coords(x2, y1, M)
@@ -184,22 +214,19 @@ def get_yolo_detections(results, model, M):
                 "label": label,
                 "cx": cx, "cy": cy,
                 "ax": ax, "ay": ay,
-                "corners": [tl, tr, br, bl] # Store all 4 corners
+                "corners": [tl, tr, br, bl] 
             })
     return detections
 
 def draw_arena_overlay(vis_frame):
-    # Draw Arena Polygon
     if len(corners) == 4:
         pts = np.array(corners, dtype=np.int32)
         cv2.polylines(vis_frame, [pts], isClosed=True, color=(0, 200, 255), thickness=2)
     
-    # Draw Goal A (Right, Small)
     if len(goal_a_pts) == 2:
         cv2.rectangle(vis_frame, goal_a_pts[0], goal_a_pts[1], (255, 150, 0), 2)
         draw_text_with_outline(vis_frame, "Goal A", (goal_a_pts[0][0], goal_a_pts[0][1] - 10), 0.5, (255, 150, 0), 2)
         
-    # Draw Goal B (Left, Large)
     if len(goal_b_pts) == 2:
         cv2.rectangle(vis_frame, goal_b_pts[0], goal_b_pts[1], (0, 0, 255), 2)
         draw_text_with_outline(vis_frame, "Goal B", (goal_b_pts[0][0], goal_b_pts[0][1] - 10), 0.5, (0, 0, 255), 2)
@@ -208,19 +235,16 @@ def draw_arena_overlay(vis_frame):
 
 def draw_positions(vis_frame, detections):
     for d in detections:
-        # If it's a ball, just put the crosshair and center coordinate
         if "ball" in d['label'].lower():
             cx, cy = d["cx"], d["cy"]
             cv2.drawMarker(vis_frame, (cx, cy), (0, 255, 0), cv2.MARKER_CROSS, 20, 2)
             text = f"{d['label']} ({d['ax']}cm, {d['ay']}cm)"
             draw_text_with_outline(vis_frame, text, (cx + 10, cy - 10), 0.5, (0, 255, 0), 2)
         else:
-            # If it's the cross/obstacle, draw a bounding box around it
             cx, cy = d["cx"], d["cy"]
             cv2.drawMarker(vis_frame, (cx, cy), (255, 0, 255), cv2.MARKER_CROSS, 20, 2)
             text = f"{d['label']} (Obstacle)"
             draw_text_with_outline(vis_frame, text, (cx + 10, cy - 10), 0.5, (255, 0, 255), 2)
-
     return vis_frame
 
 def main():
@@ -234,6 +258,8 @@ def main():
     cap.set(cv2.CAP_PROP_FRAME_WIDTH, 1280)
     cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
 
+    os.makedirs("image_recon", exist_ok=True)
+
     if not setup_arena(cap):
         print("Setup cancelled.")
         cap.release()
@@ -246,7 +272,7 @@ def main():
     cv2.namedWindow(window_name, cv2.WINDOW_NORMAL)
     cv2.resizeWindow(window_name, 1280, 720)
 
-    show_visuals = False  # Set to False by default
+    show_visuals = False 
 
     while True:
         ret, frame = cap.read()
@@ -255,7 +281,6 @@ def main():
         preview_frame = frame.copy()
         preview_frame = draw_arena_overlay(preview_frame)
         
-        # Developer UI: Outlined text on the Live Preview only
         visual_status = "ON" if show_visuals else "OFF"
         draw_text_with_outline(preview_frame, f"'s': SCAN | 'v': VISUALS [{visual_status}] | 'r': RE-DRAW | 'q': QUIT", 
                                (20, 40), 0.8, (0, 255, 0), 2)
@@ -293,7 +318,6 @@ def main():
             results = model(masked_frame, verbose=False, conf=0.25)[0]
             detections = get_yolo_detections(results, model, M)
 
-            # ----- CONVERT GOAL PIXELS TO ARENA (CM) COORDINATES -----
             goal_a_cm = []
             if len(goal_a_pts) == 2:
                 for pt in goal_a_pts:
@@ -306,18 +330,26 @@ def main():
                     ax, ay = to_arena_coords(pt[0], pt[1], M)
                     goal_b_cm.append({"x": ax, "y": ay})
 
-            # ----- PACK DATA INTO JSON DICTIONARY -----
             robot_data = {
+                "arena": {
+                    "width_cm": ARENA_W_CM,
+                    "height_cm": ARENA_H_CM,
+                    "corners_pixel": [
+                        {"position": "bottom-left", "x": corners[0][0], "y": corners[0][1]},
+                        {"position": "bottom-right", "x": corners[1][0], "y": corners[1][1]},
+                        {"position": "top-right", "x": corners[2][0], "y": corners[2][1]},
+                        {"position": "top-left", "x": corners[3][0], "y": corners[3][1]}
+                    ] if len(corners) == 4 else []
+                },
                 "goals": {
-                    "A": goal_a_cm,  # Contains [{"x": .., "y": ..}, {"x": .., "y": ..}]
+                    "A": goal_a_cm, 
                     "B": goal_b_cm
                 },
-                "cross": {}, # Will hold the 4 corners of the cross
+                "cross": {}, 
                 "balls": []
             }
             
             for d in detections:
-                # If the YOLO label DOES NOT contain the word "ball", treat it as the cross
                 if "ball" not in d["label"].lower():
                     robot_data["cross"] = {
                         "label": d["label"],
@@ -329,7 +361,6 @@ def main():
                         ]
                     }
                 else:
-                    # Treat it as a standard ball
                     robot_data["balls"].append({
                         "label": d["label"],
                         "x": d["ax"],
@@ -340,16 +371,13 @@ def main():
             print("\n--- DATA FOR ROBOT ---")
             print(json_output)
             
-            # Save JSON to file
             with open("image_recon/robot_coords.json", "w") as json_file:
                 json_file.write(json_output)
 
-            # ----- HANDLE VISUALS -----
             if show_visuals:
                 vis_frame = results.plot()
                 vis_frame = draw_arena_overlay(vis_frame)
                 vis_frame = draw_positions(vis_frame, detections)
-                
                 cv2.imwrite("image_recon/latest_scan.jpg", vis_frame)
                 
                 result_window = "Screenshot Result (Press ANY KEY to resume)"
@@ -364,7 +392,7 @@ def main():
                 vis_frame = draw_arena_overlay(vis_frame)
                 vis_frame = draw_positions(vis_frame, detections)
                 cv2.imwrite("image_recon/latest_scan_silent.jpg", vis_frame)
-                print("-> Scan complete. (Image saved to latest_scan_silent.jpg, JSON saved to robot_coords.json)")
+                print("-> Scan complete. (Files saved to 'image_recon')")
 
     cap.release()
     cv2.destroyAllWindows()

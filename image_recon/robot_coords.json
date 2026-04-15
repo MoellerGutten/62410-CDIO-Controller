@@ -1,56 +1,52 @@
 {
+  "arena": {
+    "width_cm": 167.0,
+    "height_cm": 121.5,
+    "corners_pixel": [
+      {
+        "position": "bottom-left",
+        "x": 171,
+        "y": 70
+      },
+      {
+        "position": "bottom-right",
+        "x": 210,
+        "y": 338
+      },
+      {
+        "position": "top-right",
+        "x": 547,
+        "y": 245
+      },
+      {
+        "position": "top-left",
+        "x": 440,
+        "y": 60
+      }
+    ]
+  },
   "goals": {
     "A": [
       {
-        "x": 165.0,
-        "y": 57.9
+        "x": 53.3,
+        "y": 110.8
       },
       {
-        "x": 164.9,
-        "y": 64.0
+        "x": 83.9,
+        "y": 113.5
       }
     ],
     "B": [
       {
-        "x": 2.8,
-        "y": 52.9
+        "x": 69.8,
+        "y": 5.3
       },
       {
-        "x": 2.6,
-        "y": 67.8
+        "x": 88.3,
+        "y": 6.9
       }
     ]
   },
-  "cross": {
-    "label": "X",
-    "corners": [
-      {
-        "position": "top-left",
-        "x": 78.2,
-        "y": 71.0
-      },
-      {
-        "position": "top-right",
-        "x": 98.0,
-        "y": 70.9
-      },
-      {
-        "position": "bottom-right",
-        "x": 97.7,
-        "y": 50.8
-      },
-      {
-        "position": "bottom-left",
-        "x": 78.1,
-        "y": 50.8
-      }
-    ]
-  },
-  "balls": [
-    {
-      "label": "OBall",
-      "x": 76.3,
-      "y": 3.5
-    }
-  ]
+  "cross": {},
+  "balls": []
 }
