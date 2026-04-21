@@ -3,6 +3,10 @@ import socket
 from config import Config
 from protocol import serialize_message
 from input import build_message_from_short_command, parse_input
+
+# For detecting changes in the json file (new data from camera)
+from JSONObserver import update_state
+
 import argparse
 import threading
 import sys
@@ -28,7 +32,7 @@ def start(args):
     try:
         with open("image_recon/robot_coords.json", mode="r", encoding="utf-8") as read_file:
             state_data = json.load(read_file)
-            
+
         # Only starts state thread if proper JSON data exists for initialization.
         state_thread = threading.Thread(
             target=update_state,
@@ -47,40 +51,6 @@ def start(args):
         print("Running controller")
         controller_thread.join()
 
-def update_state(state: FieldState, newState):
-    # If some update
-    if True:
-        setState(state, newState)
-
-def setState(state: FieldState, newState):
-    with state.lock:
-        ### BALLS ###
-        # Removes balls from previous state
-        tempBalls = []
-        for ball in newState["balls"]:
-            print("Ball: " + ball["label"] + "Is at pos: " + str(ball["x"]) + "," + str(ball["y"]))
-            if ball["label"] == "OBall":
-                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=True))
-            else:
-                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=False))
-        state.balls = tempBalls
-        ### CROSS ### 
-        cross = newState["cross"]
-        crossX = 0
-        crossY = 0
-        
-        for point in cross["corners"]:
-            crossX += point["x"]
-            crossY += point["y"]
-
-        crossX = crossX/4
-        crossY = crossY/4
-
-        # TODO Fix cross orientation
-        state.cross = Cross((crossX, crossY), 0)
-
-        # TODO: Corners
-        # TODO: Robot
 
 def run_controller(state: FieldState, args):
     if (args.it):
