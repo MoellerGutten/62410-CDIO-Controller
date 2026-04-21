@@ -25,16 +25,19 @@ def start(args):
         daemon=True
     )
     controller_thread.start()
-
-    with open("image_recon/robot_coords.json", mode="r", encoding="utf-8") as read_file:
-        state_data = json.load(read_file)
-
-    state_thread = threading.Thread(
-        target=update_state,
-        kwargs={"state": state, "newState": state_data},
-        daemon=True
-    )
-    state_thread.start()
+    try:
+        with open("image_recon/robot_coords.json", mode="r", encoding="utf-8") as read_file:
+            state_data = json.load(read_file)
+            
+        # Only starts state thread if proper JSON data exists for initialization.
+        state_thread = threading.Thread(
+            target=update_state,
+            kwargs={"state": state, "newState": state_data},
+            daemon=True
+        )
+        state_thread.start()
+    except:
+        print("ERROR: Couldn't initialize state, due to missing json. Using test state instead")
 
     if (args.gui):
         print("Running controller with GUI")
