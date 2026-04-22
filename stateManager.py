@@ -1,48 +1,27 @@
-import json
-import time
-from watchdog.observers import Observer
-from watchdog.events import FileSystemEventHandler
+import cv2
+from image_recon.scripts import YOLO_controller
 from model.ball import Ball
 from model.cross import Cross
 from model.state import FieldState
 from debug.log import log_state
 
-JSON_PATH = "image_recon/robot_coords.json"
-
-class JSONHandler(FileSystemEventHandler):
-    def __init__(self, state, logger=None):
-        self.state = state
-        self.logger = logger
-
-    def on_modified(self, event):
-        if event.is_directory or event.src_path != JSON_PATH:
-            return
-        try:
-            with open(JSON_PATH, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except json.JSONDecodeError:
-            return  # file may be mid-write; try again on next event
-
-        setState(self.state, data, self.logger)
 
 
-def update_state(state: FieldState, newState, logger=None):
-    # initalize state from JSON
-    setState(state, newState, logger)
+def update_state(state: FieldState, logger=None):
+    
+    model, M, M_inv = YOLO_controller.initialize_vision()
 
-    # Using a watchdog thread to monitor for robot_coords.json changes
-    observer = Observer()
-    handler = JSONHandler(state, logger)
-    observer.schedule(handler, path="image_recon", recursive=False)
-    observer.start()
+    if model is None:
+        print("Please run arena_tracker.py manually first to calibrate the corners!")
+        exit()
 
-    # If changes in JSON
-    try:
-        while True:
-            time.sleep(1)
-    finally:
-        observer.stop()
-        observer.join()
+    cap = cv2.VideoCapture(0)
+
+    ret, frame = cap.read()
+    
+    robot_data, vis_frame = YOLO_controller.scan(frame, model, M, M_inv)
+    setState(state, robot_data, logger)
+        
 
 def setState(state: FieldState, newState, logger=None):
     # Balls and cross positions are scaled by the ratio of pixels to cm.

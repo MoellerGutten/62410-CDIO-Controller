@@ -5,7 +5,7 @@ from protocol import serialize_message
 from input import build_message_from_short_command, parse_input
 
 # For detecting changes in the json file (new data from camera)
-from JSONObserver import update_state
+from stateManager import update_state
 
 import argparse
 import threading
@@ -28,23 +28,18 @@ def start(args):
     logger = setup_state_logger() if args.log else None
     controller_thread = threading.Thread(
         target=run_controller,
-        kwargs={"state": state, "args": args},
+        kwargs={"state": state, "args": args, "logger": logger},
         daemon=True
     )
     controller_thread.start()
-    try:
-        with open("image_recon/robot_coords.json", mode="r", encoding="utf-8") as read_file:
-            state_data = json.load(read_file)
 
-        # Only starts state thread if proper JSON data exists for initialization.
-        state_thread = threading.Thread(
-            target=update_state,
-            kwargs={"state": state, "newState": state_data, "logger": logger},
-            daemon=True
-        )
-        state_thread.start()
-    except:
-        print("ERROR: Couldn't initialize state, due to missing json. Using test state instead")
+    # Only starts state thread if proper JSON data exists for initialization.
+    state_thread = threading.Thread(
+        target=update_state,
+        kwargs={"state": state, "logger": logger},
+        daemon=True
+    )
+    state_thread.start()
 
     if (args.gui):
         print("Running controller with GUI")
@@ -55,11 +50,11 @@ def start(args):
         controller_thread.join()
 
 
-def run_controller(state: FieldState, args):
+def run_controller(state: FieldState, args, logger):
     if (args.it):
         start_interactive_session()
     else:
-        start_autonomous_session()
+        start_autonomous_session(state, logger)
 
 def connect():
     config = Config()
