@@ -269,17 +269,36 @@ def draw_positions(vis_frame, detections):
             draw_text_with_outline(vis_frame, f"{d['label']} (Obstacle)", (d["cx"] + 10, d["cy"] - 10), 0.5, (255, 0, 255), 2)
     return vis_frame
 
-def scan(frame, model, M, M_inv, key, show_visuals, continuous_mode):
+# --- EXPOSED API FUNCTIONS ---
+
+def initialize_vision():
+    """Call this from external scripts to setup the tracker without UI."""
+    if not load_calibration():
+        print("[ERROR] Cannot initialize vision. No calibration file found.")
+        return None, None, None
+        
+    model = YOLO(MODEL_PATH)
+    M, M_inv = get_perspective_transform()
+    os.makedirs("image_recon", exist_ok=True)
+    return model, M, M_inv
+
+def scan(frame, model, M, M_inv):
+    """Call this from external scripts to process a frame and update the JSON."""
+    global corners, goal_a_pts, goal_b_pts
+    
+    # 1. Apply Blackout Mask
     mask = np.zeros(frame.shape[:2], dtype=np.uint8)
     if len(corners) == 4:
         pts = np.array(corners, dtype=np.int32)
         cv2.fillPoly(mask, [pts], 255)
     
     masked_frame = cv2.bitwise_and(frame, frame, mask=mask)
+    
+    # 2. Run YOLO
     results = model(masked_frame, verbose=False, conf=0.25)[0]
     detections = get_yolo_detections(results, model, M)
 
-    # JSON Data Packing
+    # 3. Construct JSON Output
     goal_a_cm = [{"x": to_arena_coords(pt[0], pt[1], M)[0], "y": to_arena_coords(pt[0], pt[1], M)[1]} for pt in goal_a_pts] if len(goal_a_pts) == 2 else []
     goal_b_cm = [{"x": to_arena_coords(pt[0], pt[1], M)[0], "y": to_arena_coords(pt[0], pt[1], M)[1]} for pt in goal_b_pts] if len(goal_b_pts) == 2 else []
 
@@ -318,35 +337,19 @@ def scan(frame, model, M, M_inv, key, show_visuals, continuous_mode):
     
     json_output = json.dumps(robot_data, indent=2)
 
-    # --- ATOMIC WRITE ---
-    # This ensures JSON observers never read a half-written file
+    # 4. Atomic Save
     temp_file = "image_recon/robot_coords_temp.json"
     final_file = "image_recon/robot_coords.json"
     with open(temp_file, "w") as json_file:
         json_file.write(json_output)
     os.replace(temp_file, final_file) 
     
+    # 5. Draw visual frame for returning
     vis_frame = results.plot()
     vis_frame = draw_arena_overlay(vis_frame, M_inv)
     vis_frame = draw_positions(vis_frame, detections)
-
-    # If user manually hit 's', act like taking a physical screenshot
-    if key == ord('s'):
-        print("\n--- SINGLE SCAN COMPLETE ---")
-        print(json_output)
-        if show_visuals:
-            cv2.imwrite("image_recon/latest_scan.jpg", vis_frame)
-            result_window = "Screenshot Result (Press ANY KEY to resume)"
-            cv2.namedWindow(result_window, cv2.WINDOW_NORMAL)
-            cv2.imshow(result_window, vis_frame)
-            cv2.waitKey(0) 
-            cv2.destroyWindow(result_window)
-        else:
-            cv2.imwrite("image_recon/latest_scan_silent.jpg", vis_frame)
     
-    # If in continuous mode, push the tracking visuals to the Live Preview
-    if continuous_mode:
-        preview_frame = vis_frame
+    return robot_data, vis_frame
 
 
 def main():
@@ -382,7 +385,6 @@ def main():
 
         preview_frame = frame.copy()
 
-        # Handle UI inputs
         key = cv2.waitKey(1) & 0xFF
         if key == ord('q'):
             break
@@ -400,16 +402,31 @@ def main():
             else:
                 break
         
-        # Process scan if 's' is pressed OR if continuous mode is running
         do_scan = continuous_mode or (key == ord('s'))
 
         if do_scan:
-            scan(frame, model, M, M_inv, key, show_visuals, continuous_mode)
+            # We call the newly abstracted scan function
+            robot_data, vis_frame = scan(frame, model, M, M_inv)
+
+            if key == ord('s'):
+                print("\n--- SINGLE SCAN COMPLETE ---")
+                print(json.dumps(robot_data, indent=2))
+                
+                if show_visuals:
+                    cv2.imwrite("image_recon/latest_scan.jpg", vis_frame)
+                    result_window = "Screenshot Result (Press ANY KEY to resume)"
+                    cv2.namedWindow(result_window, cv2.WINDOW_NORMAL)
+                    cv2.imshow(result_window, vis_frame)
+                    cv2.waitKey(0) 
+                    cv2.destroyWindow(result_window)
+                else:
+                    cv2.imwrite("image_recon/latest_scan_silent.jpg", vis_frame)
+            
+            if continuous_mode:
+                preview_frame = vis_frame
         else:
-            # If not scanning, just draw the standard empty overlay on the feed
             preview_frame = draw_arena_overlay(preview_frame, M_inv)
 
-        # Draw UI
         vis_status = "ON" if show_visuals else "OFF"
         cont_status = "ON" if continuous_mode else "OFF"
         draw_text_with_outline(preview_frame, f"'s': SCAN | 'c': CONT [{cont_status}] | 'v': VIS [{vis_status}] | 'r': RESET | 'q': QUIT", 
