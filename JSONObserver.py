@@ -5,33 +5,34 @@ from watchdog.events import FileSystemEventHandler
 from model.ball import Ball
 from model.cross import Cross
 from model.state import FieldState
+from debug.log import log_state
 
 JSON_PATH = "image_recon/robot_coords.json"
 
 class JSONHandler(FileSystemEventHandler):
-    def __init__(self, state):
+    def __init__(self, state, logger=None):
         self.state = state
+        self.logger = logger
 
     def on_modified(self, event):
         if event.is_directory or event.src_path != JSON_PATH:
             return
-
         try:
             with open(JSON_PATH, "r", encoding="utf-8") as f:
                 data = json.load(f)
         except json.JSONDecodeError:
             return  # file may be mid-write; try again on next event
 
-        setState(self.state, data)
+        setState(self.state, data, self.logger)
 
 
-def update_state(state: FieldState, newState):
+def update_state(state: FieldState, newState, logger=None):
     # initalize state from JSON
-    setState(state, newState)
+    setState(state, newState, logger)
 
     # Using a watchdog thread to monitor for robot_coords.json changes
     observer = Observer()
-    handler = JSONHandler(state)
+    handler = JSONHandler(state, logger)
     observer.schedule(handler, path="image_recon", recursive=False)
     observer.start()
 
@@ -43,7 +44,7 @@ def update_state(state: FieldState, newState):
         observer.stop()
         observer.join()
 
-def setState(state: FieldState, newState):
+def setState(state: FieldState, newState, logger=None):
     # Balls and cross positions are scaled by the ratio of pixels to cm.
     with state.lock:
         ### BALLS ###
@@ -73,3 +74,6 @@ def setState(state: FieldState, newState):
 
         # TODO: Corners
         # TODO: Robot
+    if logger:
+        print("wog")
+        log_state(logger, state)
