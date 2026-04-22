@@ -59,9 +59,9 @@ C_PANEL_BG      = ( 22,  30,  38)
 # Layout constants
 # ---------------------------------------------------------------------------
 
-# TODO: Scale this field to the field from camera
-WINDOW_W, WINDOW_H = 1100, 760
+# 
 PANEL_W             = 260
+WINDOW_W, WINDOW_H = 1503 + PANEL_W, 1093.5
 FIELD_MARGIN        = 60            # pixels from window edge to field corners
 
 FIELD_X0 = FIELD_MARGIN
@@ -69,12 +69,13 @@ FIELD_Y0 = FIELD_MARGIN
 FIELD_X1 = WINDOW_W - PANEL_W - FIELD_MARGIN
 FIELD_Y1 = WINDOW_H - FIELD_MARGIN
 
+# Field IRL is 167; 121.5. Scaled to pixels with the window ratio it is 1383; 973.5
 FIELD_W  = FIELD_X1 - FIELD_X0
 FIELD_H  = FIELD_Y1 - FIELD_Y0
 
-# Goal sizes relative to field height
-BIG_GOAL_RATIO   = 1 / 4
-SMALL_GOAL_RATIO = 1 / 8
+# Goal sizes relative to field height (Big goal is 16 cm, small is 8.5)
+BIG_GOAL_RATIO   = 0.131
+SMALL_GOAL_RATIO = 0.07
 
 FPS = 60
 
@@ -123,7 +124,7 @@ def draw_arrow(surf, colour, origin, angle_deg, length, tip_size=10, width=3):
     pygame.draw.polygon(surf, colour, [(int(ex), int(ey)), (int(lx), int(ly)), (int(rx), int(ry))])
 
 
-def draw_cross_shape(surf, pos, size, angle_deg, colour, outline, width=6):
+def draw_cross_shape(surf, pos, size, angle_deg, colour, outline, width=14):
     """Draw a + shaped cross centred at pos, rotated by angle_deg."""
     cx, cy = pos
     for arm_offset in [0, 90]:
@@ -205,8 +206,9 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
-    draw_cross_shape(surf, field_to_screen(cross.position, corners), 22, cross.orientation,
-                     C_CROSS, C_CROSS_OUTLINE, width=6)
+    # TODO: get proper size of cross (vibe sized)
+    draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
+                     C_CROSS, C_CROSS_OUTLINE, width=14)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 

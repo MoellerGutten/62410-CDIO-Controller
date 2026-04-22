@@ -44,6 +44,7 @@ def update_state(state: FieldState, newState):
         observer.join()
 
 def setState(state: FieldState, newState):
+    # Balls and cross positions are scaled by the ratio of pixels to cm.
     with state.lock:
         ### BALLS ###
         # Removes balls from previous state
@@ -51,9 +52,9 @@ def setState(state: FieldState, newState):
         for ball in newState["balls"]:
             print("Ball: " + ball["label"] + "Is at pos: " + str(ball["x"]) + "," + str(ball["y"]))
             if ball["label"] == "OBall":
-                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=True))
+                tempBalls.append(Ball((ball["x"]*1383/167, ball["y"]*973.5/121.5), is_vip=True))
             else:
-                tempBalls.append(Ball((ball["x"], ball["y"]), is_vip=False))
+                tempBalls.append(Ball((ball["x"]*1383/167, ball["y"]*973.5/121.5), is_vip=False))
         state.balls = tempBalls
         ### CROSS ### 
         cross = newState["cross"]
@@ -61,8 +62,8 @@ def setState(state: FieldState, newState):
         crossY = 0
         
         for point in cross["corners"]:
-            crossX += point["x"]
-            crossY += point["y"]
+            crossX += point["x"]*1383/167
+            crossY += point["y"]*973.5/121.5
 
         crossX = crossX/4
         crossY = crossY/4
