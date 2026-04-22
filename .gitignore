@@ -2,3 +2,4 @@ __pycache__
 .venv
 controller.config
 logs
+clean.sh
