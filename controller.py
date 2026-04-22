@@ -14,6 +14,7 @@ import os
 
 from model.ball import Ball
 from model.cross import Cross
+from debug.log import setup_state_logger
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
@@ -23,6 +24,7 @@ from state import FieldState
 
 def start(args):
     state = get_test_field_state()
+    logger = setup_state_logger() if args.log else None
     controller_thread = threading.Thread(
         target=run_controller,
         kwargs={"state": state, "args": args},
@@ -36,7 +38,7 @@ def start(args):
         # Only starts state thread if proper JSON data exists for initialization.
         state_thread = threading.Thread(
             target=update_state,
-            kwargs={"state": state, "newState": state_data},
+            kwargs={"state": state, "newState": state_data, "logger": logger},
             daemon=True
         )
         state_thread.start()
@@ -103,6 +105,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
     parser.add_argument("--it", action="store_true", help="Run interactive session")
+    parser.add_argument("--log", action="store_true", help="Log state changes to file")
     args = parser.parse_args()
     return args
 
