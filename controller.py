@@ -72,8 +72,10 @@ def connect():
 
         except ConnectionRefusedError:
             print("Error: Could not connect. Is the robot running?")
+            exit()
         except KeyboardInterrupt:
             print("\nClosing connection.")
+            exit()
 
 def start_autonomous_session():
     print("autonomous")
