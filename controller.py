@@ -15,6 +15,7 @@ import os
 from model.ball import Ball
 from model.cross import Cross
 from debug.log import setup_state_logger
+from autonomous.start import start_autonomous_session
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "debug"))
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), "model"))
@@ -78,10 +79,6 @@ def connect():
         sock.close()
         print("\nClosing connection.")
         sys.exit(1)
-
-def start_autonomous_session():
-    print("autonomous")
-    pass
 
 def start_interactive_session():
     sock = connect()
