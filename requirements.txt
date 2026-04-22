@@ -2,3 +2,4 @@ inference-sdk
 opencv-python
 git+https://github.com/nordbobirk/62410-CDIO-Protocol.git@main#egg=protocol
 watchdog
+pygame
