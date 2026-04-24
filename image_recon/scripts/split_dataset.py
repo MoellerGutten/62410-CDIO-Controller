@@ -4,7 +4,7 @@ import shutil
 
 # --- Setup your paths here ---
 # Point this to your main dataset folder
-BASE_DIR = "image_recon/YOLO_data_3.0"
+BASE_DIR = "image_recon/YOLO_data_4.0"
 
 IMAGES_TRAIN = os.path.join(BASE_DIR, "images", "train")
 LABELS_TRAIN = os.path.join(BASE_DIR, "labels", "train")
@@ -13,7 +13,6 @@ IMAGES_VAL = os.path.join(BASE_DIR, "images", "val")
 LABELS_VAL = os.path.join(BASE_DIR, "labels", "val")
 
 # Set your split ratio (0.20 = 20% goes to val, 80% stays in train)
-# Change to 0.30 if you want a 70/30 split!
 VAL_RATIO = 0.20 
 
 def main():
@@ -65,7 +64,7 @@ def main():
         moved_count += 1
 
     print("-" * 30)
-    print(f"Success! Set up complete.")
+    print("Success! Set up complete.")
     print(f"Train folder now has: {len(all_images) - moved_count} images.")
     print(f"Val folder now has: {moved_count} images.")
 

@@ -1,8 +1,8 @@
 import cv2
 from ultralytics import YOLO
 
-MODEL_PATH = "runs/segment/train5/weights/best.pt"
-IMAGE_PATH  = "image_recon/data/data_2.0/all_photos_2.0/WIN_20260318_12_25_46_Pro.jpg"
+MODEL_PATH = "runs/pose/train2/weights/best.pt"
+IMAGE_PATH  = "image_recon/YOLO_data_4.0/images/train/1.jpg"
 
 def main():
     model = YOLO(MODEL_PATH)
