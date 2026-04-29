@@ -1,0 +1,10 @@
+path: YOLO_data_5.0
+train: images/train
+val: images/val
+nc: 4
+names:
+  0: WBall
+  1: OBall
+  2: X
+  3: Robot
+kpt_shape: [4, 3]

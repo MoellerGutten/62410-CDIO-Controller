@@ -50,7 +50,7 @@ from ultralytics import YOLO
 
 
 # --------------------------------------------------------------------------- #
-#  Camera auto-detection                                                       #
+#  Camera auto-detection                                                      #
 # --------------------------------------------------------------------------- #
 
 # USB vendor:product IDs for the Logitech C930e
@@ -65,22 +65,8 @@ _LOGITECH_KEYWORDS = ("c930", "logitech", "logi")
 
 
 def find_logitech_c930e(max_index: int = 10) -> int:
-    """
-    Return the OpenCV camera index for the Logitech C930e (or the best
-    available Logitech webcam) on Linux, macOS, and Windows.
-
-    Detection strategy (in priority order):
-      1. Platform-native USB enumeration to match vid:pid exactly.
-      2. Scan indices 0..max_index-1 and check the backend's reported name.
-      3. Return 0 as a last resort (original behaviour).
-
-    Raises RuntimeError if a platform-specific tool fails unexpectedly
-    (missing executable, etc.); that error is caught and we fall through
-    to the next strategy.
-    """
     system = platform.system()
 
-    # --- 1. Platform-native USB enumeration ---
     try:
         index = _usb_enumerate(system)
         if index is not None:
@@ -89,13 +75,11 @@ def find_logitech_c930e(max_index: int = 10) -> int:
     except Exception as exc:
         print(f"[CameraDetect] USB enumeration skipped ({exc})")
 
-    # --- 2. Scan OpenCV backends for a matching name ---
     index = _scan_by_name(max_index)
     if index is not None:
         print(f"[CameraDetect] Found Logitech camera by name scan → index {index}")
         return index
 
-    # --- 3. Fallback ---
     print("[CameraDetect] Could not identify C930e; falling back to index 0.")
     return 0
 
@@ -103,11 +87,6 @@ def find_logitech_c930e(max_index: int = 10) -> int:
 # ── Linux ──────────────────────────────────────────────────────────────────
 
 def _linux_find_camera() -> Optional[int]:
-    """
-    Walk /sys/class/video4linux and match by idVendor/idProduct.
-    Returns the lowest-numbered /dev/videoN index whose USB device matches
-    the C930e vid:pid (or any Logitech vid if the exact pid is absent).
-    """
     v4l_root = "/sys/class/video4linux"
     if not os.path.isdir(v4l_root):
         return None
@@ -116,13 +95,11 @@ def _linux_find_camera() -> Optional[int]:
     vendor_match: list[int]   = []
 
     for node in sorted(os.listdir(v4l_root)):
-        # node is e.g. "video0", "video1", …
         match = re.match(r"video(\d+)$", node)
         if not match:
             continue
         cam_idx = int(match.group(1))
 
-        # Walk up the sysfs tree to find the USB device attributes
         device_path = os.path.realpath(os.path.join(v4l_root, node, "device"))
         vid, pid = _sysfs_vid_pid(device_path)
 
@@ -139,9 +116,8 @@ def _linux_find_camera() -> Optional[int]:
 
 
 def _sysfs_vid_pid(device_path: str) -> tuple[str, str]:
-    """Climb sysfs parents until we find idVendor / idProduct files."""
     path = device_path
-    for _ in range(6):                    # max depth to climb
+    for _ in range(6):
         vid_file = os.path.join(path, "idVendor")
         pid_file = os.path.join(path, "idProduct")
         if os.path.isfile(vid_file) and os.path.isfile(pid_file):
@@ -158,16 +134,6 @@ def _sysfs_vid_pid(device_path: str) -> tuple[str, str]:
 # ── macOS ──────────────────────────────────────────────────────────────────
 
 def _macos_find_camera() -> Optional[int]:
-    """
-    Use `system_profiler SPCameraDataType` to list cameras and their
-    USB IDs, then match to an OpenCV index by probing in order.
-
-    system_profiler output (macOS 13+) looks like:
-        FaceTime HD Camera:
-          Vendor ID: 0x046d
-          Product ID: 0x0843
-          ...
-    """
     try:
         out = subprocess.check_output(
             ["system_profiler", "SPCameraDataType"],
@@ -177,7 +143,6 @@ def _macos_find_camera() -> Optional[int]:
     except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
         return None
 
-    # Collect camera names that match C930e
     matching_names: list[str] = []
     current_name  = ""
     current_vid   = ""
@@ -185,9 +150,7 @@ def _macos_find_camera() -> Optional[int]:
 
     for line in out.splitlines():
         line = line.strip()
-        # A camera entry starts with a name followed by a colon at column 0
         if line.endswith(":") and not line.startswith(" ") and ":" not in line[:-1]:
-            # save previous
             if current_name and _is_logitech(current_vid, current_pid, current_name):
                 matching_names.append(current_name)
             current_name = line[:-1].strip()
@@ -207,28 +170,14 @@ def _macos_find_camera() -> Optional[int]:
     if not matching_names:
         return None
 
-    # Now map names → OpenCV indices by opening cameras and reading the name
-    # (AVFoundation backend exposes the name via CAP_PROP_BACKEND_NAME on
-    # recent OpenCV builds; fall back to positional matching if not available)
     target = matching_names[0].lower()
     for idx in range(10):
         cap = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
         if not cap.isOpened():
             cap.release()
             continue
-        # Try to get the backend name (OpenCV 4.5.3+)
-        backend_name = ""
-        try:
-            backend_name = cap.getBackendName().lower()
-        except AttributeError:
-            pass
         cap.release()
-
-        # If AVFoundation is available we can try cv2.videoio_registry
-        # but the safest cross-version approach is just positional order:
-        # system_profiler lists cameras in the same order as AVFoundation.
-        # Return the index equal to the position of our match in the list.
-        return matching_names.index(matching_names[0])   # index within OS list
+        return matching_names.index(matching_names[0])
 
     return None
 
@@ -236,12 +185,6 @@ def _macos_find_camera() -> Optional[int]:
 # ── Windows ────────────────────────────────────────────────────────────────
 
 def _windows_find_camera() -> Optional[int]:
-    """
-    Query WMI (via PowerShell) to find the PnP device index for the C930e.
-
-    We list Win32_PnPEntity items whose DeviceID contains the vid:pid,
-    then map to a DirectShow/MSMF camera index by scanning OpenCV.
-    """
     ps_script = (
         "Get-WmiObject Win32_PnPEntity | "
         "Where-Object { $_.DeviceID -match 'VID_046D' } | "
@@ -260,15 +203,12 @@ def _windows_find_camera() -> Optional[int]:
     if not names:
         return None
 
-    # Match camera names → OpenCV index by scanning
     for idx in range(10):
         cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
         if not cap.isOpened():
             cap.release()
             continue
         cap.release()
-        # If any WMI name looks like our camera, assign this index.
-        # We scan in order, so the first open index that matches is it.
         for name in names:
             if any(k in name for k in _LOGITECH_KEYWORDS):
                 return idx
@@ -289,11 +229,6 @@ def _usb_enumerate(system: str) -> Optional[int]:
 
 
 def _scan_by_name(max_index: int) -> Optional[int]:
-    """
-    Open each camera index and check its name (where supported by the
-    OpenCV backend) for Logitech keywords.  Falls back to returning the
-    first camera that successfully opens if a keyword match isn't possible.
-    """
     system = platform.system()
     backend = {
         "Linux":   cv2.CAP_V4L2,
@@ -312,7 +247,6 @@ def _scan_by_name(max_index: int) -> Optional[int]:
         if first_open is None:
             first_open = idx
 
-        # Try getBackendName / description where available
         name = ""
         try:
             name = cap.getBackendName().lower()
@@ -324,7 +258,7 @@ def _scan_by_name(max_index: int) -> Optional[int]:
         if any(k in name for k in _LOGITECH_KEYWORDS):
             return idx
 
-    return None     # caller falls back to index 0
+    return None
 
 
 def _is_logitech(vid: str, pid: str, name: str) -> bool:
@@ -369,19 +303,13 @@ class CrossData:
 
 @dataclass
 class ScanResult:
-    """
-    Everything the third party needs.
-    All coordinates are centimetres relative to the arena's bottom-left (0, 0).
-    """
     arena_width_cm: float
     arena_height_cm: float
-    goal_a: list[Point]        # [top-left, bottom-right] corners in cm
+    goal_a: list[Point]
     goal_b: list[Point]
     robot: Optional[RobotData]
     cross: Optional[CrossData]
     balls: list[BallData]
-
-    # -- Serialisation helpers --
 
     def to_dict(self) -> dict:
         def pt(p: Point) -> dict:
@@ -425,30 +353,14 @@ class ScanResult:
 
 
 # --------------------------------------------------------------------------- #
-#  ArenaTracker                                                                #
+#  ArenaTracker                                                              #
 # --------------------------------------------------------------------------- #
 
-# Sentinel: pass camera_index=AUTO_DETECT to trigger auto-detection
 AUTO_DETECT = -1
-
 import threading as _threading
 
 
 class ArenaTracker:
-    """
-    Owns the camera, YOLO model, and all calibration state.
-
-    Singleton: only one instance (and one camera handle) ever exists.
-    Calling ``ArenaTracker()`` a second time returns the same object, so
-    two threads or two modules can share the tracker without fighting over
-    /dev/videoN (which causes errno=16 "Device or resource busy").
-
-    Pass ``camera_index=AUTO_DETECT`` (the default) to let the tracker
-    automatically locate the Logitech C930e on Linux, macOS, or Windows.
-    Pass an explicit integer to pin a specific /dev/videoN or DirectShow index.
-    """
-
-    # --- Singleton bookkeeping (class-level) ---
     _instance:  "Optional[ArenaTracker]" = None
     _init_lock: "_threading.Lock"        = _threading.Lock()
 
@@ -472,15 +384,12 @@ class ArenaTracker:
         back_kp_index:   int   = 1,
         detection_conf:  float = 0.25,
     ) -> None:
-        # __init__ is called every time ArenaTracker() is invoked, even when
-        # __new__ returns the existing singleton.  Guard against re-init.
         if self._initialised:
             return
         self._initialised = True
 
-        # -- Config --
         self._model_path   = model_path
-        self._camera_index = camera_index   # may be AUTO_DETECT (-1)
+        self._camera_index = camera_index
         self._arena_w      = arena_w_cm
         self._arena_h      = arena_h_cm
         self._config_file  = config_file
@@ -489,13 +398,11 @@ class ArenaTracker:
         self._back_kp      = back_kp_index
         self._conf         = detection_conf
 
-        # -- Arena calibration state --
         self._corners:    list[tuple[int, int]] = []
         self._goal_a_pts: list[tuple[int, int]] = []
         self._goal_b_pts: list[tuple[int, int]] = []
         self._setup_step: str = "CORNERS"
 
-        # -- Runtime state (populated by start()) --
         self._model:      Optional[YOLO]             = None
         self._cap:        Optional[cv2.VideoCapture] = None
         self._M:          Optional[np.ndarray]       = None
@@ -503,20 +410,20 @@ class ArenaTracker:
         self._cam_mtx:    Optional[np.ndarray]       = None
         self._cam_dist:   Optional[np.ndarray]       = None
         self._running:    bool                       = False
-        self._resolved_index: int                    = 0   # filled in by _open_camera
+        self._resolved_index: int                    = 0
         self._scan_lock:  _threading.Lock            = _threading.Lock()
 
-    # ------------------------------------------------------------------ #
-    #  Public lifecycle                                                    #
-    # ------------------------------------------------------------------ #
+        self._target_aruco_id = 0
+        try:
+            self._aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            self._aruco_params = cv2.aruco.DetectorParameters()
+            self._aruco_detector = cv2.aruco.ArucoDetector(self._aruco_dict, self._aruco_params)
+        except AttributeError:
+            self._aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            self._aruco_params = cv2.aruco.DetectorParameters()
+            self._aruco_detector = None
 
     def start(self) -> None:
-        """
-        Open the camera, load calibration, and warm up the model.
-
-        Raises RuntimeError if no calibration file exists – run
-        `ArenaTracker().run()` once to produce one.
-        """
         if self._running:
             return
 
@@ -535,7 +442,6 @@ class ArenaTracker:
 
         self._cap = self._open_camera()
 
-        # Discard first frames so auto-exposure settles
         for _ in range(5):
             self._cap.read()
 
@@ -546,10 +452,6 @@ class ArenaTracker:
         )
 
     def scan(self) -> ScanResult:
-        """
-        Capture one frame from the camera and return a ScanResult.
-        Must call start() first.  Thread-safe: concurrent calls queue.
-        """
         if not self._running:
             raise RuntimeError("Call start() before scan().")
         with self._scan_lock:
@@ -557,14 +459,12 @@ class ArenaTracker:
             return self._process_frame(frame)
 
     def stop(self) -> None:
-        """Release the camera and mark the tracker as stopped."""
         if self._cap is not None:
             self._cap.release()
             self._cap = None
         self._running = False
         print("[ArenaTracker] Stopped.")
 
-    # Context-manager support
     def __enter__(self) -> "ArenaTracker":
         self.start()
         return self
@@ -572,15 +472,7 @@ class ArenaTracker:
     def __exit__(self, *_) -> None:
         self.stop()
 
-    # ------------------------------------------------------------------ #
-    #  Camera opening                                                      #
-    # ------------------------------------------------------------------ #
-
     def _open_camera(self) -> cv2.VideoCapture:
-        """
-        Resolve the camera index (auto-detect if needed) and open it with
-        the best available backend for the current OS.
-        """
         system = platform.system()
         backend = {
             "Linux":   cv2.CAP_V4L2,
@@ -597,40 +489,20 @@ class ArenaTracker:
         cap = cv2.VideoCapture(idx, backend)
 
         if not cap.isOpened():
-            # Try CAP_ANY as a final fallback before giving up
             cap.release()
             cap = cv2.VideoCapture(idx, cv2.CAP_ANY)
 
         if not cap.isOpened():
-            raise RuntimeError(
-                f"Cannot open camera at index {idx} on {system}. "
-                "Check that the Logitech C930e is plugged in and not "
-                "claimed by another process."
-            )
+            raise RuntimeError(f"Cannot open camera at index {idx} on {system}.")
 
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-
-        # C930e supports 30fps at 1080p; request explicitly
         cap.set(cv2.CAP_PROP_FPS, 30)
-
-        # Use MJPEG to get full 1280×720 over USB 2.0 bandwidth
         cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
 
         return cap
 
-    # ------------------------------------------------------------------ #
-    #  Interactive debug loop                                              #
-    # ------------------------------------------------------------------ #
-
     def run(self) -> None:
-        """
-        Full interactive OpenCV window.  Use this once to produce the
-        calibration file, then use start()/scan() from your code.
-
-        Keys:  s – single scan   c – continuous overlay
-               v – save frames   r – re-calibrate   q – quit
-        """
         model = YOLO(self._model_path)
         cap   = self._open_camera()
         if not cap.isOpened():
@@ -641,7 +513,6 @@ class ArenaTracker:
 
         if not self._load_calibration():
             if not self._setup_arena(cap):
-                print("Setup cancelled.")
                 cap.release()
                 return
 
@@ -713,10 +584,6 @@ class ArenaTracker:
         cap.release()
         cv2.destroyAllWindows()
 
-    # ------------------------------------------------------------------ #
-    #  Frame acquisition                                                   #
-    # ------------------------------------------------------------------ #
-
     def _grab_frame(self) -> np.ndarray:
         ret, frame = self._cap.read()
         if not ret:
@@ -725,22 +592,15 @@ class ArenaTracker:
             frame = cv2.undistort(frame, self._cam_mtx, self._cam_dist, None, self._cam_mtx)
         return frame
 
-    # ------------------------------------------------------------------ #
-    #  Detection pipeline                                                  #
-    # ------------------------------------------------------------------ #
-
     def _process_frame(
         self,
         frame: np.ndarray,
         *,
         model: Optional[YOLO] = None,
     ) -> ScanResult:
-        """Run YOLO on one frame and return a structured ScanResult."""
         model = model or self._model
         M     = self._M
-        M_inv = self._M_inv
 
-        # Black out everything outside the arena polygon
         mask = np.zeros(frame.shape[:2], dtype=np.uint8)
         if len(self._corners) == 4:
             cv2.fillPoly(mask, [np.array(self._corners, dtype=np.int32)], 255)
@@ -748,7 +608,50 @@ class ArenaTracker:
 
         results    = model(masked, verbose=False, conf=self._conf)[0]
         detections = self._parse_detections(results, model, M)
-        return self._build_result(detections)
+        return self._build_result(detections, frame, M)
+
+    def _get_aruco_robot(self, frame: np.ndarray, M: np.ndarray) -> Optional[RobotData]:
+        if self._aruco_detector:
+            corners, ids, _ = self._aruco_detector.detectMarkers(frame)
+        else:
+            corners, ids, _ = cv2.aruco.detectMarkers(
+                frame, self._aruco_dict, parameters=self._aruco_params
+            )
+
+        if ids is None or self._target_aruco_id not in ids:
+            return None
+
+        idx = np.where(ids == self._target_aruco_id)[0][0]
+        marker_corners_px = corners[idx][0]
+
+        corners_cm = []
+        for px, py in marker_corners_px:
+            cx, cy = self._to_cm(px, py, M)
+            corners_cm.append(Point(cx, cy))
+
+        tl, tr, br, bl = corners_cm
+
+        center_x = (tl.x + tr.x + br.x + bl.x) / 4.0
+        center_y = (tl.y + tr.y + br.y + bl.y) / 4.0
+
+        front_mid_x = (tl.x + tr.x) / 2.0
+        front_mid_y = (tl.y + tr.y) / 2.0
+
+        heading = round(
+            math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1
+        )
+
+        front_mid_pt = Point(front_mid_x, front_mid_y)
+        center_pt = Point(center_x, center_y)
+        visual_keypoints = [front_mid_pt, center_pt] + corners_cm
+
+        return RobotData(
+            label=f"ArucoRobot-{self._target_aruco_id}",
+            position=Point(round(center_x, 1), round(center_y, 1)),
+            heading=heading,
+            keypoints=visual_keypoints,
+            corners=corners_cm
+        )
 
     def _parse_detections(
         self, results, model: YOLO, M: np.ndarray
@@ -759,92 +662,65 @@ class ArenaTracker:
 
         for i in range(len(results.boxes)):
             cls   = int(results.boxes[i].cls[0].item())
-            label = model.names[cls]
+            label = model.names[cls].lower()
+
+            # COMPLETELY IGNORE YOLO ROBOT DETECTIONS
+            if "robot" in label:
+                continue
 
             x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
             cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
             ax, ay = self._to_cm(cx, cy, M)
 
-            # Drop detections that land outside the arena
             if not (0 <= ax <= self._arena_w and 0 <= ay <= self._arena_h):
                 continue
 
-            keypoints, heading = self._extract_pose(results, i, label, M)
+            keypoints = self._extract_pose(results, i, M)
 
             out.append({
                 "label":      label,
                 "cx": cx,     "cy": cy,
                 "ax": ax,     "ay": ay,
                 "corners_cm": [
-                    self._to_cm(x1, y1, M),  # TL
-                    self._to_cm(x2, y1, M),  # TR
-                    self._to_cm(x2, y2, M),  # BR
-                    self._to_cm(x1, y2, M),  # BL
+                    self._to_cm(x1, y1, M),
+                    self._to_cm(x2, y1, M),
+                    self._to_cm(x2, y2, M),
+                    self._to_cm(x1, y2, M),
                 ],
                 "keypoints": keypoints,
-                "heading":   heading,
             })
 
         return out
 
     def _extract_pose(
-        self, results, index: int, label: str, M: np.ndarray
-    ) -> tuple[list[dict], Optional[float]]:
-        keypoints: list[dict]    = []
-        heading: Optional[float] = None
-
+        self, results, index: int, M: np.ndarray
+    ) -> list[dict]:
+        # Heading logic removed. Now only extracts standard keypoints if they exist.
+        keypoints: list[dict] = []
         if results.keypoints is None or len(results.keypoints.xy) <= index:
-            return keypoints, heading
+            return keypoints
 
         for kx, ky in results.keypoints.xy[index].cpu().numpy():
             if kx > 0 and ky > 0:
                 kax, kay = self._to_cm(kx, ky, M)
                 keypoints.append({"x": kax, "y": kay, "px": int(kx), "py": int(ky)})
 
-        if (
-            "robot" in label.lower()
-            and len(keypoints) > max(self._front_kp, self._back_kp)
-        ):
-            try:
-                front = keypoints[self._front_kp]
-                back  = keypoints[self._back_kp]
-                heading = round(
-                    math.degrees(math.atan2(
-                        front["y"] - back["y"],
-                        front["x"] - back["x"],
-                    )),
-                    1,
-                )
-            except IndexError:
-                pass
+        return keypoints
 
-        return keypoints, heading
-
-    # ------------------------------------------------------------------ #
-    #  Result builder                                                      #
-    # ------------------------------------------------------------------ #
-
-    def _build_result(self, detections: list[dict]) -> ScanResult:
-        robot: Optional[RobotData] = None
+    def _build_result(self, detections: list[dict], frame: np.ndarray, M: np.ndarray) -> ScanResult:
+        # Robot is strictly derived from ArUco
+        robot: Optional[RobotData] = self._get_aruco_robot(frame, M)
+        
         cross: Optional[CrossData] = None
         balls: list[BallData]      = []
 
+        # YOLO detections strictly build Balls and Crosses
         for d in detections:
             lbl     = d["label"].lower()
             corners = [Point(x, y) for x, y in d["corners_cm"]]
 
             if "ball" in lbl:
                 balls.append(BallData(d["label"], Point(d["ax"], d["ay"])))
-
-            elif "robot" in lbl:
-                robot = RobotData(
-                    label     = d["label"],
-                    position  = Point(d["ax"], d["ay"]),
-                    heading   = d["heading"],
-                    keypoints = [Point(kp["x"], kp["y"]) for kp in d["keypoints"]],
-                    corners   = corners,
-                )
-
             else:
                 cross = CrossData(label=d["label"], corners=corners)
 
@@ -857,10 +733,6 @@ class ArenaTracker:
             cross  = cross,
             balls  = balls,
         )
-
-    # ------------------------------------------------------------------ #
-    #  Coordinate helpers                                                  #
-    # ------------------------------------------------------------------ #
 
     def _to_cm(self, x: float, y: float, M: np.ndarray) -> tuple[float, float]:
         pt = np.array([[[float(x), float(y)]]], dtype=np.float32)
@@ -878,10 +750,6 @@ class ArenaTracker:
         self._M     = cv2.getPerspectiveTransform(src, dst)
         self._M_inv = cv2.getPerspectiveTransform(dst, src)
         return self._M, self._M_inv
-
-    # ------------------------------------------------------------------ #
-    #  Calibration I/O                                                     #
-    # ------------------------------------------------------------------ #
 
     def _load_calibration(self) -> bool:
         if not os.path.exists(self._config_file):
@@ -918,12 +786,7 @@ class ArenaTracker:
             with np.load(self._calib_file) as data:
                 print("[ArenaTracker] Lens calibration loaded.")
                 return data["mtx"], data["dist"]
-        print("[WARNING] No lens calibration – image won't be undistorted.")
         return None, None
-
-    # ------------------------------------------------------------------ #
-    #  Interactive setup wizard                                            #
-    # ------------------------------------------------------------------ #
 
     def _setup_arena(self, cap: cv2.VideoCapture) -> bool:
         self._corners.clear()
@@ -942,8 +805,8 @@ class ArenaTracker:
 
         _STEPS = {
             "CORNERS": lambda: (f"1. Click 4 corners (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
-            "GOAL_A":  lambda: (f"2. Goal A – TL then BR: {len(self._goal_a_pts)}/2",         (255, 150, 0)),
-            "GOAL_B":  lambda: (f"3. Goal B – TL then BR: {len(self._goal_b_pts)}/2",         (0, 0, 255)),
+            "GOAL_A":  lambda: (f"2. Goal A – TL then BR: {len(self._goal_a_pts)}/2",        (255, 150, 0)),
+            "GOAL_B":  lambda: (f"3. Goal B – TL then BR: {len(self._goal_b_pts)}/2",        (0, 0, 255)),
             "DONE":    lambda: ("Done! ENTER to save | R to reset",                            (0, 255, 0)),
         }
 
@@ -974,7 +837,6 @@ class ArenaTracker:
                 self._goal_a_pts.clear()
                 self._goal_b_pts.clear()
                 self._setup_step = "CORNERS"
-                print("--- Reset ---")
             elif key == 13 and self._setup_step == "DONE":
                 self._save_calibration()
                 break
@@ -990,26 +852,16 @@ class ArenaTracker:
             return
         if self._setup_step == "CORNERS" and len(self._corners) < 4:
             self._corners.append((x, y))
-            print(f"  Corner {len(self._corners)}/4: ({x}, {y})")
             if len(self._corners) == 4:
                 self._setup_step = "GOAL_A"
-                print("-> Click TL + BR of Goal A")
         elif self._setup_step == "GOAL_A" and len(self._goal_a_pts) < 2:
             self._goal_a_pts.append((x, y))
-            print(f"  Goal A {len(self._goal_a_pts)}/2: ({x}, {y})")
             if len(self._goal_a_pts) == 2:
                 self._setup_step = "GOAL_B"
-                print("-> Click TL + BR of Goal B")
         elif self._setup_step == "GOAL_B" and len(self._goal_b_pts) < 2:
             self._goal_b_pts.append((x, y))
-            print(f"  Goal B {len(self._goal_b_pts)}/2: ({x}, {y})")
             if len(self._goal_b_pts) == 2:
                 self._setup_step = "DONE"
-                print("-> Press ENTER to save.")
-
-    # ------------------------------------------------------------------ #
-    #  Visualisation (debug / run() only)                                  #
-    # ------------------------------------------------------------------ #
 
     def _render_debug_frame(
         self,
@@ -1024,7 +876,6 @@ class ArenaTracker:
         vis = yolo_res.plot()
         vis = self._draw_arena_overlay(vis, self._M_inv)
 
-        # Robot heading arrow
         if result.robot and result.robot.heading is not None:
             kps = result.robot.keypoints
             if len(kps) > max(self._front_kp, self._back_kp):
@@ -1076,11 +927,6 @@ class ArenaTracker:
     ) -> None:
         cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness + 3)
         cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color,     thickness)
-
-
-# --------------------------------------------------------------------------- #
-#  Entry point                                                                 #
-# --------------------------------------------------------------------------- #
 
 if __name__ == "__main__":
     ArenaTracker().run()
