@@ -1,10 +1,12 @@
+import math
+
 import cv2
 import numpy as np
 import json
 import os
 from ultralytics import YOLO
 
-MODEL_PATH = "runs/segment/train5/weights/best.pt"
+MODEL_PATH = "runs/pose/train2/weights/best.pt"
 CAMERA_INDEX = 0
 
 ARENA_W_CM = 167.0
@@ -170,30 +172,59 @@ def get_yolo_detections(results, model, M):
             cls = int(results.boxes[i].cls[0].item())
             label = model.names[cls]
             
-            if results.masks is not None and len(results.masks.xy) > i:
-                mask = results.masks.xy[i]
-                cx = int(np.mean(mask[:, 0]))
-                cy = int(np.mean(mask[:, 1]))
-            else:
-                x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
-                cx = int((x1 + x2) / 2)
-                cy = int((y1 + y2) / 2)
-
+            # Get Box Center
+            x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
+            cx = int((x1 + x2) / 2)
+            cy = int((y1 + y2) / 2)
+            
+            # Convert center to arena coords
             ax, ay = to_arena_coords(cx, cy, M)
             
             # Keep only items inside the arena bounds
             if ax < 0 or ax > ARENA_W_CM or ay < 0 or ay > ARENA_H_CM:
                 continue
-            
-            x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
+                
             tl = to_arena_coords(x1, y1, M)
             tr = to_arena_coords(x2, y1, M)
             br = to_arena_coords(x2, y2, M)
             bl = to_arena_coords(x1, y2, M)
+
+            # --- POSE EXTRACTION ---
+            keypoints_arena = []
+            heading = None
             
+            if results.keypoints is not None and len(results.keypoints.xy) > i:
+                kpts = results.keypoints.xy[i].cpu().numpy()
+                for kx, ky in kpts:
+                    # Check if keypoint is visible/valid (not 0,0)
+                    if kx > 0 and ky > 0:
+                        k_ax, k_ay = to_arena_coords(kx, ky, M)
+                        keypoints_arena.append({"x": k_ax, "y": k_ay, "px": int(kx), "py": int(ky)})
+
+                # Calculate Heading (Adjust indices to match your dataset's front/back keypoints)
+                if "robot" in label.lower() and len(keypoints_arena) >= 2:
+                    FRONT_KP_INDEX = 0  # <--- Change to your front keypoint index
+                    BACK_KP_INDEX = 1   # <--- Change to your back keypoint index
+                    
+                    try:
+                        front_kp = keypoints_arena[FRONT_KP_INDEX]
+                        back_kp = keypoints_arena[BACK_KP_INDEX]
+                        
+                        # Calculate angle using atan2
+                        dy = front_kp["y"] - back_kp["y"]
+                        dx = front_kp["x"] - back_kp["x"]
+                        
+                        # Get angle in degrees (0 is straight right, 90 is straight up, etc.)
+                        angle_deg = math.degrees(math.atan2(dy, dx))
+                        heading = round(angle_deg, 1)
+                    except IndexError:
+                        pass # Not enough keypoints detected for this frame
+
             detections.append({
                 "label": label, "cx": cx, "cy": cy,
-                "ax": ax, "ay": ay, "corners": [tl, tr, br, bl] 
+                "ax": ax, "ay": ay, "corners": [tl, tr, br, bl],
+                "keypoints": keypoints_arena,
+                "heading": heading
             })
     return detections
 
@@ -212,9 +243,21 @@ def draw_arena_overlay(vis_frame, M_inv):
 
 def draw_positions(vis_frame, detections):
     for d in detections:
-        if "ball" in d['label'].lower():
+        label_lower = d['label'].lower()
+        if "ball" in label_lower:
             cv2.drawMarker(vis_frame, (d["cx"], d["cy"]), (0, 255, 0), cv2.MARKER_CROSS, 20, 2)
             draw_text_with_outline(vis_frame, f"{d['label']} ({d['ax']}cm, {d['ay']}cm)", (d["cx"] + 10, d["cy"] - 10), 0.5, (0, 255, 0), 2)
+        elif "robot" in label_lower:
+            cv2.drawMarker(vis_frame, (d["cx"], d["cy"]), (0, 255, 255), cv2.MARKER_CROSS, 20, 2)
+            heading_text = f"HDG: {d['heading']}*" if d['heading'] is not None else ""
+            draw_text_with_outline(vis_frame, f"{d['label']} {heading_text}", (d["cx"] + 10, d["cy"] - 10), 0.5, (0, 255, 255), 2)
+            
+            # Draw Heading Arrow based on Keypoints
+            if d['heading'] is not None and len(d['keypoints']) >= 2:
+                # Using the pixel coords for drawing
+                front_px = (d['keypoints'][0]['px'], d['keypoints'][0]['py']) # Adjust index if needed
+                back_px = (d['keypoints'][1]['px'], d['keypoints'][1]['py'])  # Adjust index if needed
+                cv2.arrowedLine(vis_frame, back_px, front_px, (0, 255, 255), 3, tipLength=0.3)
         else:
             cv2.drawMarker(vis_frame, (d["cx"], d["cy"]), (255, 0, 255), cv2.MARKER_CROSS, 20, 2)
             draw_text_with_outline(vis_frame, f"{d['label']} (Obstacle)", (d["cx"] + 10, d["cy"] - 10), 0.5, (255, 0, 255), 2)
@@ -246,7 +289,7 @@ def scan(frame, model, M, M_inv):
     
     masked_frame = cv2.bitwise_and(frame, frame, mask=mask)
     
-    # Run YOLO
+    # Run YOLO (Make sure model returns keypoints)
     results = model(masked_frame, verbose=False, conf=0.25)[0]
     detections = get_yolo_detections(results, model, M)
 
@@ -266,23 +309,36 @@ def scan(frame, model, M, M_inv):
             ] if len(corners) == 4 else []
         },
         "goals": {"A": goal_a_cm, "B": goal_b_cm},
+        "robot": {}, 
         "cross": {}, 
         "balls": []
     }
     
     for d in detections:
-        if "ball" not in d["label"].lower():
+        label_lower = d["label"].lower()
+        corners_list = [
+            {"position": "top-left", "x": d["corners"][0][0], "y": d["corners"][0][1]},
+            {"position": "top-right", "x": d["corners"][1][0], "y": d["corners"][1][1]},
+            {"position": "bottom-right", "x": d["corners"][2][0], "y": d["corners"][2][1]},
+            {"position": "bottom-left", "x": d["corners"][3][0], "y": d["corners"][3][1]}
+        ]
+
+        if "ball" in label_lower:
+            robot_data["balls"].append({"label": d["label"], "x": d["ax"], "y": d["ay"]})
+        elif "robot" in label_lower:
+            robot_data["robot"] = {
+                "label": d["label"],
+                "x": d["ax"],
+                "y": d["ay"],
+                "heading": d["heading"],
+                "keypoints": [{"x": kp["x"], "y": kp["y"]} for kp in d["keypoints"]],
+                "corners": corners_list
+            }
+        else: # Obstacles / Cross
             robot_data["cross"] = {
                 "label": d["label"],
-                "corners": [
-                    {"position": "top-left", "x": d["corners"][0][0], "y": d["corners"][0][1]},
-                    {"position": "top-right", "x": d["corners"][1][0], "y": d["corners"][1][1]},
-                    {"position": "bottom-right", "x": d["corners"][2][0], "y": d["corners"][2][1]},
-                    {"position": "bottom-left", "x": d["corners"][3][0], "y": d["corners"][3][1]}
-                ]
+                "corners": corners_list
             }
-        else:
-            robot_data["balls"].append({"label": d["label"], "x": d["ax"], "y": d["ay"]})
     
     json_output = json.dumps(robot_data, indent=2)
 
@@ -299,7 +355,6 @@ def scan(frame, model, M, M_inv):
     vis_frame = draw_positions(vis_frame, detections)
     
     return robot_data, vis_frame
-
 
 def main():
     model = YOLO(MODEL_PATH)
