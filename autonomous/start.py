@@ -1,22 +1,23 @@
 from stateManager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from connection import connect
-from stateManager import update_state
 
-def start_autonomous_session(state,  logger):
+
+def start_autonomous_session(state, logger):
     print("autonomous")
-    update_state(state, logger)
 
     socket = connect()
 
     inst = Instruction(
-            name=CommandName.BALL_IN,
-            type=InstructionType.COMMAND,
-            args=Arguments(seconds=500, speed=100),
-        )
+        name=CommandName.BALL_IN,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=500, speed=100),
+    )
     msg = Message(instruction=inst)
-    s = serialize_message(msg)
-    socket.sendall(s.encode("utf-8"))
+    socket.sendall(serialize_message(msg).encode("utf-8"))
+
+    # Get an initial snapshot before the loop
+    update_state(state, logger)
 
     ball = state.balls[0]
 
@@ -26,10 +27,9 @@ def start_autonomous_session(state,  logger):
             type=InstructionType.COMMAND,
             args=Arguments(),
         )
-        msg = Message(instruction=inst)
-        s = serialize_message(msg)
-        socket.sendall(s.encode("utf-8"))
+        socket.sendall(serialize_message(Message(instruction=inst)).encode("utf-8"))
         update_state(state, logger)
+        ball = state.balls[0]   # refresh target after each scan
 
     while not state.robot.distance_to_point(ball.position) > 5:
         inst = Instruction(
@@ -37,7 +37,6 @@ def start_autonomous_session(state,  logger):
             type=InstructionType.COMMAND,
             args=Arguments(),
         )
-        msg = Message(instruction=inst)
-        s = serialize_message(msg)
-        socket.sendall(s.encode("utf-8"))
+        socket.sendall(serialize_message(Message(instruction=inst)).encode("utf-8"))
         update_state(state, logger)
+        ball = state.balls[0]   # refresh target after each scan

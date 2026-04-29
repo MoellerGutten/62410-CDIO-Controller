@@ -5,49 +5,70 @@ from model.state import FieldState
 from debug.log import log_state
 from image_recon.scripts.arena_tracker import ArenaTracker
 
-def update_state(state: FieldState, logger=None):
+
+def _get_tracker() -> ArenaTracker:
+    """Return the singleton tracker, starting it if needed."""
     tracker = ArenaTracker()
-    tracker.start()
-    setState(state, tracker.scan(), logger)
-        
+    tracker.start()   # no-op if already running (guarded by _running flag)
+    return tracker
 
-def setState(state: FieldState, newState, logger=None):
-    # Balls and cross positions are scaled by the ratio of pixels to cm.
+
+def update_state(state: FieldState, logger=None) -> None:
+    """
+    One-shot scan: capture one frame and update state.
+
+    Call this directly when you need a fresh snapshot inline
+    (e.g. inside an autonomous control loop).
+    """
+    tracker = _get_tracker()
+    _set_state(state, tracker.scan(), logger)
+
+
+def poll_state(state: FieldState, logger=None) -> None:
+    """
+    Continuous background loop: keeps scanning and updating state.
+
+    Intended to run in a dedicated daemon thread from controller.py.
+    Do NOT also call update_state() from other threads while this is
+    running — both would scan from the same camera handle simultaneously.
+
+    Blocks forever (until the process exits or an exception is raised).
+    """
+    tracker = _get_tracker()
+    print("[stateManager] Background polling started.")
+    while True:
+        _set_state(state, tracker.scan(), logger)
+
+
+def _set_state(state: FieldState, new_state, logger=None) -> None:
+    """Apply a ScanResult to the shared FieldState (thread-safe)."""
     with state.lock:
-        ### BALLS ###
-        # Removes balls from previous state
-        tempBalls = []
-        for ball in newState.balls:
-            print("Ball: " + ball.label+ "Is at pos: " + str(ball.position.x) + "," + str(ball.position.y))
-            if ball.label == "OBall":
-                tempBalls.append(Ball((ball.position.x*1383/167, ball.position.y*973.5/121.5), is_vip=True))
-            else:
-                tempBalls.append(Ball((ball.position.x*1383/167, ball.position.y*973.5/121.5), is_vip=False))
-        state.balls = tempBalls
-        ### CROSS ### 
-        if newState.cross is not None:
-            cross = newState.cross
-            crossX = 0
-            crossY = 0
-            
-            for point in cross.corners:
-                crossX += point.x*1383/167
-                crossY += point.y*973.5/121.5
+        # --- Balls ---
+        temp_balls = []
+        for ball in new_state.balls:
+            print(f"Ball: {ball.label}  pos: {ball.position.x:.1f}, {ball.position.y:.1f}")
+            is_vip = ball.label == "OBall"
+            temp_balls.append(Ball(
+                (ball.position.x * 1383 / 167,
+                 ball.position.y * 973.5 / 121.5),
+                is_vip=is_vip,
+            ))
+        state.balls = temp_balls
 
-            crossX = crossX/4
-            crossY = crossY/4
+        # --- Cross ---
+        if new_state.cross is not None:
+            cross = new_state.cross
+            cx = sum(p.x * 1383 / 167   for p in cross.corners) / 4
+            cy = sum(p.y * 973.5 / 121.5 for p in cross.corners) / 4
+            state.cross = Cross((cx, cy), 0)   # TODO: fix orientation
 
-            # TODO Fix cross orientation
-            state.cross = Cross((crossX, crossY), 0)
-
-        # TODO: Corners
-        # TODO: Robot
-        if newState.robot is not None:
-            robotX = newState.robot.position.x
-            robotY = newState.robot.position.y
-            robotHeading = newState.robot.heading
-            state.robot = Robot((robotX, robotY), robotHeading)
+        # --- Robot ---
+        if new_state.robot is not None:
+            state.robot = Robot(
+                (new_state.robot.position.x,
+                 new_state.robot.position.y),
+                new_state.robot.heading,
+            )
 
     if logger:
-        print("wog")
         log_state(logger, state)
