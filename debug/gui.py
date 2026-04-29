@@ -286,8 +286,8 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     # Goals info
     heading("GOALS")
-    row("Left (big)")
-    row("Right (small)")
+    #row("Left (big)")
+    #row("Right (small)")
     y += 16
 
     # Legend

@@ -31,8 +31,8 @@ def setState(state: FieldState, newState, logger=None):
             crossY = 0
             
             for point in cross.corners:
-                crossX += point.position.x*1383/167
-                crossY += point.position.y*973.5/121.5
+                crossX += point.x*1383/167
+                crossY += point.y*973.5/121.5
 
             crossX = crossX/4
             crossY = crossY/4
