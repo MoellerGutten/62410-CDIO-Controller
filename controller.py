@@ -27,15 +27,7 @@ from state import FieldState
 
 def start(args):
     state = get_test_field_state()
-    logger = setup_state_logger() if args.log else None
-    controller_thread = threading.Thread(
-        target=run_controller,
-        kwargs={"state": state, "args": args, "logger": logger},
-        daemon=True
-    )
-    controller_thread.start()
 
-    
     # Setup for YOLO controller
     model, M, M_inv = YOLO_controller.initialize_vision()
 
@@ -46,6 +38,14 @@ def start(args):
     cap = cv2.VideoCapture(0)
 
     ret, frame = cap.read()
+
+    logger = setup_state_logger() if args.log else None
+    controller_thread = threading.Thread(
+        target=run_controller,
+        kwargs={"state": state, "args": args, "frame": frame, "model": model, "M": M, "M_inv": M_inv, "logger": logger},
+        daemon=True
+    )
+    controller_thread.start()
 
     state_thread = threading.Thread(
         target=update_state,
@@ -63,11 +63,11 @@ def start(args):
         controller_thread.join()
 
 
-def run_controller(state: FieldState, args, logger):
+def run_controller(state: FieldState, args, frame, model, M, M_inv, logger):
     if (args.it):
         start_interactive_session()
     else:
-        start_autonomous_session(state, logger)
+        start_autonomous_session(state, frame, model, M, M_inv, logger)
 
 def connect():
     config = Config()
