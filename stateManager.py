@@ -1,4 +1,4 @@
-import cv2
+
 from image_recon.scripts import YOLO_controller
 from model.ball import Ball
 from model.cross import Cross
@@ -7,18 +7,8 @@ from debug.log import log_state
 
 
 
-def update_state(state: FieldState, logger=None):
-    
-    model, M, M_inv = YOLO_controller.initialize_vision()
-
-    if model is None:
-        print("Please run arena_tracker.py manually first to calibrate the corners!")
-        exit()
-
-    cap = cv2.VideoCapture(0)
-
-    ret, frame = cap.read()
-    
+def update_state(state: FieldState, frame, model, M, M_inv, logger=None):
+    # Gets data from camera
     robot_data, vis_frame = YOLO_controller.scan(frame, model, M, M_inv)
     setState(state, robot_data, logger)
         
