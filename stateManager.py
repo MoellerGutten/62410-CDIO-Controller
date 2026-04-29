@@ -46,7 +46,6 @@ def _set_state(state: FieldState, new_state, logger=None) -> None:
         # --- Balls ---
         temp_balls = []
         for ball in new_state.balls:
-            print(f"Ball: {ball.label}  pos: {ball.position.x:.1f}, {ball.position.y:.1f}")
             is_vip = ball.label == "OBall"
             temp_balls.append(Ball(
                 (ball.position.x * 1383 / 167,
