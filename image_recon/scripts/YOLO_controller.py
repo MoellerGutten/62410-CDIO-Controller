@@ -289,7 +289,7 @@ def scan(frame, model, M, M_inv):
     
     masked_frame = cv2.bitwise_and(frame, frame, mask=mask)
     
-    # Run YOLO (Make sure model returns keypoints)
+    # Run YOLO
     results = model(masked_frame, verbose=False, conf=0.25)[0]
     detections = get_yolo_detections(results, model, M)
 
@@ -341,20 +341,13 @@ def scan(frame, model, M, M_inv):
             }
     
     json_output = json.dumps(robot_data, indent=2)
-
-    # Atomic Save
-    temp_file = "image_recon/robot_coords_temp.json"
-    final_file = "image_recon/robot_coords.json"
-    with open(temp_file, "w") as json_file:
-        json_file.write(json_output)
-    os.replace(temp_file, final_file) 
     
     # Draw visual frame for returning
     vis_frame = results.plot()
     vis_frame = draw_arena_overlay(vis_frame, M_inv)
     vis_frame = draw_positions(vis_frame, detections)
     
-    return robot_data, vis_frame
+    return json_output, vis_frame
 
 def main():
     model = YOLO(MODEL_PATH)
