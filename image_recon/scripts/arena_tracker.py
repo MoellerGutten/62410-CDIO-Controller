@@ -457,8 +457,6 @@ class ArenaTracker:
             if cls._instance is None:
                 cls._instance = super().__new__(cls)
                 cls._instance._initialised = False
-            else:
-                print("[ArenaTracker] Reusing existing singleton instance.")
         return cls._instance
 
     def __init__(
