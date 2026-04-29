@@ -2,6 +2,7 @@
 from image_recon.scripts import YOLO_controller
 from model.ball import Ball
 from model.cross import Cross
+from model.robot import Robot
 from model.state import FieldState
 from debug.log import log_state
 
@@ -43,6 +44,11 @@ def setState(state: FieldState, newState, logger=None):
 
         # TODO: Corners
         # TODO: Robot
+        robotX = newState["robot"]["x"]
+        robotY = newState["robot"]["y"]
+        robotHeading = newState["robot"]["heading"]
+        state.robot = Robot((robotX, robotY), robotHeading)
+
     if logger:
         print("wog")
         log_state(logger, state)
