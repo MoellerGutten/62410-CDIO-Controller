@@ -31,6 +31,7 @@ from corner import Corner
 from cross import Cross
 from robot import Robot
 from state import FieldState
+from math import floor
 
 # ---------------------------------------------------------------------------
 # Colours
@@ -213,8 +214,8 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 
-def draw_robot(surf, robot: Robot):
-    x, y = robot.position
+def draw_robot(surf, robot: Robot, corners):
+    x, y = field_to_screen(robot.position, corners)
     r    = 16
     # Body
     pygame.draw.circle(surf, C_ROBOT_OUTLINE, (x, y), r + 2)
@@ -260,13 +261,13 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     # Robot
     heading("ROBOT")
-    row("Position",    robot.position)
+    row("Position",    (floor(robot.position[0]), floor(robot.position[1])))
     row("Orientation", f"{robot.orientation:.1f}°")
     y += 8
 
     # Cross
     heading("CROSS")
-    row("Position",    cross.position)
+    row("Position",    (floor(cross.position[0]), floor(cross.position[1])))
     row("Orientation", f"{cross.orientation:.1f}°")
     y += 8
 
@@ -274,14 +275,14 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     heading(f"BALLS  ({len(balls)})")
     for i, b in enumerate(balls):
         tag = "VIP" if b.is_vip else f"#{i}"
-        row(tag, b.position)
+        row(tag, (floor(b.position[0]), floor(b.position[1])))
     y += 8
 
     # Corners
     heading("CORNERS")
     labels = ["TL", "TR", "BR", "BL"]
     for lbl, c in zip(labels, corners):
-        row(lbl, c.position)
+        row(lbl, (floor(c.position[0]), floor(c.position[1])))
     y += 16
 
     # Goals info
@@ -350,7 +351,7 @@ def run_gui(state: FieldState):
         draw_corners(screen, corners)
         draw_cross(screen, cross, corners)
         draw_balls(screen, balls, corners)
-        draw_robot(screen, robot)
+        draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # Title

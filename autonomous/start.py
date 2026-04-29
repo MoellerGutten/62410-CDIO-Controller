@@ -19,24 +19,43 @@ def start_autonomous_session(state, logger):
     # Get an initial snapshot before the loop
     update_state(state, logger)
 
-    ball = state.balls[0]
+    ball = state.balls[0] if len(state.balls) > 0 else None
 
-    while not state.robot.is_facing_point(ball.position, 5.0):
-        inst = Instruction(
-            name=CommandName.TANK_RIGHT,
-            type=InstructionType.COMMAND,
-            args=Arguments(),
-        )
-        socket.sendall(serialize_message(Message(instruction=inst)).encode("utf-8"))
-        update_state(state, logger)
-        ball = state.balls[0]   # refresh target after each scan
+    while True:
+        if ball is None:
+            update_state(state, logger)
+            ball = state.balls[0]   # refresh target after each scan
+            continue
+        while not state.robot.is_facing_point(ball.position, 5.0):
+            angle_to_point = state.robot.angle_to_point(ball.position)
+            if (angle_to_point > 0):
+                inst = Instruction(
+                    name=CommandName.TANK_RIGHT,
+                    type=InstructionType.COMMAND,
+                    args=Arguments(seconds=1,lspeed=-10,rspeed=10),
+                )
+                s = serialize_message(Message(instruction=inst))
+                socket.sendall(s.encode("utf-8"))
+            else:
+                inst = Instruction(
+                    name=CommandName.TANK_LEFT,
+                    type=InstructionType.COMMAND,
+                    args=Arguments(seconds=1,lspeed=10,rspeed=-10),
+                )
+                s = serialize_message(Message(instruction=inst))
+                socket.sendall(s.encode("utf-8"))
+            print(s)
+            update_state(state, logger)
+            ball = state.balls[0]   # refresh target after each scan
 
-    while state.robot.distance_to_point(ball.position) > 5:
+        
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
-            args=Arguments(),
+            args=Arguments(seconds=1,speed=50),
         )
-        socket.sendall(serialize_message(Message(instruction=inst)).encode("utf-8"))
+        s = serialize_message(Message(instruction=inst))
+        socket.sendall(s.encode("utf-8"))
+        print(s)
         update_state(state, logger)
         ball = state.balls[0]   # refresh target after each scan

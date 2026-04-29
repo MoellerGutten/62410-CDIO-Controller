@@ -64,8 +64,8 @@ def _set_state(state: FieldState, new_state, logger=None) -> None:
         # --- Robot ---
         if new_state.robot is not None:
             state.robot = Robot(
-                (new_state.robot.position.x,
-                 new_state.robot.position.y),
+                (new_state.robot.position.x * 1383 / 167,
+                 new_state.robot.position.y * 973.5 / 121.5),
                 new_state.robot.heading,
             )
 
