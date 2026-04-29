@@ -1,8 +1,4 @@
-import json
-import socket
-from config import Config
-from image_recon.scripts import YOLO_controller
-import cv2
+from connection import connect
 from protocol import serialize_message
 from input import build_message_from_short_command, parse_input
 
@@ -13,9 +9,6 @@ import argparse
 import threading
 import sys
 import os
-
-from model.ball import Ball
-from model.cross import Cross
 from debug.log import setup_state_logger
 from autonomous.start import start_autonomous_session
 
@@ -28,28 +21,17 @@ from state import FieldState
 def start(args):
     state = get_test_field_state()
 
-    # Setup for YOLO controller
-    model, M, M_inv = YOLO_controller.initialize_vision()
-
-    if model is None:
-        print("Please run arena_tracker.py manually first to calibrate the corners!")
-        exit()
-
-    cap = cv2.VideoCapture(0)
-
-    ret, frame = cap.read()
-
     logger = setup_state_logger() if args.log else None
     controller_thread = threading.Thread(
         target=run_controller,
-        kwargs={"state": state, "args": args, "frame": frame, "model": model, "M": M, "M_inv": M_inv, "logger": logger},
+        kwargs={"state": state, "args": args, "logger": logger},
         daemon=True
     )
     controller_thread.start()
 
     state_thread = threading.Thread(
         target=update_state,
-        kwargs={"state": state, "frame": frame, "model": model, "M": M, "M_inv": M_inv, "logger": logger},
+        kwargs={"state": state, "logger": logger},
         daemon=True
     )
     state_thread.start()
@@ -63,30 +45,11 @@ def start(args):
         controller_thread.join()
 
 
-def run_controller(state: FieldState, args, frame, model, M, M_inv, logger):
+def run_controller(state: FieldState, args, logger):
     if (args.it):
         start_interactive_session()
     else:
-        start_autonomous_session(state, frame, model, M, M_inv, logger)
-
-def connect():
-    config = Config()
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    try:
-        host = config.getStr("EV3_HOST")
-        port = config.getNum("EV3_PORT")
-        print(f"Connecting to {host}:{port}...")
-        sock.connect((host, port))
-        print("Connected! Type 'exit' to exit.")
-        return sock
-    except ConnectionRefusedError:
-        sock.close()
-        print("Error: Could not connect. Is the robot running?")
-        sys.exit(1)
-    except KeyboardInterrupt:
-        sock.close()
-        print("\nClosing connection.")
-        sys.exit(1)
+        start_autonomous_session(state, logger)
 
 def start_interactive_session():
     sock = connect()

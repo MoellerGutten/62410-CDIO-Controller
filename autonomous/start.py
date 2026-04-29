@@ -11,7 +11,7 @@ def start_autonomous_session(state,  logger):
     ball = state.balls[0]
     while not state.robot.is_facing_point(ball.position, 5.0):
         inst = Instruction(
-            name=CommandName.TURN_RIGHT,
+            name=CommandName.TANK_RIGHT,
             type=InstructionType.COMMAND,
             args=Arguments(),
         )
