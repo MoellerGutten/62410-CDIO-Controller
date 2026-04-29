@@ -31,7 +31,7 @@ def start_autonomous_session(state, logger):
         update_state(state, logger)
         ball = state.balls[0]   # refresh target after each scan
 
-    while not state.robot.distance_to_point(ball.position) > 5:
+    while state.robot.distance_to_point(ball.position) > 5:
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
