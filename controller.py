@@ -1,6 +1,8 @@
 import json
 import socket
 from config import Config
+from image_recon.scripts import YOLO_controller
+import cv2
 from protocol import serialize_message
 from input import build_message_from_short_command, parse_input
 
@@ -33,10 +35,21 @@ def start(args):
     )
     controller_thread.start()
 
-    # Only starts state thread if proper JSON data exists for initialization.
+    
+    # Setup for YOLO controller
+    model, M, M_inv = YOLO_controller.initialize_vision()
+
+    if model is None:
+        print("Please run arena_tracker.py manually first to calibrate the corners!")
+        exit()
+
+    cap = cv2.VideoCapture(0)
+
+    ret, frame = cap.read()
+
     state_thread = threading.Thread(
         target=update_state,
-        kwargs={"state": state, "logger": logger},
+        kwargs={"state": state, "frame": frame, "model": model, "M": M, "M_inv": M_inv, "logger": logger},
         daemon=True
     )
     state_thread.start()
