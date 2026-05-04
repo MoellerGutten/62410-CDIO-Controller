@@ -4,7 +4,7 @@ import shutil
 
 # --- Setup your paths here ---
 # Point this to your main dataset folder
-BASE_DIR = "image_recon/YOLO_data_4.0"
+BASE_DIR = "image_recon/YOLO_data_5.0"
 
 IMAGES_TRAIN = os.path.join(BASE_DIR, "images", "train")
 LABELS_TRAIN = os.path.join(BASE_DIR, "labels", "train")
