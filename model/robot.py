@@ -1,4 +1,4 @@
-import math
+from math import hypot, degrees, atan2, radians, cos, sin
 
 
 class Robot:
@@ -20,7 +20,7 @@ class Robot:
 
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
-        return math.hypot(self.position[0] - point[0], self.position[1] - point[1])
+        return hypot(self.position[0] - point[0], self.position[1] - point[1])
 
     # ------------------------------------------------------------------
     # Orientation helpers
@@ -33,7 +33,7 @@ class Robot:
         """
         dx = point[0] - self.position[0]
         dy = point[1] - self.position[1]
-        return math.degrees(math.atan2(dy, dx)) % 360
+        return degrees(atan2(dy, dx)) % 360
 
     def angle_to_point(self, point: tuple[int, int]) -> float:
         """
@@ -51,8 +51,8 @@ class Robot:
 
     def heading_vector(self) -> tuple[float, float]:
         """Unit vector in the direction the robot is currently facing."""
-        rad = math.radians(self.orientation)
-        return (math.cos(rad), math.sin(rad))
+        rad = radians(self.orientation)
+        return (cos(rad), sin(rad))
 
     def __repr__(self) -> str:
         return f"Robot(position={self.position}, orientation={self.orientation:.1f}°)"

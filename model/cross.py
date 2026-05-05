@@ -1,4 +1,4 @@
-import math
+from math import hypot
 
 
 class Cross:
@@ -20,7 +20,7 @@ class Cross:
 
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance from the cross centre to an arbitrary (x, y) point."""
-        return math.hypot(self.position[0] - point[0], self.position[1] - point[1])
+        return hypot(self.position[0] - point[0], self.position[1] - point[1])
 
     # ------------------------------------------------------------------
     # Orientation helpers

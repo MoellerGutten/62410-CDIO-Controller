@@ -1,8 +1,8 @@
-import threading
+from threading import Lock
 
 class FieldState:
     def __init__(self):
-        self.lock = threading.Lock()
+        self.lock = Lock()
         self.robot = None
         self.balls = []
         self.cross = None

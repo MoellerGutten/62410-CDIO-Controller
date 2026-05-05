@@ -15,22 +15,12 @@ Run:  python demo.py
 
 import math
 import sys
-
 import pygame
-
-# ---------------------------------------------------------------------------
-# Local imports — ensure the other files are on the path
-# ---------------------------------------------------------------------------
-import os
-BASE_DIR = os.path.dirname(__file__)
-MODEL_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "model"))
-sys.path.insert(0, MODEL_DIR)
-
-from ball import Ball
-from corner import Corner
-from cross import Cross
-from robot import Robot
-from state import FieldState
+from model.ball import Ball
+from model.corner import Corner
+from model.cross import Cross
+from model.robot import Robot
+from model.state import FieldState
 from math import floor
 
 # ---------------------------------------------------------------------------

@@ -1,10 +1,10 @@
 from config import Config
-import socket
-import sys
+from socket import socket, AF_INET, SOCK_STREAM
+from sys import exit
 
 def connect():
     config = Config()
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock = socket(AF_INET, SOCK_STREAM)
     try:
         host = config.getStr("EV3_HOST")
         port = config.getNum("EV3_PORT")
@@ -15,8 +15,8 @@ def connect():
     except ConnectionRefusedError:
         sock.close()
         print("Error: Could not connect. Is the robot running?")
-        sys.exit(1)
+        exit(1)
     except KeyboardInterrupt:
         sock.close()
         print("\nClosing connection.")
-        sys.exit(1)
+        exit(1)
