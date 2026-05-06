@@ -1,5 +1,5 @@
 from autonomous.deliver_balls import deliver_balls
-from stateManager import _get_tracker, update_state
+from stateManager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from connection import connect 
 from debug.gui import FIELD_H
@@ -33,7 +33,7 @@ def start_autonomous_session(state, logger):
                     break
             # If no balls are left, drive to goal and bust
             if not has_balls:
-                deliver_balls(logger)
+                deliver_balls(state, logger)
 
         if ball is None:
             update_state(state, logger)

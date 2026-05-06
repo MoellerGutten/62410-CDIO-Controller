@@ -1,12 +1,11 @@
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from debug.gui import FIELD_H
-from model import state
+from model.state import FieldState
 from stateManager import _get_tracker, update_state
 from connection import connect 
 
 
-
-def deliver_balls(logger):
+def deliver_balls(state: FieldState, logger):
     socket = connect()
     tracker = _get_tracker()
     result = tracker.scan()
