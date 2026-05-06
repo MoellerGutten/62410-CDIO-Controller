@@ -575,11 +575,20 @@ class ArenaTracker:
                     print(result.to_json())
                     cv2.imwrite("image_recon/latest_scan.jpg", vis)
                     if show_visuals:
-                        w2 = "Result – any key to resume"
-                        cv2.namedWindow(w2, cv2.WINDOW_NORMAL)
+                        w2 = "Result - any key to resume"
+                        cv2.namedWindow(w2, cv2.WINDOW_FULLSCREEN)
                         cv2.imshow(w2, vis)
-                        cv2.waitKey(0)
+                        cv2.waitKey(1)
+
+                        while True:
+                                k = cv2.waitKey(30) & 0xFF
+                                if k != 0xFF:   # any real keypress
+                                    break
+                                if cv2.getWindowProperty(w2, cv2.WND_PROP_VISIBLE) < 1:
+                                    break
+
                         cv2.destroyWindow(w2)
+                        cv2.waitKey(1)
 
                 if continuous:
                     preview = vis
