@@ -3,7 +3,7 @@ from model.cross import Cross
 from model.robot import Robot
 from model.state import FieldState
 from debug.log import log_state
-from image_recon.scripts.arena_tracker import ArenaTracker
+from arena_tracker import ArenaTracker
 from debug.gui import FIELD_W, FIELD_H
 
 
