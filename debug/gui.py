@@ -52,7 +52,7 @@ C_PANEL_BG      = ( 22,  30,  38)
 
 # 
 PANEL_W             = 260
-WINDOW_W, WINDOW_H = 1503 + PANEL_W, 1093.5
+WINDOW_W, WINDOW_H = (1503 * 0.8 + PANEL_W), (1093.5 * 0.8)
 FIELD_MARGIN        = 60            # pixels from window edge to field corners
 
 FIELD_X0 = FIELD_MARGIN

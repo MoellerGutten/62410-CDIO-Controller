@@ -4,6 +4,7 @@ from model.robot import Robot
 from model.state import FieldState
 from debug.log import log_state
 from image_recon.scripts.arena_tracker import ArenaTracker
+from debug.gui import FIELD_W, FIELD_H
 
 
 def _get_tracker() -> ArenaTracker:
@@ -48,8 +49,8 @@ def _set_state(state: FieldState, new_state, logger=None) -> None:
         for ball in new_state.balls:
             is_vip = ball.label == "OBall"
             temp_balls.append(Ball(
-                (ball.position.x * 1383 / 167,
-                 ball.position.y * 973.5 / 121.5),
+                (ball.position.x * FIELD_W / 167,
+                 ball.position.y * FIELD_H / 121.5),
                 is_vip=is_vip,
             ))
         state.balls = temp_balls
@@ -57,15 +58,15 @@ def _set_state(state: FieldState, new_state, logger=None) -> None:
         # --- Cross ---
         if new_state.cross is not None:
             cross = new_state.cross
-            cx = sum(p.x * 1383 / 167   for p in cross.corners) / 4
-            cy = sum(p.y * 973.5 / 121.5 for p in cross.corners) / 4
+            cx = sum(p.x * FIELD_W / 167   for p in cross.corners) / 4
+            cy = sum(p.y * FIELD_H / 121.5 for p in cross.corners) / 4
             state.cross = Cross((cx, cy), 0)   # TODO: fix orientation
 
         # --- Robot ---
         if new_state.robot is not None:
             state.robot = Robot(
-                (new_state.robot.position.x * 1383 / 167,
-                 new_state.robot.position.y * 973.5 / 121.5),
+                (new_state.robot.position.x * FIELD_W / 167,
+                 new_state.robot.position.y * FIELD_H / 121.5),
                 new_state.robot.heading,
             )
 

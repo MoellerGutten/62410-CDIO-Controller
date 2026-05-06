@@ -32,7 +32,7 @@ def start_autonomous_session(state, logger):
                 inst = Instruction(
                     name=CommandName.TANK_RIGHT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=1,lspeed=-10,rspeed=10),
+                    args=Arguments(seconds=1,lspeed=10,rspeed=-10),
                 )
                 s = serialize_message(Message(instruction=inst))
                 socket.sendall(s.encode("utf-8"))
@@ -40,7 +40,7 @@ def start_autonomous_session(state, logger):
                 inst = Instruction(
                     name=CommandName.TANK_LEFT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=1,lspeed=10,rspeed=-10),
+                    args=Arguments(seconds=1,lspeed=-10,rspeed=10),
                 )
                 s = serialize_message(Message(instruction=inst))
                 socket.sendall(s.encode("utf-8"))
