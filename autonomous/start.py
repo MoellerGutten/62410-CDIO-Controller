@@ -1,7 +1,8 @@
-from stateManager import update_state
+from autonomous import deliver_balls
+from stateManager import _get_tracker, update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
-from connection import connect
-
+from connection import connect 
+from debug.gui import FIELD_H
 
 def start_autonomous_session(state, logger):
     print("autonomous")
@@ -22,6 +23,20 @@ def start_autonomous_session(state, logger):
     ball = state.balls[0] if len(state.balls) > 0 else None
 
     while True:
+
+        # Check initial ball count (to avoid duplicate work) and if no balls
+        # take 'x' amount of pictures to make sure no balls are left
+        if ball == None:
+            has_balls = False
+            for _ in range(3):
+                update_state(state, logger)
+                has_balls = True if len(state.balls) > 0 else False
+                if has_balls:
+                    break
+            # If no balls are left, drive to goal and bust
+            if not has_balls:
+                deliver_balls(logger)
+
         if ball is None:
             update_state(state, logger)
             ball = state.balls[0]   # refresh target after each scan
