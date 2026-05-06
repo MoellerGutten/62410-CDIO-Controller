@@ -33,7 +33,7 @@ def start_autonomous_session(state, logger):
                     break
             # If no balls are left, drive to goal and bust
             if not has_balls:
-                deliver_balls(state, logger)
+                deliver_balls(state, socket, logger)
 
         if ball is None:
             update_state(state, logger)

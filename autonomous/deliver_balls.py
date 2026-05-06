@@ -5,8 +5,7 @@ from stateManager import _get_tracker, update_state
 from connection import connect 
 
 
-def deliver_balls(state: FieldState, logger):
-    socket = connect()
+def deliver_balls(state: FieldState, socket, logger):
     tracker = _get_tracker()
     result = tracker.scan()
     # Goal point is middle point of goal a
