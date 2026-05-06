@@ -348,7 +348,7 @@ def run_gui(state: FieldState):
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # DEBUG target point for robot.
-        target_point = (state.robot.position[0], (FIELD_H / 121.5) / 2)
+        target_point = (state.robot.position[0] * FIELD_W / 167, (FIELD_H / 2) * FIELD_H / 121.5)
 
         pygame.draw.circle(screen, (255, 0, 0), target_point, 3)            
 
