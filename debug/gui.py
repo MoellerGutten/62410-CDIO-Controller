@@ -339,9 +339,11 @@ def run_gui(state: FieldState):
         draw_field_surface(screen, corners)
         draw_borders(screen, corners)
         draw_corners(screen, corners)
-        draw_cross(screen, cross, corners)
+        if cross is not None:
+            draw_cross(screen, cross, corners)
         draw_balls(screen, balls, corners)
-        draw_robot(screen, robot, corners)
+        if robot is not None:
+            draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
         # Title
