@@ -1,4 +1,4 @@
-from autonomous import deliver_balls
+from autonomous.deliver_balls import deliver_balls
 from stateManager import _get_tracker, update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from connection import connect 
