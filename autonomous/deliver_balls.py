@@ -14,7 +14,7 @@ def deliver_balls(state: FieldState, logger):
     goaly = sum(p.y for p in result.goal_a) / len(result.goal_a) if result.goal_a else None
     goal = [goalx, goaly]
     print("Target goal coords: " + str(goal))
-    print("Intermediate target point (robot.x, FIELD_H/2): " + [state.robot.x, FIELD_H/2])
+    print("Intermediate target point (robot.x, FIELD_H/2): " + [state.robot.position[0], FIELD_H/2])
     # TODO: add support for shortest angle (driving backward (ask Merian))
     # Sequence should be (excluding cross problem):
     # Aim for y = arena_h/2, i.e. straight up or down from robot (turn first ofc)
@@ -22,7 +22,7 @@ def deliver_balls(state: FieldState, logger):
     # Eject balls
 
     # Turning toward point (robot.x, arena_h/2)
-    target_point = [state.robot.x, FIELD_H/2]
+    target_point = [state.robot.position[0], FIELD_H/2]
     while not state.robot.is_facing_point(target_point, 5.0):
         angle_to_point = state.robot.angle_to_point(target_point)
         if (angle_to_point > 0):
