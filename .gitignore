@@ -3,3 +3,5 @@ __pycache__
 controller.config
 logs
 clean.sh
+image_recon/latest_scan.jpg
+image_recon/arena_config.json
