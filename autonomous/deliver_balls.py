@@ -50,7 +50,7 @@ def deliver_balls(state: FieldState, socket, logger):
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
-        args=Arguments(seconds=1,speed=50),
+        args=Arguments(seconds=0.1,speed=50),
         )
         s = serialize_message(Message(instruction=inst))
         socket.sendall(s.encode("utf-8"))
