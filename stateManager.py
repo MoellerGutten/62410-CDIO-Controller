@@ -61,6 +61,8 @@ def _set_state(state: FieldState, new_state, logger=None) -> None:
             cx = sum(p.x * FIELD_W / 167   for p in cross.corners) / 4
             cy = sum(p.y * FIELD_H / 121.5 for p in cross.corners) / 4
             state.cross = Cross((cx, cy), 0)   # TODO: fix orientation
+        else:
+            state.cross = None
 
         # --- Robot ---
         if new_state.robot is not None:
