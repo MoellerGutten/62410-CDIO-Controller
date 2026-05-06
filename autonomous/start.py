@@ -4,8 +4,6 @@ from connection import connect
 
 
 def start_autonomous_session(state, logger):
-    print("autonomous")
-
     socket = connect()
 
     inst = Instruction(
@@ -24,7 +22,7 @@ def start_autonomous_session(state, logger):
     while True:
         if ball is None:
             update_state(state, logger)
-            ball = state.balls[0]   # refresh target after each scan
+            ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
             continue
         while not state.robot.is_facing_point(ball.position, 5.0):
             angle_to_point = state.robot.angle_to_point(ball.position)
@@ -44,9 +42,8 @@ def start_autonomous_session(state, logger):
                 )
                 s = serialize_message(Message(instruction=inst))
                 socket.sendall(s.encode("utf-8"))
-            print(s)
             update_state(state, logger)
-            ball = state.balls[0]   # refresh target after each scan
+            ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
 
         
         inst = Instruction(
@@ -56,6 +53,5 @@ def start_autonomous_session(state, logger):
         )
         s = serialize_message(Message(instruction=inst))
         socket.sendall(s.encode("utf-8"))
-        print(s)
         update_state(state, logger)
-        ball = state.balls[0]   # refresh target after each scan
+        ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
