@@ -374,7 +374,7 @@ class ArenaTracker:
     def __init__(
         self,
         *,
-        model_path:      str   = "runs/pose/train2/weights/best.pt",
+        model_path:      str   = "runs/pose/train7/weights/best.pt",
         camera_index:    int   = AUTO_DETECT,
         arena_w_cm:      float = 167.0,
         arena_h_cm:      float = 121.5,
