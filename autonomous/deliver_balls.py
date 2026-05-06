@@ -3,7 +3,7 @@ from debug.gui import FIELD_H
 from model import state
 from stateManager import _get_tracker, update_state
 from connection import connect 
-from model.robot import distance_to_point
+
 
 
 def deliver_balls(logger):
@@ -46,7 +46,7 @@ def deliver_balls(logger):
         update_state(state, logger)
 
     # Drives toward target point
-    while distance_to_point(target_point) > 1:
+    while state.robot.distance_to_point(target_point) > 1:
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -81,7 +81,7 @@ def deliver_balls(logger):
         update_state(state, logger)
 
     # Drives toward goal
-    while distance_to_point(goal) > 1:
+    while state.robot.distance_to_point(goal) > 1:
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
