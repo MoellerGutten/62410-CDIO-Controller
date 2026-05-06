@@ -347,6 +347,11 @@ def run_gui(state: FieldState):
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
 
+        # DEBUG target point for robot.
+        target_point = (state.robot.position[0], (FIELD_H / 121.5) / 2)
+
+        pygame.draw.circle(screen, (255, 0, 0), target_point, 3)            
+
         # Title
         title = font_lg.render("Controller GUI", True, C_LABEL)
         screen.blit(title, (FIELD_X0, 14))
