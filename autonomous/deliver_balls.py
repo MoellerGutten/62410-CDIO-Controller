@@ -23,12 +23,13 @@ def deliver_balls(state: FieldState, socket, logger):
     # Turning toward point (robot.x, arena_h/2)
     target_point = [state.robot.position[0], FIELD_H/2]
     while not state.robot.is_facing_point(target_point, 5.0):
+        print("Turning")
         angle_to_point = state.robot.angle_to_point(target_point)
         if (angle_to_point > 0):
             inst = Instruction(
                 name=CommandName.TANK_RIGHT,
                 type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
+                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
             )
             s = serialize_message(Message(instruction=inst))
             socket.sendall(s.encode("utf-8"))
@@ -36,7 +37,7 @@ def deliver_balls(state: FieldState, socket, logger):
             inst = Instruction(
                 name=CommandName.TANK_LEFT,
                 type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
+                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
             )
             s = serialize_message(Message(instruction=inst))
             socket.sendall(s.encode("utf-8"))
@@ -45,6 +46,7 @@ def deliver_balls(state: FieldState, socket, logger):
 
     # Drives toward target point
     while state.robot.distance_to_point(target_point) > 1:
+        print("Drives toward target point")
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -58,6 +60,7 @@ def deliver_balls(state: FieldState, socket, logger):
     
     # Turning toward goal
     while not state.robot.is_facing_point(goal, 5.0):
+        print("Turning toward goal")
         angle_to_point = state.robot.angle_to_point(target_point)
         if (angle_to_point > 0):
             inst = Instruction(
@@ -80,6 +83,7 @@ def deliver_balls(state: FieldState, socket, logger):
 
     # Drives toward goal
     while state.robot.distance_to_point(goal) > 1:
+        print("Drives toward goal")
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
