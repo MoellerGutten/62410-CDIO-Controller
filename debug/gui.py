@@ -256,10 +256,11 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     y += 8
 
     # Cross
-    heading("CROSS")
-    row("Position",    (floor(cross.position[0]), floor(cross.position[1])))
-    row("Orientation", f"{cross.orientation:.1f}°")
-    y += 8
+    if cross is not None:
+        heading("CROSS")
+        row("Position",    (floor(cross.position[0]), floor(cross.position[1])))
+        row("Orientation", f"{cross.orientation:.1f}°")
+        y += 8
 
     # Balls
     heading(f"BALLS  ({len(balls)})")
