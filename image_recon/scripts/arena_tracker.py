@@ -43,6 +43,7 @@ import subprocess
 import sys
 from dataclasses import dataclass
 from typing import Optional
+from pygrabber.dshow_graph import FilterGraph
 
 import cv2
 import numpy as np
@@ -185,6 +186,20 @@ def _macos_find_camera() -> Optional[int]:
 # ── Windows ────────────────────────────────────────────────────────────────
 
 def _windows_find_camera() -> Optional[int]:
+    """Enumerate DirectShow devices — same ordering as OpenCV on Windows."""
+    try:
+        # pygrabber uses DirectShow, same device order as cv2.VideoCapture
+        graph = FilterGraph()
+        devices = graph.get_input_devices()  # list of names, index == CV index
+        for idx, name in enumerate(devices):
+            name_lower = name.lower()
+            if any(k in name_lower for k in _LOGITECH_KEYWORDS):
+                return idx
+        return None
+    except ImportError:
+        pass
+
+    # Fallback: WMI — less reliable ordering but better than nothing
     ps_script = (
         "Get-WmiObject Win32_PnPEntity | "
         "Where-Object { $_.DeviceID -match 'VID_046D' } | "
@@ -193,25 +208,14 @@ def _windows_find_camera() -> Optional[int]:
     try:
         out = subprocess.check_output(
             ["powershell", "-NoProfile", "-Command", ps_script],
-            stderr=subprocess.DEVNULL,
-            timeout=10,
+            stderr=subprocess.DEVNULL, timeout=10,
         ).decode(errors="replace")
-    except (FileNotFoundError, subprocess.CalledProcessError, subprocess.TimeoutExpired):
-        return None
-
-    names = [l.strip().lower() for l in out.splitlines() if l.strip()]
-    if not names:
-        return None
-
-    for idx in range(10):
-        cap = cv2.VideoCapture(idx, cv2.CAP_MSMF)
-        if not cap.isOpened():
-            cap.release()
-            continue
-        cap.release()
-        for name in names:
-            if any(k in name for k in _LOGITECH_KEYWORDS):
-                return idx
+        names = [l.strip().lower() for l in out.splitlines() if l.strip()]
+        if names:
+            print(f"[CameraDetect] WMI found: {names} — assuming index 0")
+            return 0  # best guess without DirectShow
+    except Exception:
+        pass
 
     return None
 
