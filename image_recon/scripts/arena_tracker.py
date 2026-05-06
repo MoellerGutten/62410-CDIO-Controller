@@ -204,7 +204,7 @@ def _windows_find_camera() -> Optional[int]:
         return None
 
     for idx in range(10):
-        cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+        cap = cv2.VideoCapture(idx, cv2.CAP_MSMF)
         if not cap.isOpened():
             cap.release()
             continue
@@ -230,18 +230,27 @@ def _usb_enumerate(system: str) -> Optional[int]:
 
 def _scan_by_name(max_index: int) -> Optional[int]:
     system = platform.system()
-    backend = {
-        "Linux":   cv2.CAP_V4L2,
-        "Darwin":  cv2.CAP_AVFOUNDATION,
-        "Windows": cv2.CAP_DSHOW,
-    }.get(system, cv2.CAP_ANY)
+    backends = (
+        [cv2.CAP_MSMF] if system == "Windows"
+        else [cv2.CAP_V4L2]   if system == "Linux"
+        else [cv2.CAP_AVFOUNDATION] if system == "Darwin"
+        else [cv2.CAP_ANY]
+    )
 
     first_open: Optional[int] = None
 
     for idx in range(max_index):
-        cap = cv2.VideoCapture(idx, backend)
-        if not cap.isOpened():
+        cap = None
+        for backend in backends:
+            cap = cv2.VideoCapture(idx, backend)
+            if cap.isOpened():
+                break
             cap.release()
+            cap = None
+
+        if cap is None or not cap.isOpened():
+            if cap:
+                cap.release()
             continue
 
         if first_open is None:
