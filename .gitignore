@@ -5,3 +5,8 @@ logs
 clean.sh
 image_recon/latest_scan.jpg
 image_recon/arena_config.json
+image_recon/latest_scan_silent.jpg
+image_recon/YOLO_data_1.0
+image_recon/YOLO_data_2.0
+image_recon/YOLO_data_3.0
+image_recon/YOLO_data_4.0
