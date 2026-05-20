@@ -25,7 +25,7 @@ def start_autonomous_session(state: FieldState, logger: Logger) -> None:
 
         # Check initial ball count (to avoid duplicate work) and if no balls
         # take 'x' amount of pictures to make sure no balls are left
-        if ball == None:
+        if ball is None:
             has_balls = False
             for _ in range(3):
                 update_state(state, logger)
