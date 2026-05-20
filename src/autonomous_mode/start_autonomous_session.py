@@ -50,23 +50,27 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             update_state(state, logger)
             ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
             continue
+
+        if state.robot is None:
+            update_state(state, logger)
+            continue
+
         while ball is not None and not state.robot.is_facing_point(ball.position, 3.0):
             angle_to_point = state.robot.angle_to_point(ball.position)
-            turn_ms = max(100, min(300, int(abs(angle_to_point) * 10)))
-            turn_s = turn_ms / 1000
-            speed = max(10, min(20, int(abs(angle_to_point) * 0.4)))
+            turn_ms = max(100, min(300, int(abs(angle_to_point) * 10))) / 1000
+            turn_speed = max(10, min(20, int(abs(angle_to_point) * 0.4)))
 
             if angle_to_point > 0:
                 inst = Instruction(
                     name=CommandName.TANK_RIGHT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=turn_s, lspeed=speed, rspeed=-speed),
+                    args=Arguments(seconds=turn_ms, lspeed=turn_speed, rspeed=-turn_speed),
                 )
             else:
                 inst = Instruction(
                     name=CommandName.TANK_LEFT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=turn_s, lspeed=-speed, rspeed=speed),
+                    args=Arguments(seconds=turn_ms, lspeed=-turn_speed, rspeed=turn_speed),
                 )
 
             connection.send_message(Message(instruction=inst))
@@ -75,16 +79,17 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             ball = state.balls[0] if state.balls else None
             if ball is None:
                 break
-        
-        distance = state.robot.distance_to_point(ball.position)
-        fwd_s = max(0.5, min(2, int(distance * 0.2)))
-        fwd_speed = max(10, min(50, int(distance)))
-        inst = Instruction(
-            name=CommandName.FORWARD,
-            type=InstructionType.COMMAND,
-            args=Arguments(seconds=fwd_s,speed=fwd_speed),
-        )
-        connection.send_message(Message(instruction=inst))
-        sleep(fwd_s + 0.05)
+
+        if ball is not None:
+            distance = state.robot.distance_to_point(ball.position)
+            fwd_ms = max(0.5, min(2, int(distance * 0.2)))
+            fwd_speed = max(10, min(50, int(distance)))
+            inst = Instruction(
+                name=CommandName.FORWARD,
+                type=InstructionType.COMMAND,
+                args=Arguments(seconds=fwd_ms,speed=fwd_speed),
+            )
+            connection.send_message(Message(instruction=inst))
+            sleep(fwd_ms + 0.05)
         update_state(state, logger)
         ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan

@@ -306,11 +306,6 @@ class ArenaTracker:
                 frame, self._aruco_dict, parameters=self._aruco_params
             )
         print(f"[ArUco DEBUG] ids={ids}, M is None={self._M is None}")  # ← tilføj denne
-        # if ids is None or self._cfg.aruco_target_id not in ids:
-        #     return None
-        #
-        # idx              = np.where(ids == self._cfg.aruco_target_id)[0][0]
-        # marker_px        = corners[idx][0]
 
         if ids is None:
             return None
