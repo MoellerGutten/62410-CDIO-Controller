@@ -3,7 +3,7 @@ from threading import Thread
 from src.debug.log import setup_state_logger
 from src.interactive_mode.start_interactive_session import start_interactive_session
 from src.autonomous_mode.start import start_autonomous_session
-from src.state.stateManager import poll_state
+from src.state.state_manager import poll_state
 from src.debug.gui import run_gui, get_test_field_state
 from src.model.state import FieldState
 

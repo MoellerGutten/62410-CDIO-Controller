@@ -36,7 +36,7 @@ def poll_state(state: FieldState, logger=None) -> None:
     Blocks forever (until the process exits or an exception is raised).
     """
     tracker = _get_tracker()
-    print("[stateManager] Background polling started.")
+    print("[state_manager] Background polling started.")
     while True:
         _set_state(state, tracker.scan(), logger)
 

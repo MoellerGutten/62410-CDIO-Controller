@@ -1,5 +1,5 @@
 from src.autonomous_mode.deliver_balls import deliver_balls
-from src.state.stateManager import update_state
+from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from src.lib.connection import connect 
 from src.debug.gui import FIELD_H
