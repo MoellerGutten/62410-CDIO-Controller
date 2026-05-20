@@ -1,4 +1,4 @@
-from argparse import ArgumentParser
+from argparse import ArgumentParser, Namespace
 from threading import Thread
 from src.debug.log import setup_state_logger
 from src.interactive_mode.start_interactive_session import start_interactive_session
@@ -8,7 +8,7 @@ from src.debug.gui import run_gui, get_test_field_state
 from src.model.state import FieldState
 from logging import Logger
 
-def start():
+def start() -> None:
     args = parse_args()
     state = get_test_field_state()
     logger = setup_state_logger() if args.log else None
@@ -45,14 +45,14 @@ def start():
         controller_thread.join()
 
 
-def run_controller(state: FieldState, args, logger: Logger):
+def run_controller(state: FieldState, args: Namespace, logger: Logger) -> None:
     if args.it:
         start_interactive_session()
     else:
         start_autonomous_session(state, logger)
 
 
-def parse_args():
+def parse_args() -> None:
     parser = ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
     parser.add_argument("--it",  action="store_true", help="Run interactive session")

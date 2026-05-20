@@ -20,7 +20,7 @@ DEFAULT_ARG_OVERRIDE = {
     "back_slow": { "speed": -10 },
 }
 
-def build_message_from_short_command(name, kwargs):
+def build_message_from_short_command(name: str, kwargs: dict) -> Message:
     """Build a Message from a short command name and user kwargs."""
     if name not in COMMAND_MAP:
         allowed = ", ".join(sorted(COMMAND_MAP))
@@ -52,7 +52,7 @@ def build_message_from_short_command(name, kwargs):
     )
     return Message(instruction=inst)
 
-def parse_input(line):
+def parse_input(line: str) -> tuple[str, dict]:
     """Parse "NAME key=value key2=value" into (name, kwargs)."""
     parts = line.strip().split()
     if not parts:

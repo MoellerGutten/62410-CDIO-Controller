@@ -2,10 +2,10 @@ from src.autonomous_mode.deliver_balls import deliver_balls
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection 
-from src.debug.gui import FIELD_H
 from logging import Logger
+from src.model.state import FieldState
 
-def start_autonomous_session(state, logger: Logger):
+def start_autonomous_session(state: FieldState, logger: Logger) -> None:
     connection = RobotConnection()
 
     inst = Instruction(

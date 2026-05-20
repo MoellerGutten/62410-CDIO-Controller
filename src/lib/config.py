@@ -5,7 +5,7 @@ class Config:
         self.config = self.load_config()
         self.check_required_values()
 
-    def load_config(self):
+    def load_config(self) -> dict:
         config = {}
         with open('controller.config', 'r') as f:
             for line_num, line in enumerate(f, 1):
@@ -22,17 +22,17 @@ class Config:
                     print(f"Error parsing line {line_num}: {e}")
         return config
     
-    def check_required_values(self):
+    def check_required_values(self) -> None:
         missing = [key for key in self.REQUIRED_KEYS if key not in self.config]
         if missing:
             raise ValueError(f"Missing required config keys: {', '.join(missing)}")
         
-    def getStr(self, key: str):
+    def getStr(self, key: str) -> str:
         if key not in self.config:
             raise ValueError(f"Key does not exist in config: {key}")
         return self.config[key]
     
-    def getNum(self, key: str):
+    def getNum(self, key: str) -> int:
         if key not in self.config:
             raise ValueError(f"Key does not exist in config: {key}")
         return int(self.config[key])

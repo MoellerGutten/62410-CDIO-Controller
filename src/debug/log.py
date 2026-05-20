@@ -14,5 +14,5 @@ def setup_state_logger() -> Logger:
     logger.addHandler(handler)
     return logger
 
-def log_state(logger: Logger, state: FieldState):
+def log_state(logger: Logger, state: FieldState) -> None:
     logger.debug(repr(state))

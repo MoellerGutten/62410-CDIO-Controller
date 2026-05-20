@@ -3,8 +3,9 @@ from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.state import FieldState
 from src.debug.log import log_state
-from src.state.arena_tracker import ArenaTracker
+from src.state.arena_tracker import ArenaTracker, ScanResult
 from src.debug.gui import FIELD_W, FIELD_H
+from logging import Logger
 
 
 def _get_tracker() -> ArenaTracker:
@@ -14,7 +15,7 @@ def _get_tracker() -> ArenaTracker:
     return tracker
 
 
-def update_state(state: FieldState, logger=None) -> None:
+def update_state(state: FieldState, logger:Logger=None) -> None:
     """
     One-shot scan: capture one frame and update state.
 
@@ -25,7 +26,7 @@ def update_state(state: FieldState, logger=None) -> None:
     _set_state(state, tracker.scan(), logger)
 
 
-def poll_state(state: FieldState, logger=None) -> None:
+def poll_state(state: FieldState, logger:Logger=None) -> None:
     """
     Continuous background loop: keeps scanning and updating state.
 
@@ -41,7 +42,7 @@ def poll_state(state: FieldState, logger=None) -> None:
         _set_state(state, tracker.scan(), logger)
 
 
-def _set_state(state: FieldState, new_state, logger=None) -> None:
+def _set_state(state: FieldState, new_state: ScanResult, logger:Logger=None) -> None:
     """Apply a ScanResult to the shared FieldState (thread-safe)."""
     with state.lock:
         # --- Balls ---

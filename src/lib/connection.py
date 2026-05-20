@@ -25,7 +25,7 @@ class RobotConnection:
             print("\nClosing connection.")
             exit(1)
 
-    def send_message(self, message: Message):
+    def send_message(self, message: Message) -> str:
         """Send a protocol message object via the robot connection instance and receive a response. The response is decoded, stripped and returned"""
         serialized_message = serialize_message(message)
         encoded_message = serialized_message.encode("utf-8")

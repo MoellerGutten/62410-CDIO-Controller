@@ -1,7 +1,7 @@
 from src.lib.connection import RobotConnection
 from src.interactive_mode.interactice_command_util import parse_input, build_message_from_short_command
 
-def start_interactive_session():
+def start_interactive_session() -> None:
     connection = RobotConnection()
     while True:
         inp = input("Robot instruction > ").strip()
