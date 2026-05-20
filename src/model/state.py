@@ -1,12 +1,16 @@
 from threading import Lock
+from src.model.ball import Ball
+from src.model.robot import Robot
+from src.model.cross import Cross
+from src.model.corner import Corner
 
 class FieldState:
     def __init__(self):
         self.lock = Lock()
-        self.robot = None
-        self.balls = []
-        self.cross = None
-        self.corners = []
+        self.robot: Robot | None = None
+        self.balls: list[Ball] = []
+        self.cross: Cross | None = None
+        self.corners: list[Corner] = []
 
     def __repr__(self) -> str:
         ball_strs = ", ".join(repr(b) for b in self.balls)
