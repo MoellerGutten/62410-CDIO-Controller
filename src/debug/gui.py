@@ -20,7 +20,7 @@ from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
 from src.model.robot import Robot
-from src.model.state import FieldState
+from src.model.state import ArenaState
 from math import floor
 
 # ---------------------------------------------------------------------------
@@ -304,7 +304,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 # Main
 # ---------------------------------------------------------------------------
 
-def run_gui(state: FieldState):
+def run_gui(state: ArenaState):
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
     pygame.display.set_caption("Robot Field — Demo Renderer")
@@ -366,7 +366,7 @@ def run_gui(state: FieldState):
     sys.exit()
 
 def get_test_field_state():
-    state = FieldState()
+    state = ArenaState()
     state.corners = [
         Corner((FIELD_X0, FIELD_Y0)),   # top-left
         Corner((FIELD_X1, FIELD_Y0)),   # top-right

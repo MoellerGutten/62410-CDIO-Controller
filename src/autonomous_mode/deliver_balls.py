@@ -1,11 +1,11 @@
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
 from src.debug.gui import FIELD_H
-from src.model.state import FieldState
+from src.model.arena_state import ArenaState
 from src.state.state_manager import _get_tracker, update_state
 from src.lib.connection import RobotConnection
 from logging import Logger
 
-def deliver_balls(state: FieldState, connection: RobotConnection, logger: Logger) -> None:
+def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
     tracker = _get_tracker()
     result = tracker.scan()
     # Goal point is middle point of goal a

@@ -3,10 +3,10 @@ from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection 
 from logging import Logger
-from src.model.state import FieldState
+from src.model.arena_state import ArenaState
 from time import sleep
 
-def start_autonomous_session(state: FieldState, logger: Logger) -> None:
+def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
     connection = RobotConnection()
 
     inst = Instruction(

@@ -5,7 +5,7 @@ from src.interactive_mode.start_interactive_session import start_interactive_ses
 from src.autonomous_mode.start_autonomous_session import start_autonomous_session
 from src.state.state_manager import poll_state
 from src.debug.gui import run_gui, get_test_field_state
-from src.model.state import FieldState
+from src.model.arena_state import ArenaState
 from logging import Logger
 
 def start() -> None:
@@ -45,7 +45,7 @@ def start() -> None:
         controller_thread.join()
 
 
-def run_controller(state: FieldState, args: Namespace, logger: Logger) -> None:
+def run_controller(state: ArenaState, args: Namespace, logger: Logger) -> None:
     if args.it:
         start_interactive_session()
     else:
