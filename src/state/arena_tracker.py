@@ -305,7 +305,6 @@ class ArenaTracker:
             corners, ids, _ = cv2.aruco.detectMarkers(
                 frame, self._aruco_dict, parameters=self._aruco_params
             )
-        print(f"[ArUco DEBUG] ids={ids}, M is None={self._M is None}")  # ← tilføj denne
 
         if ids is None:
             return None

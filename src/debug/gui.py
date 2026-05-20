@@ -22,7 +22,7 @@ from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
-
+from src.state.arena_config import ArenaConfig
 # ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
@@ -215,8 +215,8 @@ def draw_robot(surf, robot: Robot, corners):
 
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
-    x = int(lerp(tl[0], tr[0], pos[0] / FIELD_W))
-    y = int(lerp(bl[1], tl[1], pos[1] / FIELD_H))  # y flipped: 0 = bottom
+    x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
+    y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom
     return (x, y)
 
 # ---------------------------------------------------------------------------
