@@ -3,7 +3,7 @@ import tempfile
 import unittest
 import shutil
 from unittest.mock import patch, mock_open
-from config import Config
+from src.lib.config import Config
 
 class TestConfig(unittest.TestCase):
     

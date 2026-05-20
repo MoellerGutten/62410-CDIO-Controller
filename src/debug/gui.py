@@ -16,11 +16,11 @@ Run:  python demo.py
 import math
 import sys
 import pygame
-from model.ball import Ball
-from model.corner import Corner
-from model.cross import Cross
-from model.robot import Robot
-from model.state import FieldState
+from src.model.ball import Ball
+from src.model.corner import Corner
+from src.model.cross import Cross
+from src.model.robot import Robot
+from src.model.state import FieldState
 from math import floor
 
 # ---------------------------------------------------------------------------

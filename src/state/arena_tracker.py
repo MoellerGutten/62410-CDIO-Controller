@@ -9,7 +9,7 @@ from typing import Optional
 import cv2
 import numpy as np
 from ultralytics import YOLO
-from camera import find_logitech_c930e
+from src.lib.detect_camera import find_camera_index
 
 
 # --------------------------------------------------------------------------- #
@@ -223,7 +223,7 @@ class ArenaTracker:
         }.get(system, cv2.CAP_ANY)
 
         if self._camera_index == AUTO_DETECT:
-            idx = find_logitech_c930e()
+            idx = find_camera_index()
         else:
             idx = self._camera_index
 

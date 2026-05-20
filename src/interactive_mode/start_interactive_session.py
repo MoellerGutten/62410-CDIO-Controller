@@ -1,5 +1,5 @@
-from connection import connect
-from input import parse_input, build_message_from_short_command
+from src.lib.connection import connect
+from src.interactive_mode.interactice_command_util import parse_input, build_message_from_short_command
 from protocol import serialize_message
 
 def start_interactive_session():

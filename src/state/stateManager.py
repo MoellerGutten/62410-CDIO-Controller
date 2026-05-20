@@ -1,10 +1,10 @@
-from model.ball import Ball
-from model.cross import Cross
-from model.robot import Robot
-from model.state import FieldState
-from debug.log import log_state
-from arena_tracker import ArenaTracker
-from debug.gui import FIELD_W, FIELD_H
+from src.model.ball import Ball
+from src.model.cross import Cross
+from src.model.robot import Robot
+from src.model.state import FieldState
+from src.debug.log import log_state
+from src.state.arena_tracker import ArenaTracker
+from src.debug.gui import FIELD_W, FIELD_H
 
 
 def _get_tracker() -> ArenaTracker:

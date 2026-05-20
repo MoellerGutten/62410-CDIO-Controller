@@ -1,8 +1,8 @@
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
-from debug.gui import FIELD_H
-from model.state import FieldState
-from stateManager import _get_tracker, update_state
-from connection import connect 
+from src.debug.gui import FIELD_H
+from src.model.state import FieldState
+from src.state.stateManager import _get_tracker, update_state
+from src.lib.connection import connect 
 
 
 def deliver_balls(state: FieldState, socket, logger):

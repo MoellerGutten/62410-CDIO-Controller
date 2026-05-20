@@ -20,6 +20,9 @@ _LOGITECH_VID = "046d"
 _LOGITECH_KEYWORDS = ("c930", "logitech", "logi")
 
 
+def find_camera_index(max_index: int = 10) -> int:
+    return find_logitech_c930e(max_index)
+
 def find_logitech_c930e(max_index: int = 10) -> int:
     system = platform.system()
 

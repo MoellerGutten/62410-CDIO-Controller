@@ -1,13 +1,14 @@
 from argparse import ArgumentParser
 from threading import Thread
-from debug.log import setup_state_logger
-from interactive.start import start_interactive_session
-from autonomous.start import start_autonomous_session
-from stateManager import poll_state
-from debug.gui import run_gui, get_test_field_state
-from model.state import FieldState
+from src.debug.log import setup_state_logger
+from src.interactive_mode.start_interactive_session import start_interactive_session
+from src.autonomous_mode.start import start_autonomous_session
+from src.state.stateManager import poll_state
+from src.debug.gui import run_gui, get_test_field_state
+from src.model.state import FieldState
 
-def start(args):
+def start():
+    args = parse_args()
     state = get_test_field_state()
     logger = setup_state_logger() if args.log else None
 
@@ -56,8 +57,3 @@ def parse_args():
     parser.add_argument("--it",  action="store_true", help="Run interactive session")
     parser.add_argument("--log", action="store_true", help="Log state changes to file")
     return parser.parse_args()
-
-
-if __name__ == "__main__":
-    args = parse_args()
-    start(args)

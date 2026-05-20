@@ -1,8 +1,8 @@
-from autonomous.deliver_balls import deliver_balls
-from stateManager import update_state
+from src.autonomous_mode.deliver_balls import deliver_balls
+from src.state.stateManager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
-from connection import connect 
-from debug.gui import FIELD_H
+from src.lib.connection import connect 
+from src.debug.gui import FIELD_H
 
 def start_autonomous_session(state, logger):
     socket = connect()

@@ -1,4 +1,4 @@
-from config import Config
+from src.lib.config import Config
 from socket import socket, AF_INET, SOCK_STREAM
 from sys import exit
 
