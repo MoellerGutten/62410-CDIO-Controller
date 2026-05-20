@@ -16,6 +16,8 @@ from src.lib.detect_camera import find_camera_index
 #  Result data-classes returned by scan()                                      #
 # --------------------------------------------------------------------------- #
 
+# to run this in isolation: python3 -m src.state.arena_tracker
+
 @dataclass
 class Point:
     x: float
@@ -124,7 +126,7 @@ class ArenaTracker:
         calib_file:      str   = "image_recon/camera_calib.npz",
         front_kp_index:  int   = 0,
         back_kp_index:   int   = 1,
-        detection_conf:  float = 0.25,
+        detection_conf:  float = 0.75,
     ) -> None:
         if self._initialised:
             return
