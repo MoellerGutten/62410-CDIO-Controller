@@ -4,6 +4,7 @@ from protocol import CommandName, Arguments, Instruction, InstructionType, Messa
 from src.lib.connection import RobotConnection 
 from logging import Logger
 from src.model.state import FieldState
+from time import sleep
 
 def start_autonomous_session(state: FieldState, logger: Logger) -> None:
     connection = RobotConnection()
@@ -34,37 +35,56 @@ def start_autonomous_session(state: FieldState, logger: Logger) -> None:
                     break
             # If no balls are left, drive to goal and bust
             if not has_balls:
-                deliver_balls(state, connection, logger)
+                # deliver_balls(state, connection, logger)
+                
+                # for now just stop instead of attempting delivery
+                inst = Instruction(
+                    name=CommandName.PANIC,
+                    type=InstructionType.COMMAND,
+                    args=Arguments(),
+                )
+                connection.send_message(Message(instruction=inst))
+                break
 
         if ball is None:
             update_state(state, logger)
             ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
             continue
-        while not state.robot.is_facing_point(ball.position, 5.0):
+        while ball is not None and not state.robot.is_facing_point(ball.position, 3.0):
             angle_to_point = state.robot.angle_to_point(ball.position)
-            if (angle_to_point > 0):
+            turn_ms = max(100, min(300, int(abs(angle_to_point) * 10)))
+            turn_s = turn_ms / 1000
+            speed = max(10, min(20, int(abs(angle_to_point) * 0.4)))
+
+            if angle_to_point > 0:
                 inst = Instruction(
                     name=CommandName.TANK_RIGHT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=1,lspeed=10,rspeed=-10),
+                    args=Arguments(seconds=turn_s, lspeed=speed, rspeed=-speed),
                 )
-                connection.send_message(Message(instruction=inst))
             else:
                 inst = Instruction(
                     name=CommandName.TANK_LEFT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=1,lspeed=-10,rspeed=10),
+                    args=Arguments(seconds=turn_s, lspeed=-speed, rspeed=speed),
                 )
-                connection.send_message(Message(instruction=inst))
-            update_state(state, logger)
-            ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
 
+            connection.send_message(Message(instruction=inst))
+            sleep(turn_ms / 1000 + 0.05)  # vent til robotten er færdig + lille buffer
+            update_state(state, logger)
+            ball = state.balls[0] if state.balls else None
+            if ball is None:
+                break
         
+        distance = state.robot.distance_to_point(ball.position)
+        fwd_s = max(0.5, min(2, int(distance * 0.2)))
+        fwd_speed = max(10, min(50, int(distance)))
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
-            args=Arguments(seconds=1,speed=50),
+            args=Arguments(seconds=fwd_s,speed=fwd_speed),
         )
         connection.send_message(Message(instruction=inst))
+        sleep(fwd_s + 0.05)
         update_state(state, logger)
         ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
