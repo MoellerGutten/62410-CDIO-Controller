@@ -4,109 +4,34 @@ import json
 import math
 import os
 import platform
-from dataclasses import dataclass
+import threading as _threading
 from typing import Optional
+
 import cv2
 import numpy as np
 from ultralytics import YOLO
+
 from src.lib.detect_camera import find_camera_index
-
-
-# --------------------------------------------------------------------------- #
-#  Result data-classes returned by scan()                                      #
-# --------------------------------------------------------------------------- #
-
-# to run this in isolation: python3 -m src.state.arena_tracker
-
-@dataclass
-class Point:
-    x: float
-    y: float
-
-
-@dataclass
-class BallData:
-    label: str
-    position: Point
-
-
-@dataclass
-class RobotData:
-    label: str
-    position: Point
-    heading: Optional[float]   # degrees; None if undeterminable
-    keypoints: list[Point]
-    corners: list[Point]       # [TL, TR, BR, BL] in arena-cm
-
-
-@dataclass
-class CrossData:
-    label: str
-    corners: list[Point]       # [TL, TR, BR, BL] in arena-cm
-
-
-@dataclass
-class ScanResult:
-    arena_width_cm: float
-    arena_height_cm: float
-    goal_a: list[Point]
-    goal_b: list[Point]
-    robot: Optional[RobotData]
-    cross: Optional[CrossData]
-    balls: list[BallData]
-
-    def to_dict(self) -> dict:
-        def pt(p: Point) -> dict:
-            return {"x": p.x, "y": p.y}
-
-        return {
-            "arena": {
-                "width_cm":  self.arena_width_cm,
-                "height_cm": self.arena_height_cm,
-            },
-            "goals": {
-                "A": [pt(p) for p in self.goal_a],
-                "B": [pt(p) for p in self.goal_b],
-            },
-            "robot": (
-                {
-                    "label":     self.robot.label,
-                    "x":         self.robot.position.x,
-                    "y":         self.robot.position.y,
-                    "heading":   self.robot.heading,
-                    "keypoints": [pt(k) for k in self.robot.keypoints],
-                    "corners":   [pt(c) for c in self.robot.corners],
-                }
-                if self.robot else {}
-            ),
-            "cross": (
-                {
-                    "label":   self.cross.label,
-                    "corners": [pt(c) for c in self.cross.corners],
-                }
-                if self.cross else {}
-            ),
-            "balls": [
-                {"label": b.label, "x": b.position.x, "y": b.position.y}
-                for b in self.balls
-            ],
-        }
-
-    def to_json(self, indent: int = 2) -> str:
-        return json.dumps(self.to_dict(), indent=indent)
-
-
-# --------------------------------------------------------------------------- #
-#  ArenaTracker                                                              #
-# --------------------------------------------------------------------------- #
-
-AUTO_DETECT = -1
-import threading as _threading
+from src.model.ball import Ball
+from src.model.cross import Cross
+from src.model.robot import Robot
+from src.model.corner import Corner
+from src.model.arena_state import ArenaState
+from src.state.arena_config import ArenaConfig
 
 
 class ArenaTracker:
-    _instance:  "Optional[ArenaTracker]" = None
-    _init_lock: "_threading.Lock"        = _threading.Lock()
+    """
+    Singleton camera + YOLO + ArUco tracker.
+    scan() returns an ArenaState with all positions in cm.
+    """
+
+    _instance:  Optional["ArenaTracker"] = None
+    _init_lock: _threading.Lock          = _threading.Lock()
+
+    # ------------------------------------------------------------------ #
+    #  Singleton boilerplate                                               #
+    # ------------------------------------------------------------------ #
 
     def __new__(cls, **kwargs):
         with cls._init_lock:
@@ -115,87 +40,69 @@ class ArenaTracker:
                 cls._instance._initialised = False
         return cls._instance
 
-    def __init__(
-        self,
-        *,
-        model_path:      str   = "runs/pose/train7/weights/best.pt",
-        camera_index:    int   = AUTO_DETECT,
-        arena_w_cm:      float = 167.0,
-        arena_h_cm:      float = 121.5,
-        config_file:     str   = "image_recon/arena_config.json",
-        calib_file:      str   = "image_recon/camera_calib.npz",
-        front_kp_index:  int   = 0,
-        back_kp_index:   int   = 1,
-        detection_conf:  float = 0.75,
-    ) -> None:
+    def __init__(self, config: ArenaConfig = ArenaConfig()) -> None:
         if self._initialised:
             return
         self._initialised = True
 
-        self._model_path   = model_path
-        self._camera_index = camera_index
-        self._arena_w      = arena_w_cm
-        self._arena_h      = arena_h_cm
-        self._config_file  = config_file
-        self._calib_file   = calib_file
-        self._front_kp     = front_kp_index
-        self._back_kp      = back_kp_index
-        self._conf         = detection_conf
+        self._cfg = config
 
         self._corners:    list[tuple[int, int]] = []
         self._goal_a_pts: list[tuple[int, int]] = []
         self._goal_b_pts: list[tuple[int, int]] = []
         self._setup_step: str = "CORNERS"
 
-        self._model:      Optional[YOLO]             = None
-        self._cap:        Optional[cv2.VideoCapture] = None
-        self._M:          Optional[np.ndarray]       = None
-        self._M_inv:      Optional[np.ndarray]       = None
-        self._cam_mtx:    Optional[np.ndarray]       = None
-        self._cam_dist:   Optional[np.ndarray]       = None
-        self._running:    bool                       = False
-        self._resolved_index: int                    = 0
-        self._scan_lock:  _threading.Lock            = _threading.Lock()
+        self._model:          Optional[YOLO]             = None
+        self._cap:            Optional[cv2.VideoCapture] = None
+        self._M:              Optional[np.ndarray]       = None
+        self._M_inv:          Optional[np.ndarray]       = None
+        self._cam_mtx:        Optional[np.ndarray]       = None
+        self._cam_dist:       Optional[np.ndarray]       = None
+        self._running:        bool                       = False
+        self._resolved_index: int                        = 0
+        self._scan_lock:      _threading.Lock            = _threading.Lock()
 
-        self._target_aruco_id = 0
         try:
-            self._aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-            self._aruco_params = cv2.aruco.DetectorParameters()
+            self._aruco_dict     = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            self._aruco_params   = cv2.aruco.DetectorParameters()
             self._aruco_detector = cv2.aruco.ArucoDetector(self._aruco_dict, self._aruco_params)
         except AttributeError:
-            self._aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
-            self._aruco_params = cv2.aruco.DetectorParameters()
+            self._aruco_dict     = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
+            self._aruco_params   = cv2.aruco.DetectorParameters()
             self._aruco_detector = None
+
+    # ------------------------------------------------------------------ #
+    #  Public API                                                          #
+    # ------------------------------------------------------------------ #
 
     def start(self) -> None:
         if self._running:
             return
 
-        os.makedirs(os.path.dirname(self._config_file) or ".", exist_ok=True)
+        os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
         if not self._load_calibration():
             raise RuntimeError(
                 "No arena calibration found. "
-                "Run `ArenaTracker().run()` interactively once to calibrate, "
-                "then call start() again."
+                "Run `python3 -m src.state.arena_tracker` to calibrate, "
+                "then try again."
             )
 
-        self._M, self._M_inv = self._compute_perspective()
-        self._model           = YOLO(self._model_path)
+        self._M, self._M_inv          = self._compute_perspective()
+        self._model                   = YOLO(self._cfg.model_path)
         self._cam_mtx, self._cam_dist = self._load_camera_calibration()
+        self._cap                     = self._open_camera()
 
-        self._cap = self._open_camera()
-
-        for _ in range(5):
+        for _ in range(5):          # flush stale frames from buffer
             self._cap.read()
 
         self._running = True
         print(
-            f"[ArenaTracker] Ready – camera index {self._resolved_index}, "
-            f"arena {self._arena_w} × {self._arena_h} cm"
+            f"[ArenaTracker] Ready — camera index {self._resolved_index}, "
+            f"arena {self._cfg.width_cm} × {self._cfg.height_cm} cm"
         )
 
-    def scan(self) -> ScanResult:
+    def scan(self) -> ArenaState:
         if not self._running:
             raise RuntimeError("Call start() before scan().")
         with self._scan_lock:
@@ -216,44 +123,18 @@ class ArenaTracker:
     def __exit__(self, *_) -> None:
         self.stop()
 
-    def _open_camera(self) -> cv2.VideoCapture:
-        system = platform.system()
-        backend = {
-            "Linux":   cv2.CAP_V4L2,
-            "Darwin":  cv2.CAP_AVFOUNDATION,
-            "Windows": cv2.CAP_DSHOW,
-        }.get(system, cv2.CAP_ANY)
-
-        if self._camera_index == AUTO_DETECT:
-            idx = find_camera_index()
-        else:
-            idx = self._camera_index
-
-        self._resolved_index = idx
-        cap = cv2.VideoCapture(idx, backend)
-
-        if not cap.isOpened():
-            cap.release()
-            cap = cv2.VideoCapture(idx, cv2.CAP_ANY)
-
-        if not cap.isOpened():
-            raise RuntimeError(f"Cannot open camera at index {idx} on {system}.")
-
-        cap.set(cv2.CAP_PROP_FRAME_WIDTH,  1280)
-        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 720)
-        cap.set(cv2.CAP_PROP_FPS, 30)
-        cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))
-
-        return cap
+    # ------------------------------------------------------------------ #
+    #  Interactive calibration mode  (run once from terminal)             #
+    # ------------------------------------------------------------------ #
 
     def run(self) -> None:
-        model = YOLO(self._model_path)
+        model = YOLO(self._cfg.model_path)
         cap   = self._open_camera()
         if not cap.isOpened():
             print(f"[ERROR] Cannot open camera (index {self._resolved_index}).")
             return
 
-        os.makedirs(os.path.dirname(self._config_file) or ".", exist_ok=True)
+        os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
         if not self._load_calibration():
             if not self._setup_arena(cap):
@@ -262,11 +143,11 @@ class ArenaTracker:
 
         self._compute_perspective()
         cam_mtx, cam_dist = self._load_camera_calibration()
-        print(f"[ArenaTracker] Arena locked: {self._arena_w} × {self._arena_h} cm")
+        print(f"[ArenaTracker] Arena locked: {self._cfg.width_cm} × {self._cfg.height_cm} cm")
 
         win = "Live Preview"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(win, 1280, 720)
+        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
 
         show_visuals = False
         continuous   = False
@@ -291,7 +172,7 @@ class ArenaTracker:
                 if self._setup_arena(cap):
                     self._compute_perspective()
                     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(win, 1280, 720)
+                    cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
                 else:
                     break
 
@@ -303,10 +184,10 @@ class ArenaTracker:
 
                 if key == ord("s"):
                     print("\n--- SCAN ---")
-                    print(result.to_json())
+                    print(repr(result))
                     cv2.imwrite("image_recon/latest_scan.jpg", vis)
                     if show_visuals:
-                        w2 = "Result – any key to resume"
+                        w2 = "Result — any key to resume"
                         cv2.namedWindow(w2, cv2.WINDOW_NORMAL)
                         cv2.imshow(w2, vis)
                         cv2.waitKey(0)
@@ -328,6 +209,10 @@ class ArenaTracker:
         cap.release()
         cv2.destroyAllWindows()
 
+    # ------------------------------------------------------------------ #
+    #  Core processing                                                     #
+    # ------------------------------------------------------------------ #
+
     def _grab_frame(self) -> np.ndarray:
         ret, frame = self._cap.read()
         if not ret:
@@ -341,65 +226,19 @@ class ArenaTracker:
         frame: np.ndarray,
         *,
         model: Optional[YOLO] = None,
-    ) -> ScanResult:
+    ) -> ArenaState:
         model = model or self._model
-        M     = self._M
 
         mask = np.zeros(frame.shape[:2], dtype=np.uint8)
         if len(self._corners) == 4:
             cv2.fillPoly(mask, [np.array(self._corners, dtype=np.int32)], 255)
         masked = cv2.bitwise_and(frame, frame, mask=mask)
 
-        results    = model(masked, verbose=False, conf=self._conf)[0]
-        detections = self._parse_detections(results, model, M)
-        return self._build_result(detections, frame, M)
+        results    = model(masked, verbose=False, conf=self._cfg.detection_conf)[0]
+        detections = self._parse_detections(results, model)
+        return self._build_state(detections, frame)
 
-    def _get_aruco_robot(self, frame: np.ndarray, M: np.ndarray) -> Optional[RobotData]:
-        if self._aruco_detector:
-            corners, ids, _ = self._aruco_detector.detectMarkers(frame)
-        else:
-            corners, ids, _ = cv2.aruco.detectMarkers(
-                frame, self._aruco_dict, parameters=self._aruco_params
-            )
-
-        if ids is None or self._target_aruco_id not in ids:
-            return None
-
-        idx = np.where(ids == self._target_aruco_id)[0][0]
-        marker_corners_px = corners[idx][0]
-
-        corners_cm = []
-        for px, py in marker_corners_px:
-            cx, cy = self._to_cm(px, py, M)
-            corners_cm.append(Point(cx, cy))
-
-        tl, tr, br, bl = corners_cm
-
-        center_x = (tl.x + tr.x + br.x + bl.x) / 4.0
-        center_y = (tl.y + tr.y + br.y + bl.y) / 4.0
-
-        front_mid_x = (tl.x + tr.x) / 2.0
-        front_mid_y = (tl.y + tr.y) / 2.0
-
-        heading = round(
-            math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1
-        )
-
-        front_mid_pt = Point(front_mid_x, front_mid_y)
-        center_pt = Point(center_x, center_y)
-        visual_keypoints = [front_mid_pt, center_pt] + corners_cm
-
-        return RobotData(
-            label=f"ArucoRobot-{self._target_aruco_id}",
-            position=Point(round(center_x, 1), round(center_y, 1)),
-            heading=heading,
-            keypoints=visual_keypoints,
-            corners=corners_cm
-        )
-
-    def _parse_detections(
-        self, results, model: YOLO, M: np.ndarray
-    ) -> list[dict]:
+    def _parse_detections(self, results, model: YOLO) -> list[dict]:
         out = []
         if results.boxes is None:
             return out
@@ -408,98 +247,138 @@ class ArenaTracker:
             cls   = int(results.boxes[i].cls[0].item())
             label = model.names[cls].lower()
 
-            # COMPLETELY IGNORE YOLO ROBOT DETECTIONS
-            if "robot" in label:
+            if "robot" in label:        # robot comes strictly from ArUco
                 continue
 
             x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
             cx, cy = int((x1 + x2) / 2), int((y1 + y2) / 2)
-            ax, ay = self._to_cm(cx, cy, M)
+            ax, ay = self._to_cm(cx, cy)
 
-            if not (0 <= ax <= self._arena_w and 0 <= ay <= self._arena_h):
+            if not (0 <= ax <= self._cfg.width_cm and 0 <= ay <= self._cfg.height_cm):
                 continue
 
-            keypoints = self._extract_pose(results, i, M)
-
             out.append({
-                "label":      label,
-                "cx": cx,     "cy": cy,
-                "ax": ax,     "ay": ay,
+                "label": label,
+                "ax":    ax,
+                "ay":    ay,
                 "corners_cm": [
-                    self._to_cm(x1, y1, M),
-                    self._to_cm(x2, y1, M),
-                    self._to_cm(x2, y2, M),
-                    self._to_cm(x1, y2, M),
+                    self._to_cm(x1, y1),
+                    self._to_cm(x2, y1),
+                    self._to_cm(x2, y2),
+                    self._to_cm(x1, y2),
                 ],
-                "keypoints": keypoints,
             })
 
         return out
 
-    def _extract_pose(
-        self, results, index: int, M: np.ndarray
-    ) -> list[dict]:
-        # Heading logic removed. Now only extracts standard keypoints if they exist.
-        keypoints: list[dict] = []
-        if results.keypoints is None or len(results.keypoints.xy) <= index:
-            return keypoints
+    def _build_state(self, detections: list[dict], frame: np.ndarray) -> ArenaState:
+        state = ArenaState()
 
-        for kx, ky in results.keypoints.xy[index].cpu().numpy():
-            if kx > 0 and ky > 0:
-                kax, kay = self._to_cm(kx, ky, M)
-                keypoints.append({"x": kax, "y": kay, "px": int(kx), "py": int(ky)})
+        # ---- Robot (ArUco only) ----------------------------------------
+        state.robot = self._get_aruco_robot(frame)
 
-        return keypoints
-
-    def _build_result(self, detections: list[dict], frame: np.ndarray, M: np.ndarray) -> ScanResult:
-        # Robot is strictly derived from ArUco
-        robot: Optional[RobotData] = self._get_aruco_robot(frame, M)
-        
-        cross: Optional[CrossData] = None
-        balls: list[BallData]      = []
-
-        # YOLO detections strictly build Balls and Crosses
+        # ---- Balls + Cross (YOLO only) ---------------------------------
         for d in detections:
-            lbl     = d["label"].lower()
-            corners = [Point(x, y) for x, y in d["corners_cm"]]
-
+            lbl = d["label"]
             if "ball" in lbl:
-                balls.append(BallData(d["label"], Point(d["ax"], d["ay"])))
-            else:
-                cross = CrossData(label=d["label"], corners=corners)
+                state.balls.append(Ball(
+                    position=(d["ax"], d["ay"]),
+                    is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
+                ))
+            elif "cross" in lbl:
+                corners_cm = d["corners_cm"]
+                cx = sum(x for x, y in corners_cm) / 4
+                cy = sum(y for x, y in corners_cm) / 4
+                orientation = self._cross_orientation(corners_cm)
+                state.cross = Cross(position=(cx, cy), orientation=orientation)
 
-        return ScanResult(
-            arena_width_cm  = self._arena_w,
-            arena_height_cm = self._arena_h,
-            goal_a = [Point(*self._to_cm(*pt, self._M)) for pt in self._goal_a_pts],
-            goal_b = [Point(*self._to_cm(*pt, self._M)) for pt in self._goal_b_pts],
-            robot  = robot,
-            cross  = cross,
-            balls  = balls,
+        return state
+
+    # ------------------------------------------------------------------ #
+    #  ArUco robot detection                                               #
+    # ------------------------------------------------------------------ #
+
+    def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
+        if self._aruco_detector:
+            corners, ids, _ = self._aruco_detector.detectMarkers(frame)
+        else:
+            corners, ids, _ = cv2.aruco.detectMarkers(
+                frame, self._aruco_dict, parameters=self._aruco_params
+            )
+        print(f"[ArUco DEBUG] ids={ids}, M is None={self._M is None}")  # ← tilføj denne
+        # if ids is None or self._cfg.aruco_target_id not in ids:
+        #     return None
+        #
+        # idx              = np.where(ids == self._cfg.aruco_target_id)[0][0]
+        # marker_px        = corners[idx][0]
+
+        if ids is None:
+            return None
+
+        ids_flat = ids.flatten()  # [[0]] → [0]
+        if self._cfg.aruco_target_id not in ids_flat:
+            return None
+
+        idx = np.where(ids_flat == self._cfg.aruco_target_id)[0][0]
+        marker_px = corners[idx][0]
+
+        tl, tr, br, bl = [self._to_cm(px, py) for px, py in marker_px]
+
+        center_x = (tl[0] + tr[0] + br[0] + bl[0]) / 4.0
+        center_y = (tl[1] + tr[1] + br[1] + bl[1]) / 4.0
+
+        front_mid_x = (tl[0] + tr[0]) / 2.0
+        front_mid_y = (tl[1] + tr[1]) / 2.0
+
+        heading = round(
+            math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1
         )
 
-    def _to_cm(self, x: float, y: float, M: np.ndarray) -> tuple[float, float]:
+        return Robot(
+            position=(round(center_x, 1), round(center_y, 1)),
+            orientation=heading,
+        )
+
+    # ------------------------------------------------------------------ #
+    #  Geometry helpers                                                    #
+    # ------------------------------------------------------------------ #
+
+    def _to_cm(self, x: float, y: float) -> tuple[float, float]:
         pt = np.array([[[float(x), float(y)]]], dtype=np.float32)
-        tx, ty = cv2.perspectiveTransform(pt, M)[0][0]
+        tx, ty = cv2.perspectiveTransform(pt, self._M)[0][0]
         return round(float(tx), 1), round(float(ty), 1)
+
+    @staticmethod
+    def _cross_orientation(corners_cm: list[tuple[float, float]]) -> float:
+        """
+        Estimate cross orientation from its bounding-box corners.
+        Returns angle in degrees, clamped to [0, 90) due to 4-fold symmetry.
+        """
+        (x1, y1), (x2, _), _, (_, y2) = corners_cm
+        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
+        return angle % 90
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)
         dst = np.array([
-            [0,             0            ],
-            [self._arena_w, 0            ],
-            [self._arena_w, self._arena_h],
-            [0,             self._arena_h],
+            [0,                    0                   ],
+            [self._cfg.width_cm,   0                   ],
+            [self._cfg.width_cm,   self._cfg.height_cm ],
+            [0,                    self._cfg.height_cm ],
         ], dtype=np.float32)
         self._M     = cv2.getPerspectiveTransform(src, dst)
         self._M_inv = cv2.getPerspectiveTransform(dst, src)
         return self._M, self._M_inv
 
+    # ------------------------------------------------------------------ #
+    #  Calibration — load / save / interactive setup                      #
+    # ------------------------------------------------------------------ #
+
     def _load_calibration(self) -> bool:
-        if not os.path.exists(self._config_file):
+        if not os.path.exists(self._cfg.arena_config_file):
             return False
         try:
-            with open(self._config_file) as f:
+            with open(self._cfg.arena_config_file) as f:
                 data = json.load(f)
             self._corners    = [tuple(p) for p in data.get("corners",    [])]
             self._goal_a_pts = [tuple(p) for p in data.get("goal_a_pts", [])]
@@ -512,7 +391,7 @@ class ArenaTracker:
         return False
 
     def _save_calibration(self) -> None:
-        with open(self._config_file, "w") as f:
+        with open(self._cfg.arena_config_file, "w") as f:
             json.dump(
                 {
                     "corners":    self._corners,
@@ -523,14 +402,61 @@ class ArenaTracker:
             )
         print("[ArenaTracker] Calibration saved.")
 
-    def _load_camera_calibration(
-        self,
-    ) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
-        if os.path.exists(self._calib_file):
-            with np.load(self._calib_file) as data:
+    def _load_camera_calibration(self) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
+        if os.path.exists(self._cfg.camera_calib_file):
+            with np.load(self._cfg.camera_calib_file) as data:
                 print("[ArenaTracker] Lens calibration loaded.")
                 return data["mtx"], data["dist"]
         return None, None
+
+    def _validate_corners(self) -> bool:
+        """Warn if the clicked corners have a suspiciously wrong aspect ratio."""
+        if len(self._corners) != 4:
+            return False
+        tl, tr, br, bl = self._corners
+        width  = (math.dist(tl, tr) + math.dist(bl, br)) / 2
+        height = (math.dist(tl, bl) + math.dist(tr, br)) / 2
+        measured = width / height
+        expected = self._cfg.width_cm / self._cfg.height_cm
+        if abs(measured - expected) > 0.15:
+            print(
+                f"[WARNING] Hjørner ser skæve ud! "
+                f"Målt ratio: {measured:.2f}, forventet: {expected:.2f}"
+            )
+            return False
+        return True
+
+    # ------------------------------------------------------------------ #
+    #  Camera                                                              #
+    # ------------------------------------------------------------------ #
+
+    def _open_camera(self) -> cv2.VideoCapture:
+        system = platform.system()
+        backend = {
+            "Linux":   cv2.CAP_V4L2,
+            "Darwin":  cv2.CAP_AVFOUNDATION,
+            "Windows": cv2.CAP_DSHOW,
+        }.get(system, cv2.CAP_ANY)
+
+        idx = find_camera_index() if self._cfg.camera_index == -1 else self._cfg.camera_index
+        self._resolved_index = idx
+
+        cap = cv2.VideoCapture(idx, backend)
+        if not cap.isOpened():
+            cap.release()
+            cap = cv2.VideoCapture(idx, cv2.CAP_ANY)
+        if not cap.isOpened():
+            raise RuntimeError(f"Cannot open camera at index {idx} on {system}.")
+
+        cap.set(cv2.CAP_PROP_FRAME_WIDTH,  self._cfg.frame_width)
+        cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._cfg.frame_height)
+        cap.set(cv2.CAP_PROP_FPS,          self._cfg.frame_fps)
+        cap.set(cv2.CAP_PROP_FOURCC,       cv2.VideoWriter_fourcc(*"MJPG"))
+        return cap
+
+    # ------------------------------------------------------------------ #
+    #  Interactive arena setup                                             #
+    # ------------------------------------------------------------------ #
 
     def _setup_arena(self, cap: cv2.VideoCapture) -> bool:
         self._corners.clear()
@@ -544,14 +470,14 @@ class ArenaTracker:
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(win, 1280, 720)
+        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
         cv2.setMouseCallback(win, self._handle_mouse)
 
         _STEPS = {
-            "CORNERS": lambda: (f"1. Click 4 corners (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
-            "GOAL_A":  lambda: (f"2. Goal A – TL then BR: {len(self._goal_a_pts)}/2",        (255, 150, 0)),
-            "GOAL_B":  lambda: (f"3. Goal B – TL then BR: {len(self._goal_b_pts)}/2",        (0, 0, 255)),
-            "DONE":    lambda: ("Done! ENTER to save | R to reset",                            (0, 255, 0)),
+            "CORNERS": lambda: (f"1. Klik 4 hjørner (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
+            "GOAL_A":  lambda: (f"2. Mål A — TL så BR: {len(self._goal_a_pts)}/2",           (255, 150, 0)),
+            "GOAL_B":  lambda: (f"3. Mål B — TL så BR: {len(self._goal_b_pts)}/2",           (0, 0, 255)),
+            "DONE":    lambda: ("Færdig! ENTER for at gemme | R for at nulstille",             (0, 255, 0)),
         }
 
         while True:
@@ -559,7 +485,6 @@ class ArenaTracker:
             if not ret:
                 continue
             disp = frame.copy()
-
             msg, color = _STEPS[self._setup_step]()
             self._draw_text_with_outline(disp, msg, (20, 40), 0.7, color, 2)
 
@@ -570,8 +495,8 @@ class ArenaTracker:
                     disp, [np.array(self._corners, dtype=np.int32)],
                     isClosed=(len(self._corners) == 4), color=(0, 255, 0), thickness=2,
                 )
-            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Goal A")
-            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Goal B")
+            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Mål A")
+            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Mål B")
 
             cv2.imshow(win, disp)
             key = cv2.waitKey(20) & 0xFF
@@ -582,6 +507,7 @@ class ArenaTracker:
                 self._goal_b_pts.clear()
                 self._setup_step = "CORNERS"
             elif key == 13 and self._setup_step == "DONE":
+                self._validate_corners()
                 self._save_calibration()
                 break
             elif key == ord("q"):
@@ -607,33 +533,38 @@ class ArenaTracker:
             if len(self._goal_b_pts) == 2:
                 self._setup_step = "DONE"
 
+    # ------------------------------------------------------------------ #
+    #  Debug rendering                                                     #
+    # ------------------------------------------------------------------ #
+
     def _render_debug_frame(
         self,
         frame: np.ndarray,
-        result: ScanResult,
+        state: ArenaState,
         model: YOLO,
     ) -> np.ndarray:
         mask = np.zeros(frame.shape[:2], dtype=np.uint8)
         if len(self._corners) == 4:
             cv2.fillPoly(mask, [np.array(self._corners, dtype=np.int32)], 255)
-        yolo_res = model(cv2.bitwise_and(frame, frame, mask=mask), verbose=False, conf=self._conf)[0]
+        yolo_res = model(
+            cv2.bitwise_and(frame, frame, mask=mask),
+            verbose=False,
+            conf=self._cfg.detection_conf,
+        )[0]
         vis = yolo_res.plot()
         vis = self._draw_arena_overlay(vis, self._M_inv)
 
-        if result.robot and result.robot.heading is not None:
-            kps = result.robot.keypoints
-            if len(kps) > max(self._front_kp, self._back_kp):
-                def cm_to_px(kp: Point) -> tuple[int, int]:
-                    pt = np.array([[[kp.x, kp.y]]], dtype=np.float32)
-                    ox, oy = cv2.perspectiveTransform(pt, self._M_inv)[0][0]
-                    return int(ox), int(oy)
+        # Draw robot heading arrow if available
+        if state.robot is not None:
+            def cm_to_px(pos: tuple[float, float]) -> tuple[int, int]:
+                pt = np.array([[[pos[0], pos[1]]]], dtype=np.float32)
+                ox, oy = cv2.perspectiveTransform(pt, self._M_inv)[0][0]
+                return int(ox), int(oy)
 
-                cv2.arrowedLine(
-                    vis,
-                    cm_to_px(kps[self._back_kp]),
-                    cm_to_px(kps[self._front_kp]),
-                    (0, 255, 255), 3, tipLength=0.3,
-                )
+            hv   = state.robot.heading_vector()
+            base = state.robot.position
+            tip  = (base[0] + hv[0] * 15, base[1] + hv[1] * 15)
+            cv2.arrowedLine(vis, cm_to_px(base), cm_to_px(tip), (0, 255, 255), 3, tipLength=0.3)
 
         return vis
 
@@ -643,14 +574,14 @@ class ArenaTracker:
                 frame, [np.array(self._corners, dtype=np.int32)],
                 isClosed=True, color=(0, 200, 255), thickness=3,
             )
-        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Goal A")
-        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Goal B")
+        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Mål A")
+        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Mål B")
         return frame
 
     def _draw_goal_on_frame(
         self,
         frame: np.ndarray,
-        pts: list[tuple[int, int]],
+        pts:   list[tuple[int, int]],
         color: tuple[int, int, int],
         label: str,
     ) -> None:
@@ -662,15 +593,16 @@ class ArenaTracker:
 
     @staticmethod
     def _draw_text_with_outline(
-        img: np.ndarray,
-        text: str,
-        pos: tuple[int, int],
+        img:        np.ndarray,
+        text:       str,
+        pos:        tuple[int, int],
         font_scale: float,
-        color: tuple[int, int, int],
-        thickness: int,
+        color:      tuple[int, int, int],
+        thickness:  int,
     ) -> None:
         cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, (0, 0, 0), thickness + 3)
         cv2.putText(img, text, pos, cv2.FONT_HERSHEY_SIMPLEX, font_scale, color,     thickness)
+
 
 if __name__ == "__main__":
     ArenaTracker().run()

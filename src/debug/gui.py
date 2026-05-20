@@ -20,7 +20,7 @@ from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
 from src.model.robot import Robot
-from src.model.state import ArenaState
+from src.model.arena_state import ArenaState
 from math import floor
 
 # ---------------------------------------------------------------------------
@@ -250,10 +250,11 @@ def draw_panel(surf, font_sm, font_md, font_lg,
         y += k.get_height() + 4
 
     # Robot
-    heading("ROBOT")
-    row("Position",    (floor(robot.position[0]), floor(robot.position[1])))
-    row("Orientation", f"{robot.orientation:.1f}°")
-    y += 8
+    if robot is not None:
+        heading("ROBOT")
+        row("Position",    (floor(robot.position[0]), floor(robot.position[1])))
+        row("Orientation", f"{robot.orientation:.1f}°")
+        y += 8
 
     # Cross
     if cross is not None:
@@ -346,11 +347,6 @@ def run_gui(state: ArenaState):
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
-
-        # DEBUG target point for robot.
-        target_point = (state.robot.position[0] * FIELD_W / 167, (FIELD_H / 2) * FIELD_H / 121.5)
-
-        pygame.draw.circle(screen, (255, 0, 0), target_point, 3)            
 
         # Title
         title = font_lg.render("Controller GUI", True, C_LABEL)
