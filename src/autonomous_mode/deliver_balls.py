@@ -2,10 +2,10 @@ from protocol import CommandName, Arguments, Instruction, InstructionType, Messa
 from src.debug.gui import FIELD_H
 from src.model.state import FieldState
 from src.state.state_manager import _get_tracker, update_state
-from src.lib.connection import connect 
+from src.lib.connection import RobotConnection
+from logging import Logger
 
-
-def deliver_balls(state: FieldState, socket, logger):
+def deliver_balls(state: FieldState, connection: RobotConnection, logger: Logger):
     tracker = _get_tracker()
     result = tracker.scan()
     # Goal point is middle point of goal a
@@ -31,16 +31,14 @@ def deliver_balls(state: FieldState, socket, logger):
                 type=InstructionType.COMMAND,
                 args=Arguments(seconds=1,lspeed=10,rspeed=-10),
             )
-            s = serialize_message(Message(instruction=inst))
-            socket.sendall(s.encode("utf-8"))
+            connection.send_message(Message(instruction=inst))
         else:
             inst = Instruction(
                 name=CommandName.TANK_LEFT,
                 type=InstructionType.COMMAND,
                 args=Arguments(seconds=1,lspeed=-10,rspeed=10),
             )
-            s = serialize_message(Message(instruction=inst))
-            socket.sendall(s.encode("utf-8"))
+            connection.send_message(Message(instruction=inst))
         # Update state for next turn
         update_state(state, logger)
 
@@ -52,9 +50,7 @@ def deliver_balls(state: FieldState, socket, logger):
         type=InstructionType.COMMAND,
         args=Arguments(seconds=0.1,speed=50),
         )
-        s = serialize_message(Message(instruction=inst))
-        socket.sendall(s.encode("utf-8"))
-        print(s)
+        connection.send_message(Message(instruction=inst))
         # Update state for next turn
         update_state(state, logger)
     
@@ -68,16 +64,14 @@ def deliver_balls(state: FieldState, socket, logger):
                 type=InstructionType.COMMAND,
                 args=Arguments(seconds=1,lspeed=-10,rspeed=10),
             )
-            s = serialize_message(Message(instruction=inst))
-            socket.sendall(s.encode("utf-8"))
+            connection.send_message(Message(instruction=inst))
         else:
             inst = Instruction(
                 name=CommandName.TANK_LEFT,
                 type=InstructionType.COMMAND,
                 args=Arguments(seconds=1,lspeed=10,rspeed=-10),
             )
-            s = serialize_message(Message(instruction=inst))
-            socket.sendall(s.encode("utf-8"))
+            connection.send_message(Message(instruction=inst))
         # Update state for next turn
         update_state(state, logger)
 
@@ -89,9 +83,7 @@ def deliver_balls(state: FieldState, socket, logger):
         type=InstructionType.COMMAND,
         args=Arguments(seconds=1,speed=50),
         )
-        s = serialize_message(Message(instruction=inst))
-        socket.sendall(s.encode("utf-8"))
-        print(s)
+        connection.send_message(Message(instruction=inst))
         # Update state for next turn
         update_state(state, logger)
 
@@ -101,6 +93,4 @@ def deliver_balls(state: FieldState, socket, logger):
         type=InstructionType.SEQUENCE,
         args=Arguments(speed=100),
     )
-    s = serialize_message(Message(instruction=inst))
-    socket.sendall(s.encode("utf-8"))
-    print(s)
+    connection.send_message(Message(instruction=inst))

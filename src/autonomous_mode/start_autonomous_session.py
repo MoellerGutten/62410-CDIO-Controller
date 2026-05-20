@@ -1,19 +1,20 @@
 from src.autonomous_mode.deliver_balls import deliver_balls
 from src.state.state_manager import update_state
-from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
-from src.lib.connection import connect 
+from protocol import CommandName, Arguments, Instruction, InstructionType, Message
+from src.lib.connection import RobotConnection 
 from src.debug.gui import FIELD_H
+from logging import Logger
 
-def start_autonomous_session(state, logger):
-    socket = connect()
+def start_autonomous_session(state, logger: Logger):
+    connection = RobotConnection()
 
     inst = Instruction(
         name=CommandName.BALL_IN,
         type=InstructionType.COMMAND,
         args=Arguments(seconds=500, speed=100),
     )
-    msg = Message(instruction=inst)
-    socket.sendall(serialize_message(msg).encode("utf-8"))
+    message = Message(instruction=inst)
+    connection.send_message(message)
 
     # Get an initial snapshot before the loop
     update_state(state, logger)
@@ -33,7 +34,7 @@ def start_autonomous_session(state, logger):
                     break
             # If no balls are left, drive to goal and bust
             if not has_balls:
-                deliver_balls(state, socket, logger)
+                deliver_balls(state, connection, logger)
 
         if ball is None:
             update_state(state, logger)
@@ -47,16 +48,14 @@ def start_autonomous_session(state, logger):
                     type=InstructionType.COMMAND,
                     args=Arguments(seconds=1,lspeed=10,rspeed=-10),
                 )
-                s = serialize_message(Message(instruction=inst))
-                socket.sendall(s.encode("utf-8"))
+                connection.send_message(Message(instruction=inst))
             else:
                 inst = Instruction(
                     name=CommandName.TANK_LEFT,
                     type=InstructionType.COMMAND,
                     args=Arguments(seconds=1,lspeed=-10,rspeed=10),
                 )
-                s = serialize_message(Message(instruction=inst))
-                socket.sendall(s.encode("utf-8"))
+                connection.send_message(Message(instruction=inst))
             update_state(state, logger)
             ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
 
@@ -66,7 +65,6 @@ def start_autonomous_session(state, logger):
             type=InstructionType.COMMAND,
             args=Arguments(seconds=1,speed=50),
         )
-        s = serialize_message(Message(instruction=inst))
-        socket.sendall(s.encode("utf-8"))
+        connection.send_message(Message(instruction=inst))
         update_state(state, logger)
         ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan

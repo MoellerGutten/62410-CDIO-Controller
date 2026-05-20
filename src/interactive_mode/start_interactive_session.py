@@ -1,9 +1,8 @@
-from src.lib.connection import connect
+from src.lib.connection import RobotConnection
 from src.interactive_mode.interactice_command_util import parse_input, build_message_from_short_command
-from protocol import serialize_message
 
 def start_interactive_session():
-    sock = connect()
+    connection = RobotConnection()
     while True:
         inp = input("Robot instruction > ").strip()
         if inp.lower() == "exit":
@@ -12,8 +11,6 @@ def start_interactive_session():
             continue
         name, kwargs = parse_input(inp)
         msg = build_message_from_short_command(name, kwargs)
-        serialized = serialize_message(msg) + "\n"
-        sock.sendall(serialized.encode("utf-8"))
-        data = sock.recv(1024)
-        print("Robot response:", data.decode("utf-8").strip())
+        response = connection.send_message(msg)
+        print("Robot response:", response)
     print("\nClosing connection.")
