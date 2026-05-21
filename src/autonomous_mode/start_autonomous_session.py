@@ -55,7 +55,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             update_state(state, logger)
             continue
 
-        while ball is not None and not state.robot.is_facing_point(ball.position, 3.0):
+        while ball is not None and state.robot is not None and not state.robot.is_facing_point(ball.position, 3.0):
             angle_to_point = state.robot.angle_to_point(ball.position)
             turn_ms = max(100, min(300, int(abs(angle_to_point) * 10))) / 1000
             turn_speed = max(10, min(20, int(abs(angle_to_point) * 0.4)))
