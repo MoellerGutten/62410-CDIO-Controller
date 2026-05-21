@@ -57,20 +57,20 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         while ball is not None and state.robot is not None and not state.robot.is_facing_point(ball.position, 3.0):
             angle_to_point = state.robot.angle_to_point(ball.position)
-            turn_ms = max(100, min(300, int(abs(angle_to_point) * 10))) / 1000
+            turn_ms = max(100, min(300, int(abs(angle_to_point) * 10)))
             turn_speed = max(10, min(20, int(abs(angle_to_point) * 0.4)))
 
             if angle_to_point > 0:
                 inst = Instruction(
                     name=CommandName.TANK_RIGHT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=turn_ms, lspeed=turn_speed, rspeed=-turn_speed),
+                    args=Arguments(seconds=turn_ms / 1000, lspeed=turn_speed, rspeed=-turn_speed),
                 )
             else:
                 inst = Instruction(
                     name=CommandName.TANK_LEFT,
                     type=InstructionType.COMMAND,
-                    args=Arguments(seconds=turn_ms, lspeed=-turn_speed, rspeed=turn_speed),
+                    args=Arguments(seconds=turn_ms / 1000, lspeed=-turn_speed, rspeed=turn_speed),
                 )
 
             connection.send_message(Message(instruction=inst))
@@ -82,7 +82,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         if ball is not None:
             distance = state.robot.distance_to_point(ball.position)
-            fwd_ms = max(100, min(500, int(distance * 5))) / 1000
+            fwd_ms = max(100, min(500, int(distance * 5)))
             fwd_speed = max(10, min(50, int(distance)))
             print(f"distance: {distance}, fwd_speed: {fwd_speed}, sleep for: {fwd_ms / 1000} seconds")
             inst = Instruction(
