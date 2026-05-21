@@ -83,7 +83,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
         if ball is not None:
             distance = state.robot.distance_to_point(ball.position)
             fwd_ms = max(100, min(500, int(distance * 5)))
-            fwd_speed = max(10, min(50, int(distance)))
+            fwd_speed = max(10, min(50, int(distance) * 0.75))
             print(f"distance: {distance}, fwd_speed: {fwd_speed}, sleep for: {fwd_ms / 1000} seconds")
             inst = Instruction(
                 name=CommandName.FORWARD,
