@@ -84,12 +84,13 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             distance = state.robot.distance_to_point(ball.position)
             fwd_ms = max(0.5, min(2, int(distance * 0.2)))
             fwd_speed = max(10, min(50, int(distance)))
+            print(f"distance: {distance}, fwd_speed: {fwd_speed}")
             inst = Instruction(
                 name=CommandName.FORWARD,
                 type=InstructionType.COMMAND,
                 args=Arguments(seconds=fwd_ms,speed=fwd_speed),
             )
             connection.send_message(Message(instruction=inst))
-            sleep(fwd_ms + 0.05)
+            sleep(fwd_ms / 1000 + 0.05)
         update_state(state, logger)
         ball = state.balls[0] if len(state.balls) > 0 else None   # refresh target after each scan
