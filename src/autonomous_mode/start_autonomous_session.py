@@ -88,7 +88,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             inst = Instruction(
                 name=CommandName.FORWARD,
                 type=InstructionType.COMMAND,
-                args=Arguments(seconds=fwd_ms,speed=fwd_speed),
+                args=Arguments(seconds=fwd_ms / 1000,speed=fwd_speed),
             )
             connection.send_message(Message(instruction=inst))
             sleep(fwd_ms / 1000 + 0.05)
