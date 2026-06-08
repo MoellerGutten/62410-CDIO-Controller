@@ -1,18 +1,3 @@
-"""
-demo.py — Pygame field renderer for robot table-tennis-ball collector.
-
-Renders:
-  • Field with green surface and grid
-  • Borders inferred from 4 corners (left = big goal gap ~1/4 width,
-    right = small goal gap ~1/8 width)
-  • Corner markers
-  • Cross obstacle (with orientation)
-  • Balls (normal = white, VIP = orange-gold)
-  • Robot (with orientation arrow)
-
-Run:  python demo.py
-"""
-
 import math
 import sys
 import pygame
@@ -213,6 +198,10 @@ def draw_robot(surf, robot: Robot, corners):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
+def draw_center_line_debug_point(surf, robot: Robot):
+    target_point = (robot.position[0] * FIELD_W / 167, (FIELD_H / 2))
+    pygame.draw.circle(surf, (255, 0, 0), target_point, 3)       
+
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
     x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
@@ -277,29 +266,6 @@ def draw_panel(surf, font_sm, font_md, font_lg,
         row(lbl, (floor(c.position[0]), floor(c.position[1])))
     y += 16
 
-    # Goals info
-    heading("GOALS")
-    #row("Left (big)")
-    #row("Right (small)")
-    y += 16
-
-    # Legend
-    heading("LEGEND")
-    items = [
-        (C_CORNER,     "Corner"),
-        (C_BALL,       "Ball"),
-        (C_BALL_VIP,   "VIP Ball"),
-        (C_ROBOT_BODY, "Robot"),
-        (C_CROSS,      "Cross"),
-        (C_GOAL_BIG,   "Big Goal"),
-        (C_GOAL_SMALL, "Small Goal"),
-    ]
-    for colour, label in items:
-        pygame.draw.circle(surf, colour, (px + 6, y + 7), 5)
-        txt = font_sm.render(label, True, C_LABEL)
-        surf.blit(txt, (px + 16, y))
-        y += txt.get_height() + 4
-
 
 # ---------------------------------------------------------------------------
 # Main
@@ -308,7 +274,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 def run_gui(state: ArenaState):
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
-    pygame.display.set_caption("Robot Field — Demo Renderer")
+    pygame.display.set_caption("")
     clock  = pygame.time.Clock()
 
     font_sm = pygame.font.SysFont("monospace", 13)
@@ -347,14 +313,7 @@ def run_gui(state: ArenaState):
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
-
-        # Title
-        title = font_lg.render("Controller GUI", True, C_LABEL)
-        screen.blit(title, (FIELD_X0, 14))
-
-        # Controls hint
-        hint = font_sm.render("Closing this window will exit the controller", True, (80, 95, 85))
-        screen.blit(hint, (FIELD_X0, WINDOW_H - 22))
+        draw_center_line_debug_point(screen, robot)
 
         pygame.display.flip()
 
