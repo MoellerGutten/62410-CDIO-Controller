@@ -4,15 +4,15 @@ from src.model.arena_state import ArenaState
 from src.state.state_manager import _get_tracker, update_state
 from src.lib.connection import RobotConnection
 from logging import Logger
+import src.state.arena_config as conf
 
 def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
     tracker = _get_tracker()
     result = tracker.scan()
     arena_height = 121.5
+    arena_width = 167
     # Goal point is middle point of goal a
-    goalx = sum(p.x for p in result.goal_a) / len(result.goal_a) if result.goal_a else None
-    goaly = sum(p.y for p in result.goal_a) / len(result.goal_a) if result.goal_a else None
-    goal = [goalx, goaly]
+    goal = [167, 121.5/2]
     print("Target goal coords: " + str(goal))
     print("Intermediate target point (robot.x, FIELD_H/2): " + str([state.robot.position[0], arena_height / 2]))
     # TODO: add support for shortest angle (driving backward (ask Merian))
