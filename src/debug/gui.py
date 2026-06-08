@@ -7,7 +7,7 @@ from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
-
+from src.state.arena_config import ArenaConfig
 # ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
@@ -205,8 +205,8 @@ def draw_center_line_debug_point(surf, robot: Robot, corners):
 
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
-    x = int(lerp(tl[0], tr[0], pos[0] / FIELD_W))
-    y = int(lerp(bl[1], tl[1], pos[1] / FIELD_H))  # y flipped: 0 = bottom
+    x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
+    y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom
     return (x, y)
 
 # ---------------------------------------------------------------------------
@@ -240,10 +240,11 @@ def draw_panel(surf, font_sm, font_md, font_lg,
         y += k.get_height() + 4
 
     # Robot
-    heading("ROBOT")
-    row("Position",    (floor(robot.position[0]), floor(robot.position[1])))
-    row("Orientation", f"{robot.orientation:.1f}°")
-    y += 8
+    if robot is not None:
+        heading("ROBOT")
+        row("Position",    (floor(robot.position[0]), floor(robot.position[1])))
+        row("Orientation", f"{robot.orientation:.1f}°")
+        y += 8
 
     # Cross
     if cross is not None:
