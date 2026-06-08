@@ -305,7 +305,7 @@ class ArenaTracker:
                 frame, self._aruco_dict, parameters=self._aruco_params
             )
 
-        if ids is not None:
+        if ids is None:
             return None
 
         ids_flat = ids.flatten()
