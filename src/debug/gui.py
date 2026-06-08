@@ -198,6 +198,10 @@ def draw_robot(surf, robot: Robot, corners):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
+def draw_center_line_debug_point(surf, robot: Robot):
+    target_point = (robot.position[0] * FIELD_W / 167, (FIELD_H / 2) * FIELD_H / 121.5)
+    pygame.draw.circle(surf, (255, 0, 0), target_point, 3)       
+
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
     x = int(lerp(tl[0], tr[0], pos[0] / FIELD_W))
@@ -308,11 +312,7 @@ def run_gui(state: ArenaState):
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
-
-        # DEBUG target point for robot.
-        target_point = (state.robot.position[0] * FIELD_W / 167, (FIELD_H / 2) * FIELD_H / 121.5)
-
-        pygame.draw.circle(screen, (255, 0, 0), target_point, 3)            
+        draw_center_line_debug_point(screen, robot)
 
         pygame.display.flip()
 
