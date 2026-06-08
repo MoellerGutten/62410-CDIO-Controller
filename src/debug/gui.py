@@ -314,7 +314,7 @@ def run_gui(state: ArenaState):
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
-        draw_center_line_debug_point(screen, robot)
+        draw_center_line_debug_point(screen, robot, corners)
 
         pygame.display.flip()
 

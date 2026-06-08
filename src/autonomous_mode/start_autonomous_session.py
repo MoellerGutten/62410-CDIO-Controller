@@ -35,15 +35,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
                     break
             # If no balls are left, drive to goal and bust
             if not has_balls:
-                # deliver_balls(state, connection, logger)
-                
-                # for now just stop instead of attempting delivery
-                inst = Instruction(
-                    name=CommandName.PANIC,
-                    type=InstructionType.COMMAND,
-                    args=Arguments(),
-                )
-                connection.send_message(Message(instruction=inst))
+                deliver_balls(state, connection, logger)
                 break
 
         if ball is None:

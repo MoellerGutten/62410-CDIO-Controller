@@ -51,7 +51,6 @@ class ArenaTracker:
         self._goal_a_pts: list[tuple[int, int]] = []
         self._goal_b_pts: list[tuple[int, int]] = []
         self._setup_step: str = "CORNERS"
-        self._last_robot: Optional[Robot] = None
 
         self._model:          Optional[YOLO]             = None
         self._cap:            Optional[cv2.VideoCapture] = None
@@ -307,11 +306,11 @@ class ArenaTracker:
             )
 
         if ids is None:
-            return self._last_robot  # ← brug sidste kendte position
+            return None
 
         ids_flat = ids.flatten()
         if self._cfg.aruco_target_id not in ids_flat:
-            return self._last_robot  # ← samme her
+            return None
 
         idx = np.where(ids_flat == self._cfg.aruco_target_id)[0][0]
         marker_px = corners[idx][0]
@@ -323,15 +322,9 @@ class ArenaTracker:
         front_mid_x = (tl[0] + tr[0]) / 2.0
         front_mid_y = (tl[1] + tr[1]) / 2.0
 
-        heading = round(
-            math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1
-        )
+        heading = round(math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1)
 
-        self._last_robot = Robot(
-            position=(round(center_x, 1), round(center_y, 1)),
-            orientation=heading,
-        )
-        return self._last_robot
+        return Robot(position=(round(center_x, 1), round(center_y, 1)), orientation=heading)
 
     # ------------------------------------------------------------------ #
     #  Geometry helpers                                                    #
