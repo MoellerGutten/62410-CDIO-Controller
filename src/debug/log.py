@@ -1,6 +1,6 @@
 from logging import Logger, getLogger, DEBUG, Formatter, FileHandler
 from datetime import datetime
-from src.model.state import ArenaState
+from src.model.arena_state import ArenaState
 from os import makedirs
 
 def setup_state_logger() -> Logger:
