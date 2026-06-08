@@ -199,7 +199,7 @@ def draw_robot(surf, robot: Robot, corners):
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
 def draw_center_line_debug_point(surf, robot: Robot):
-    target_point = (robot.position[0] * FIELD_W / 167, (FIELD_H / 2) * FIELD_H / 121.5)
+    target_point = (robot.position[0] * FIELD_W / 167, (FIELD_H / 2))
     pygame.draw.circle(surf, (255, 0, 0), target_point, 3)       
 
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
