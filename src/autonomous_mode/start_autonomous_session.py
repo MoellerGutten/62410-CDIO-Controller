@@ -75,8 +75,8 @@ def _turn_toward_ball(state: ArenaState, connection: RobotConnection, logger: Lo
             break
 
         angle = state.robot.angle_to_point(ball.position)
-        turn_ms = max(100, min(300, int(abs(angle) * 10)))
-        turn_speed = max(10, min(20, int(abs(angle) * 0.4)))
+        turn_ms = max(100, min(300, int(abs(angle) * 10))) * 2
+        turn_speed = max(10, min(20, int(abs(angle) * 0.4))) * 2
 
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
@@ -100,8 +100,8 @@ def _drive_toward_ball(state: ArenaState, connection: RobotConnection, logger: L
 
     ball = state.balls[0]
     distance = state.robot.distance_to_point(ball.position)
-    fwd_ms = max(100, min(500, int(distance * 5)))
-    fwd_speed = max(10, min(50, int(distance * 0.75)))
+    fwd_ms = max(100, min(500, int(distance * 5))) * 2
+    fwd_speed = max(10, min(50, int(distance * 0.75))) * 2
 
     print(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
