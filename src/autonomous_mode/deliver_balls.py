@@ -31,10 +31,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
         
         drive_to_center(state, connection, logger, arena_height, arena_width)
 
-        #print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
-        #_turn_toward_point(state, connection, logger, goal)
-        #print("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
-        #_drive_toward_point(state, connection, logger, goal)
+        drive_to_goal(state, connection, logger, arena_height, arena_width)
 
         print("EJACULATING")
         _start_ejaculation(connection)
@@ -48,12 +45,10 @@ def drive_to_center(state, connection, logger, arena_height, arena_width):
             print("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(center_line_point) < 5):
+        if (robot.distance_to_point(center_line_point) < 15):
             break
 
         # Goal point is middle point of goal a
-        goal = [arena_width, arena_height/2]
-        print("Target goal coords: " + str(goal))
         print("Intermediate target point (robot.x, FIELD_H/2): " + str(center_line_point))
 
         print("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
@@ -62,3 +57,22 @@ def drive_to_center(state, connection, logger, arena_height, arena_width):
         print("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
         _drive_toward_point(state, connection, logger, center_line_point)
         
+
+def drive_to_goal(state, connection, logger, arena_height, arena_width):
+    goal = [arena_width, arena_height/2]
+    while True:
+        robot = _await_robot(state, connection, logger)
+        if robot is None:
+            print("Robot not detected after nudge — retrying main loop")
+            continue
+
+        if (robot.distance_to_point(goal) < 10):
+            break
+
+        # Goal point is middle point of goal a
+        print("Target goal coords: " + str(goal))
+
+        print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        _turn_toward_point(state, connection, logger, goal)
+        print("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        _drive_toward_point(state, connection, logger, goal)

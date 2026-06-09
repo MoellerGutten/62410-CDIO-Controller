@@ -19,22 +19,26 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             print("Robot not detected after nudge — retrying main loop")
             continue
 
-        update_state(state, logger)
-
+        print("Starting")
         if not state.balls:
             if _test_for_ball_presence(state, logger) > 0: continue
             deliver_balls(state, connection, logger)
             break
 
+        print("Balls")
+
         ball_point = state.balls[0].position
         _turn_toward_point(state, connection, logger, ball_point)
+
+        print("Turned")
 
         if state.robot is None: continue
         if state.robot.distance_to_point(ball_point) < 10:
             _collect_ball(state, connection, logger, ball_point)
-        else:   
+        else:
+            print("drive")   
             _drive_toward_point(state, connection, logger, ball_point)
 
-        update_state(state, logger)
+        print("\n")  
 
 
