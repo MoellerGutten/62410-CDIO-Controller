@@ -35,14 +35,14 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
 
         print("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
         _turn_toward_point(state, connection, logger, center_line_point)
+
         print("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
         _drive_toward_point(state, connection, logger, center_line_point)
 
-        print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
-        _turn_toward_point(state, connection, logger, goal)
-        print("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
-        _drive_toward_point(state, connection, logger, goal)
+        #print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        #_turn_toward_point(state, connection, logger, goal)
+        #print("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        #_drive_toward_point(state, connection, logger, goal)
 
         print("EJACULATING")
         _start_ejaculation(connection)
-        break
