@@ -37,7 +37,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, logger: L
     while True:
         if state.robot is None or point is None:
             break
-        if state.robot.is_facing_point(point, tolerance_deg=3.0):
+        if state.robot.is_facing_point(point, tolerance_deg=6.0):
             break
 
         angle = state.robot.angle_to_point(point)
