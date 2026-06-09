@@ -1,6 +1,5 @@
 from numpy import median
 
-from src.autonomous_mode.deliver_balls import deliver_balls
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
