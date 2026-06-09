@@ -1,5 +1,5 @@
 from src.state.state_manager import update_state
-from protocol import CommandName, Arguments, Instruction, InstructionType, Message
+from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
@@ -17,7 +17,7 @@ def _start_ball_intake(connection: RobotConnection) -> None:
 
 def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
-        name=CommandName.EJECT,
+        name=SequenceName.EJECT,
         type=InstructionType.SEQUENCE,
         args=Arguments(speed=100),
     )
