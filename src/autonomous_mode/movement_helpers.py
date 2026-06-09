@@ -65,10 +65,28 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: 
         return
 
     distance = state.robot.distance_to_point(point)
-    fwd_ms = max(100, min(500, int(distance * 5))) * 2
-    fwd_speed = max(10, min(50, int(distance * 0.75))) * 2
+    fwd_ms = max(100, min(500, int(distance * 5)))
+    fwd_speed = max(10, min(50, int(distance * 0.8)))
 
     print(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=fwd_ms / 1000, speed=fwd_speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(fwd_ms / 1000 + 0.05)
+
+def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
+    if state.robot is None:
+        return
+
+    distance = state.robot.distance_to_point(point)
+    fwd_ms = 500
+    fwd_speed = 75
+
+    print(f"Collecting ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.FORWARD,
