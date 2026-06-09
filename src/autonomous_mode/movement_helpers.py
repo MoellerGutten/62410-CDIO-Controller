@@ -83,7 +83,7 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger
         return
 
     distance = state.robot.distance_to_point(point)
-    fwd_ms = 500
+    fwd_ms = 250
     fwd_speed = 75
 
     print(f"Collecting ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
