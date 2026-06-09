@@ -25,23 +25,11 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
             print("Robot not detected after nudge — retrying main loop")
             continue
         
-        update_state(state, logger)
-
         # Turning off ball collection
         print("Turning off ball motor")
         _stop_ball_intake(connection)
         
-        # Goal point is middle point of goal a
-        goal = [167, 121.5/2]
-        center_line_point = [robot.position[0], arena_height / 2]
-        print("Target goal coords: " + str(goal))
-        print("Intermediate target point (robot.x, FIELD_H/2): " + str(center_line_point))
-
-        print("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
-        _turn_toward_point(state, connection, logger, center_line_point)
-
-        print("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
-        _drive_toward_point(state, connection, logger, center_line_point)
+        drive_to_center(state, connection, logger, arena_height, arena_width)
 
         #print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
         #_turn_toward_point(state, connection, logger, goal)
@@ -50,3 +38,27 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
 
         print("EJACULATING")
         _start_ejaculation(connection)
+
+
+def drive_to_center(state, connection, logger, arena_height, arena_width):
+    center_line_point = [state.robot.position[0], arena_height / 2]
+    while True:
+        robot = _await_robot(state, connection, logger)
+        if robot is None:
+            print("Robot not detected after nudge — retrying main loop")
+            continue
+
+        if (robot.distance_to_point(center_line_point) < 5):
+            break
+
+        # Goal point is middle point of goal a
+        goal = [arena_width, arena_height/2]
+        print("Target goal coords: " + str(goal))
+        print("Intermediate target point (robot.x, FIELD_H/2): " + str(center_line_point))
+
+        print("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
+        _turn_toward_point(state, connection, logger, center_line_point)
+
+        print("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
+        _drive_toward_point(state, connection, logger, center_line_point)
+        
