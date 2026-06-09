@@ -41,8 +41,8 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, logger: L
             break
 
         angle = state.robot.angle_to_point(point)
-        turn_ms = max(100, min(300, int(abs(angle) * 10))) * 2
-        turn_speed = max(10, min(20, int(abs(angle) * 0.4))) * 2
+        turn_ms = max(100, min(500, int(abs(angle) * 10))) * 2
+        turn_speed = max(10, min(50, int(abs(angle) * 0.4))) * 2
 
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
@@ -66,7 +66,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: 
 
     distance = state.robot.distance_to_point(point)
     fwd_ms = max(100, min(500, int(distance * 5)))
-    fwd_speed = max(10, min(50, int(distance * 0.8)))
+    fwd_speed = max(40, min(50, int(distance * 0.8)))
 
     print(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
@@ -83,7 +83,7 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger
         return
 
     distance = state.robot.distance_to_point(point)
-    fwd_ms = 250
+    fwd_ms = 500
     fwd_speed = 75
 
     print(f"Collecting ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
