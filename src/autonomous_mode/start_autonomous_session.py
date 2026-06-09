@@ -26,9 +26,9 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             deliver_balls(state, connection, logger)
             break
 
-        ball = state.balls[0]
-        _turn_toward_point(state, connection, logger, ball)
-        _drive_toward_point(state, connection, logger, ball)
+        ball_point = state.balls[0].position
+        _turn_toward_point(state, connection, logger, ball_point)
+        _drive_toward_point(state, connection, logger, ball_point)
 
         update_state(state, logger)
 
