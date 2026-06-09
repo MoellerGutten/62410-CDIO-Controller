@@ -25,7 +25,7 @@ def _await_robot(state: ArenaState, connection: RobotConnection, logger: Logger)
     return None
 
 
-def _test_for_ball_presence(state: ArenaState, logger: Logger = None, amount: int = 10) -> int:
+def _test_for_ball_presence(state: ArenaState, logger: Logger = None, amount: int = 100) -> int:
     arena_states = []
     for __ in range(amount):
         update_state(state, logger) 

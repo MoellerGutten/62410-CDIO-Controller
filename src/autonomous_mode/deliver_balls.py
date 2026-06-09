@@ -19,22 +19,16 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
     # Drive to goal
     # Eject balls
     
-    while True:
-        robot = _await_robot(state, connection, logger)
-        if robot is None:
-            print("Robot not detected after nudge — retrying main loop")
-            continue
-        
-        # Turning off ball collection
-        print("Turning off ball motor")
-        _stop_ball_intake(connection)
-        
-        drive_to_center(state, connection, logger, arena_height, arena_width)
+    # Turning off ball collection
+    print("Turning off ball motor")
+    _stop_ball_intake(connection)
+    
+    drive_to_center(state, connection, logger, arena_height, arena_width)
 
-        drive_to_goal(state, connection, logger, arena_height, arena_width)
-
-        print("EJACULATING")
-        _start_ejaculation(connection)
+    drive_to_goal(state, connection, logger, arena_height, arena_width)
+        
+    print("EJACULATING")
+    _start_ejaculation(connection)
 
 
 def drive_to_center(state, connection, logger, arena_height, arena_width):
