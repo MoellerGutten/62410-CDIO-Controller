@@ -24,20 +24,20 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
     # Turning toward point (robot.x, arena_h/2)
     target_point = [state.robot.position[0], arena_height / 2]
     while not state.robot.is_facing_point(target_point, 5.0):
-        print("Turning")
+        print("Turning towards center line")
         angle_to_point = state.robot.angle_to_point(target_point)
         if (angle_to_point > 0):
             inst = Instruction(
                 name=CommandName.TANK_RIGHT,
                 type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
+                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
             )
             connection.send_message(Message(instruction=inst))
         else:
             inst = Instruction(
                 name=CommandName.TANK_LEFT,
                 type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
+                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
             )
             connection.send_message(Message(instruction=inst))
         # Update state for next turn
@@ -45,7 +45,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
 
     # Drives toward target point
     while state.robot.distance_to_point(target_point) > 1:
-        print("Drives toward target point")
+        print("Drives toward center line")
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -82,7 +82,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
         inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
-        args=Arguments(seconds=1,speed=50),
+        args=Arguments(seconds=0.1,speed=50),
         )
         connection.send_message(Message(instruction=inst))
         # Update state for next turn
