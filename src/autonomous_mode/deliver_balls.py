@@ -1,5 +1,5 @@
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
-from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation
+from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import _await_robot
 from src.debug.gui import FIELD_H
 from src.model.arena_state import ArenaState
@@ -26,6 +26,10 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
             continue
         
         update_state(state, logger)
+
+        # Turning off ball collection
+        print("Turning off ball motor")
+        _stop_ball_intake(connection)
         
         # Goal point is middle point of goal a
         goal = [167, 121.5/2]
