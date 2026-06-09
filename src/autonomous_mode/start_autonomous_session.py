@@ -5,7 +5,7 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
 from time import sleep
-from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _drive_toward_point
+from src.autonomous_mode.movement_helpers import _collect_ball, _start_ball_intake, _turn_toward_point, _drive_toward_point
 from src.autonomous_mode.state_helpers import _await_robot, _test_for_ball_presence
 
 
@@ -28,7 +28,10 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         ball_point = state.balls[0].position
         _turn_toward_point(state, connection, logger, ball_point)
-        _drive_toward_point(state, connection, logger, ball_point)
+        if state.robot.distance_to_point(ball_point) < 5:
+            _collect_ball(state, connection, logger, ball_point)
+        else:   
+            _drive_toward_point(state, connection, logger, ball_point)
 
         update_state(state, logger)
 
