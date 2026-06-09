@@ -73,7 +73,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: 
         return
 
     distance = state.robot.distance_to_point(point)
-    fwd_ms = max(100, min(500, int(distance * 10)))
+    fwd_ms = max(100, min(2000, int(distance * 10)))
     fwd_speed =  max(30, min(100, int(distance * 0.4)))
 
     print(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
