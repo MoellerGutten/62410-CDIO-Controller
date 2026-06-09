@@ -15,6 +15,14 @@ def _start_ball_intake(connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
 
+def _stop_ball_intake(connection: RobotConnection) -> None:
+    inst = Instruction(
+        name=CommandName.BALL_OFF,
+        type=InstructionType.COMMAND,
+        args=Arguments(),
+    )
+    connection.send_message(Message(instruction=inst))
+
 def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
         name=SequenceName.EJECT,
