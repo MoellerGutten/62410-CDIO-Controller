@@ -200,9 +200,8 @@ def draw_robot(surf, robot: Robot, corners):
 
 def draw_center_line_debug_point(surf, robot: Robot, corners):
     if robot is not None:
-        robot_pos = field_to_screen(robot.position, corners)
-        target_point = (robot_pos[0] * FIELD_W / 167, (FIELD_H / 2))
-        pygame.draw.circle(surf, (255, 0, 0), target_point, 3)       
+        target_point = (robot.position[0] * FIELD_W / 167, (FIELD_H / 2))
+        pygame.draw.circle(surf, (255, 0, 0), target_point, 6)       
 
 def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
