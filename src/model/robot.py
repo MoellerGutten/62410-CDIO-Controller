@@ -28,6 +28,16 @@ class Robot:
 
         return min(balls, key=lambda ball: self.distance_to_point(ball.position))
 
+    def get_vip_ball(self, balls: list[Ball]) -> Ball | None:
+        """
+        Return the VIP (orange) ball closest to the robot,
+        or None if no VIP ball exists.
+        """
+        vip_balls = [b for b in balls if b.is_vip]
+        if not vip_balls:
+            return None
+        return min(vip_balls, key=lambda ball: self.distance_to_point(ball.position))
+
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
