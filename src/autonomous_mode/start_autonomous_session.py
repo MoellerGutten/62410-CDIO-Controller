@@ -19,22 +19,34 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             print("Robot not detected after nudge — retrying main loop")
             continue
 
-        update_state(state, logger)
-
+        print("Starting")
         if not state.balls:
             if _test_for_ball_presence(state, logger) > 0: continue
             deliver_balls(state, connection, logger)
             break
 
-        ball_point = state.balls[0].position
+        print("Balls")
+
+        vip = robot.get_vip_ball(state.balls)
+        if vip is not None:
+            print("VIP ball detected — prio is the orange ball")
+            ball_point = vip.position
+        else:
+            nearest = robot.get_nearest_ball(state.balls)
+            if nearest is None:
+                continue
+            ball_point = nearest.position
+
         _turn_toward_point(state, connection, logger, ball_point)
 
-        if state.robot is None: continue
-        if state.robot.distance_to_point(ball_point) < 10:
+        print("Turned")
+
+        if robot.distance_to_point(ball_point) < 10:
             _collect_ball(state, connection, logger, ball_point)
-        else:   
+        else:
+            print("drive")
             _drive_toward_point(state, connection, logger, ball_point)
 
-        update_state(state, logger)
+        print("\n")  
 
 

@@ -1,5 +1,5 @@
 from math import hypot, degrees, atan2, radians, cos, sin
-
+from src.model.ball import Ball
 
 class Robot:
     """Represents the robot on the field."""
@@ -17,6 +17,26 @@ class Robot:
     # ------------------------------------------------------------------
     # Distance helpers
     # ------------------------------------------------------------------
+
+    def get_nearest_ball(self, balls: list[Ball]) -> Ball | None:
+        """
+        Return the ball closest to the robot, or None if the list is empty.
+        """
+
+        if balls is None or len(balls) == 0:
+            return None
+
+        return min(balls, key=lambda ball: self.distance_to_point(ball.position))
+
+    def get_vip_ball(self, balls: list[Ball]) -> Ball | None:
+        """
+        Return the VIP (orange) ball closest to the robot,
+        or None if no VIP ball exists.
+        """
+        vip_balls = [b for b in balls if b.is_vip]
+        if not vip_balls:
+            return None
+        return min(vip_balls, key=lambda ball: self.distance_to_point(ball.position))
 
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
