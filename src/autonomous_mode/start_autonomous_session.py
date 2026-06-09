@@ -27,16 +27,19 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         print("Balls")
 
-        ball_point = state.balls[0].position
+        nearest = robot.get_nearest_ball(state.balls)
+        if nearest is None:
+            continue
+        ball_point = nearest.position
+
         _turn_toward_point(state, connection, logger, ball_point)
 
         print("Turned")
 
-        if state.robot is None: continue
-        if state.robot.distance_to_point(ball_point) < 10:
+        if robot.distance_to_point(ball_point) < 10:
             _collect_ball(state, connection, logger, ball_point)
         else:
-            print("drive")   
+            print("drive")
             _drive_toward_point(state, connection, logger, ball_point)
 
         print("\n")  
