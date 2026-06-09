@@ -1,3 +1,5 @@
+from numpy import median
+
 from src.autonomous_mode.deliver_balls import deliver_balls
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
@@ -22,4 +24,13 @@ def _await_robot(state: ArenaState, connection: RobotConnection, logger: Logger)
     print("Robot still not detected — nudging robot")
     _nudge_robot(connection)
     return None
+
+
+def test_for_ball_presence(state: ArenaState, logger: Logger = None, amount: int = 10) -> int:
+    arena_states = []
+    for __ in range(amount):
+        update_state(state, logger) 
+        arena_states.append(len(state.balls))
+    
+    return median(arena_states)
 
