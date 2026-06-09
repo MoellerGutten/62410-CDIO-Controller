@@ -6,7 +6,7 @@ from src.model.arena_state import ArenaState
 from logging import Logger
 from time import sleep
 from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _drive_toward_point
-from src.autonomous_mode.state_helpers import _await_robot
+from src.autonomous_mode.state_helpers import _await_robot, _test_for_ball_presence
 
 
 def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
@@ -22,6 +22,7 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
         update_state(state, logger)
 
         if not state.balls:
+            if _test_for_ball_presence(state, logger) > 0: continue
             deliver_balls(state, connection, logger)
             break
 
