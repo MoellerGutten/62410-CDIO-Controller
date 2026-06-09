@@ -5,7 +5,7 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
 from time import sleep
-from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_ball, _drive_toward_ball
+from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _drive_toward_point
 from src.autonomous_mode.state_helpers import _await_robot
 
 
@@ -26,8 +26,8 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
             break
 
         ball = state.balls[0]
-        _turn_toward_ball(state, connection, logger, ball)
-        _drive_toward_ball(state, connection, logger)
+        _turn_toward_point(state, connection, logger, ball)
+        _drive_toward_point(state, connection, logger, ball)
 
         update_state(state, logger)
 

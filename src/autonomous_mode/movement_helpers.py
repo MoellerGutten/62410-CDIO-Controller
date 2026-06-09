@@ -15,6 +15,13 @@ def _start_ball_intake(connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
 
+def _start_ejaculation(connection: RobotConnection) -> None:
+    inst = Instruction(
+        name=CommandName.EJECT,
+        type=InstructionType.SEQUENCE,
+        args=Arguments(speed=100),
+    )
+    connection.send_message(Message(instruction=inst))
 
 def _nudge_robot(connection: RobotConnection) -> None:
     inst = Instruction(
@@ -26,14 +33,14 @@ def _nudge_robot(connection: RobotConnection) -> None:
     sleep(0.35)
 
 
-def _turn_toward_ball(state: ArenaState, connection: RobotConnection, logger: Logger, ball) -> None:
+def _turn_toward_point(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
     while True:
-        if state.robot is None or ball is None:
+        if state.robot is None or point is None:
             break
-        if state.robot.is_facing_point(ball.position, tolerance_deg=3.0):
+        if state.robot.is_facing_point(point, tolerance_deg=3.0):
             break
 
-        angle = state.robot.angle_to_point(ball.position)
+        angle = state.robot.angle_to_point(point)
         turn_ms = max(100, min(300, int(abs(angle) * 10))) * 2
         turn_speed = max(10, min(20, int(abs(angle) * 0.4))) * 2
 
@@ -50,15 +57,14 @@ def _turn_toward_ball(state: ArenaState, connection: RobotConnection, logger: Lo
         sleep(turn_ms / 1000 + 0.05)
 
         update_state(state, logger)
-        ball = state.balls[0] if state.balls else None
+        # ball = state.balls[0] if state.balls else None
 
 
-def _drive_toward_ball(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
-    if not state.balls or state.robot is None:
+def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
+    if state.robot is None:
         return
 
-    ball = state.balls[0]
-    distance = state.robot.distance_to_point(ball.position)
+    distance = state.robot.distance_to_point(point)
     fwd_ms = max(100, min(500, int(distance * 5))) * 2
     fwd_speed = max(10, min(50, int(distance * 0.75))) * 2
 
