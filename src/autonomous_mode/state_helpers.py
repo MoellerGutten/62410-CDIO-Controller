@@ -38,4 +38,5 @@ def has_vip_balls(state: ArenaState, logger: Logger = None) -> bool:
     for ball in state.balls:
         if ball.is_vip:
             balls_contain_vip = True
+            break
     return balls_contain_vip
