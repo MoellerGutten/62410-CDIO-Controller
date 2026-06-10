@@ -1,4 +1,6 @@
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, serialize_message
+from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.state_helpers import _await_robot
 from src.debug.gui import FIELD_H
 from src.model.arena_state import ArenaState
 from src.state.state_manager import _get_tracker, update_state
@@ -11,87 +13,60 @@ def deliver_balls(state: ArenaState, connection: RobotConnection, logger: Logger
     result = tracker.scan()
     arena_height = 121.5
     arena_width = 167
-    # Goal point is middle point of goal a
-    goal = [167, 121.5/2]
-    print("Target goal coords: " + str(goal))
-    print("Intermediate target point (robot.x, FIELD_H/2): " + str([state.robot.position[0], arena_height / 2]))
-    # TODO: add support for shortest angle (driving backward (ask Merian))
+    
     # Sequence should be (excluding cross problem):
     # Aim for y = arena_h/2, i.e. straight up or down from robot (turn first ofc)
     # Drive to goal
     # Eject balls
-
-    # Turning toward point (robot.x, arena_h/2)
-    target_point = [state.robot.position[0], arena_height / 2]
-    while not state.robot.is_facing_point(target_point, 5.0):
-        print("Turning towards center line")
-        angle_to_point = state.robot.angle_to_point(target_point)
-        if (angle_to_point > 0):
-            inst = Instruction(
-                name=CommandName.TANK_RIGHT,
-                type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
-            )
-            connection.send_message(Message(instruction=inst))
-        else:
-            inst = Instruction(
-                name=CommandName.TANK_LEFT,
-                type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
-            )
-            connection.send_message(Message(instruction=inst))
-        # Update state for next turn
-        update_state(state, logger)
-
-    # Drives toward target point
-    while state.robot.distance_to_point(target_point) > 1:
-        print("Drives toward center line")
-        inst = Instruction(
-        name=CommandName.FORWARD,
-        type=InstructionType.COMMAND,
-        args=Arguments(seconds=0.1,speed=50),
-        )
-        connection.send_message(Message(instruction=inst))
-        # Update state for next turn
-        update_state(state, logger)
     
-    # Turning toward goal
-    while not state.robot.is_facing_point(goal, 5.0):
-        print("Turning toward goal")
-        angle_to_point = state.robot.angle_to_point(target_point)
-        if (angle_to_point > 0):
-            inst = Instruction(
-                name=CommandName.TANK_RIGHT,
-                type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=-10,rspeed=10),
-            )
-            connection.send_message(Message(instruction=inst))
-        else:
-            inst = Instruction(
-                name=CommandName.TANK_LEFT,
-                type=InstructionType.COMMAND,
-                args=Arguments(seconds=1,lspeed=10,rspeed=-10),
-            )
-            connection.send_message(Message(instruction=inst))
-        # Update state for next turn
-        update_state(state, logger)
+    # Turning off ball collection
+    print("Turning off ball motor")
+    _stop_ball_intake(connection)
+    
+    drive_to_center(state, connection, logger, arena_height, arena_width)
 
-    # Drives toward goal
-    while state.robot.distance_to_point(goal) > 1:
-        print("Drives toward goal")
-        inst = Instruction(
-        name=CommandName.FORWARD,
-        type=InstructionType.COMMAND,
-        args=Arguments(seconds=0.1,speed=50),
-        )
-        connection.send_message(Message(instruction=inst))
-        # Update state for next turn
-        update_state(state, logger)
+    drive_to_goal(state, connection, logger, arena_height, arena_width)
+        
+    print("EJACULATING")
+    _start_ejaculation(connection)
 
-    # Bust
-    inst = Instruction(
-        name=CommandName.EJECT,
-        type=InstructionType.SEQUENCE,
-        args=Arguments(speed=100),
-    )
-    connection.send_message(Message(instruction=inst))
+
+def drive_to_center(state, connection, logger, arena_height, arena_width):
+    center_line_point = [state.robot.position[0], arena_height / 2]
+    while True:
+        robot = _await_robot(state, connection, logger)
+        if robot is None:
+            print("Robot not detected after nudge — retrying main loop")
+            continue
+
+        if (robot.distance_to_point(center_line_point) < 15):
+            break
+
+        # Goal point is middle point of goal a
+        print("Intermediate target point (robot.x, FIELD_H/2): " + str(center_line_point))
+
+        print("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
+        _turn_toward_point(state, connection, logger, center_line_point)
+
+        print("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
+        _drive_toward_point(state, connection, logger, center_line_point)
+        
+
+def drive_to_goal(state, connection, logger, arena_height, arena_width):
+    goal = [arena_width, arena_height/2]
+    while True:
+        robot = _await_robot(state, connection, logger)
+        if robot is None:
+            print("Robot not detected after nudge — retrying main loop")
+            continue
+
+        if (robot.distance_to_point(goal) < 10):
+            break
+
+        # Goal point is middle point of goal a
+        print("Target goal coords: " + str(goal))
+
+        print("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        _turn_toward_point(state, connection, logger, goal)
+        print("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
+        _drive_toward_point(state, connection, logger, goal)
