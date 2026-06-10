@@ -220,10 +220,11 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
-    # TODO: get proper size of cross (vibe sized)
-    draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
-                     C_CROSS, C_CROSS_OUTLINE, width=14)
-    draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length*1383/167, cross.orientation, C_CROSS)
+    #draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
+                    # C_CROSS, C_CROSS_OUTLINE, width=14)
+    # Cross bounding box is not correctly scaled. TODO: fix that
+    # TODO: fix orientation for cross, currently always about 45 degrees.
+    draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length*5, cross.orientation, C_CROSS)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
@@ -344,8 +345,6 @@ def run_gui(state: ArenaState):
         # Draw
         # ------------------------------------------------------------------
         screen.fill(C_BG)
-
-        print(state)
 
         draw_field_surface(screen, corners)
         draw_borders(screen, corners)

@@ -278,13 +278,9 @@ class ArenaTracker:
         state.robot = self._get_aruco_robot(frame)
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
-        # Debug: log detections received from YOLO
-        if detections:
-            print(f"[ArenaTracker] Parsed {len(detections)} detections: {[d['label'] for d in detections]}")
 
         for d in detections:
             lbl = d["label"]
-            print(f"[ArenaTracker] handling detection: {lbl} ax={d.get('ax')} ay={d.get('ay')}")
             if "ball" in lbl:
                 state.balls.append(Ball(
                     position=(d["ax"], d["ay"]),
@@ -292,7 +288,6 @@ class ArenaTracker:
                 ))
             elif "x" in lbl:
                 corners_cm = d["corners_cm"]
-                print(f"[ArenaTracker] cross corners (cm): {corners_cm}")
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
                 orientation = self._cross_orientation(corners_cm)
@@ -301,7 +296,6 @@ class ArenaTracker:
                 x2, y2 = corners_cm[1]
                 side_length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-                print(f"[ArenaTracker] creating Cross at ({cx:.1f}, {cy:.1f}) orient={orientation:.1f} side={side_length:.1f}")
                 state.cross = Cross(position=(cx, cy), orientation=orientation, side_length=side_length)
 
         return state
