@@ -1,6 +1,5 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 from src.model.ball import Ball
-from src.model.arena_state import ArenaState
 
 class Robot:
     """Represents the robot on the field."""
@@ -19,22 +18,22 @@ class Robot:
     # Distance helpers
     # ------------------------------------------------------------------
 
-    def get_nearest_ball(self, state: ArenaState) -> Ball | None:
+    def get_nearest_ball(self, balls: list[Ball]) -> Ball | None:
         """
         Return the ball closest to the robot, or None if the list is empty.
         """
 
-        if state.balls is None or len(state.balls) == 0:
+        if balls is None or len(balls) == 0:
             return None
 
-        return min(state.balls, key=lambda ball: self.distance_to_point(ball.position))
+        return min(balls, key=lambda ball: self.distance_to_point(ball.position))
 
-    def get_nearest_vip_ball(self, state: ArenaState) -> Ball | None:
+    def get_nearest_vip_ball(self, balls: list[Ball]) -> Ball | None:
         """
         Return the VIP (orange) ball closest to the robot,
         or None if no VIP ball exists.
         """
-        vip_balls = [b for b in state.balls if b.is_vip]
+        vip_balls = [b for b in balls if b.is_vip]
         if not vip_balls:
             return None
         return min(vip_balls, key=lambda ball: self.distance_to_point(ball.position))
