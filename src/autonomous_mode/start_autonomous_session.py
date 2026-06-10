@@ -1,12 +1,9 @@
 from src.autonomous_mode.deliver_balls import deliver_balls
-from src.state.state_manager import update_state
-from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
-from time import sleep
 from src.autonomous_mode.movement_helpers import _collect_ball, _start_ball_intake, _turn_toward_point, _drive_toward_point
-from src.autonomous_mode.state_helpers import _await_robot, _test_for_ball_presence
+from src.autonomous_mode.state_helpers import _await_robot, update_ball_count_estimate
 
 
 def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
@@ -21,18 +18,18 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         print("Starting")
         if not state.balls:
-            if _test_for_ball_presence(state, logger) > 0: continue
+            if update_ball_count_estimate(state, logger) > 0: continue
             deliver_balls(state, connection, logger)
             break
 
         print("Balls")
 
-        vip = robot.get_vip_ball(state.balls)
+        vip = robot.get_nearest_vip_ball(state)
         if vip is not None:
             print("VIP ball detected — prio is the orange ball")
             ball_point = vip.position
         else:
-            nearest = robot.get_nearest_ball(state.balls)
+            nearest = robot.get_nearest_ball(state)
             if nearest is None:
                 continue
             ball_point = nearest.position

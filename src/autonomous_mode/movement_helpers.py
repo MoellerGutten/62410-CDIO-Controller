@@ -4,6 +4,7 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
 from time import sleep
+from src.autonomous_mode.state_helpers import update_ball_count_estimate
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
 
@@ -103,3 +104,4 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger
     )
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
+    update_ball_count_estimate(state, logger)
