@@ -210,7 +210,7 @@ def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, i
 
 def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
-               corners: list[Corner]):
+               corners: list[Corner], estimated_ball_count: int):
     px = WINDOW_W - PANEL_W + 15
     pw = PANEL_W - FIELD_MARGIN // 2
     panel_rect = pygame.Rect(WINDOW_W - PANEL_W, 0, PANEL_W, WINDOW_H)
@@ -262,6 +262,10 @@ def draw_panel(surf, font_sm, font_md, font_lg,
         row(lbl, (floor(c.position[0]), floor(c.position[1])))
     y += 16
 
+    # estimated ball count
+    heading("Estimates")
+    row("Ball count", estimated_ball_count)
+    y += 16
 
 # ---------------------------------------------------------------------------
 # Main
@@ -294,6 +298,7 @@ def run_gui(state: ArenaState):
             balls = list(state.balls)
             cross = state.cross
             corners = list(state.corners)
+            estimated_ball_count = state.estimated_ball_count
 
         # ------------------------------------------------------------------
         # Draw
@@ -308,7 +313,7 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count)
 
         pygame.display.flip()
 
