@@ -223,7 +223,7 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     # TODO: get proper size of cross (vibe sized)
     draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
                      C_CROSS, C_CROSS_OUTLINE, width=14)
-    draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length, cross.orientation, C_CROSS)
+    draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length*1383/167, cross.orientation, C_CROSS)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
