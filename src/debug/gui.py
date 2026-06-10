@@ -344,6 +344,8 @@ def run_gui(state: ArenaState):
         # ------------------------------------------------------------------
         screen.fill(C_BG)
 
+        print(state)
+
         draw_field_surface(screen, corners)
         draw_borders(screen, corners)
         draw_corners(screen, corners)
