@@ -112,6 +112,44 @@ def draw_cross_shape(surf, pos, size, angle_deg, colour, outline, width=14):
         pygame.draw.line(surf, colour,  (int(p1[0]), int(p1[1])), (int(p2[0]), int(p2[1])), width)
 
 
+def draw_cross_bounding_box(surf, pos, size, angle_deg, colour, width=10):
+    """
+    Draw a square consisting of 4 lines rotated according to angle_deg.
+    """
+    cx, cy = pos
+    rad = math.radians(angle_deg)
+    
+    # Half the side length (distance from center to edge)
+    half_size = size / 2
+    
+    # Calculate the 4 corners of the square relative to center (unrotated)
+    # Order: top-right, top-left, bottom-left, bottom-right
+    corners_unrotated = [
+        (half_size, -half_size),   # top-right
+        (-half_size, -half_size),  # top-left
+        (-half_size, half_size),   # bottom-left
+        (half_size, half_size),    # bottom-right
+    ]
+    
+    # Rotate each corner using rotation matrix and translate to center
+    corners = []
+    for x, y in corners_unrotated:
+        # Rotation matrix: [cos -sin; sin cos]
+        rx = x * math.cos(rad) - y * math.sin(rad)
+        ry = x * math.sin(rad) + y * math.cos(rad)
+        corners.append((cx + rx, cy + ry))
+    
+    # Draw 4 lines connecting corners to form the square
+    for i in range(4):
+        p1 = corners[i]
+        p2 = corners[(i + 1) % 4]  # Connect to next corner (wrap around)
+        pygame.draw.line(
+            surf, colour, 
+            (int(p1[0]), int(p1[1])), 
+            (int(p2[0]), int(p2[1])), 
+            width
+        )
+
 # ---------------------------------------------------------------------------
 # Drawing sub-routines
 # ---------------------------------------------------------------------------
@@ -185,6 +223,7 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     # TODO: get proper size of cross (vibe sized)
     draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
                      C_CROSS, C_CROSS_OUTLINE, width=14)
+    draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length, cross.orientation, C_CROSS)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
