@@ -40,10 +40,9 @@ def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
 
         if robot.distance_to_point(ball_point) < 15:
             _collect_ball(state, connection, logger, ball_point)
+            update_ball_count_estimate(state, logger)
         else:
             print("drive")
             _drive_toward_point(state, connection, logger, ball_point)
 
-        print("\n")  
-
-
+        print("\n")
