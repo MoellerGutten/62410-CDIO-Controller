@@ -1,21 +1,19 @@
 from argparse import ArgumentParser, Namespace
 from threading import Thread
-from src.debug.log import setup_state_logger
 from src.interactive_mode.start_interactive_session import start_interactive_session
 from src.autonomous_mode.start_autonomous_session import start_autonomous_session
 from src.state.state_manager import poll_state
 from src.debug.gui import run_gui, get_test_field_state
 from src.model.arena_state import ArenaState
-from logging import Logger
+from src.debug.log import get_logger
 
 def start() -> None:
     args = parse_args()
     state = get_test_field_state()
-    logger = setup_state_logger() if args.log else None
 
     controller_thread = Thread(
         target=run_controller,
-        kwargs={"state": state, "args": args, "logger": logger},
+        kwargs={"state": state, "args": args},
         name="controller",
         daemon=True,
     )
@@ -31,30 +29,29 @@ def start() -> None:
     else:
         state_thread = Thread(
             target=poll_state,
-            kwargs={"state": state, "logger": logger},
+            kwargs={"state": state},
             name="state-poller",
             daemon=True,
         )
         state_thread.start()
 
     if args.gui:
-        print("Running controller with GUI")
+        get_logger().info("Running controller with GUI")
         run_gui(state)
     else:
-        print("Running controller")
+        get_logger().info("Running controller without GUI")
         controller_thread.join()
 
 
-def run_controller(state: ArenaState, args: Namespace, logger: Logger) -> None:
+def run_controller(state: ArenaState, args: Namespace) -> None:
     if args.it:
         start_interactive_session()
     else:
-        start_autonomous_session(state, logger)
+        start_autonomous_session(state)
 
 
 def parse_args() -> None:
     parser = ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
     parser.add_argument("--it",  action="store_true", help="Run interactive session")
-    parser.add_argument("--log", action="store_true", help="Log state changes to file")
     return parser.parse_args()

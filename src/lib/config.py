@@ -1,3 +1,5 @@
+from src.debug.log import get_logger
+
 class Config:
     REQUIRED_KEYS = ['EV3_HOST', 'EV3_PORT']
 
@@ -13,13 +15,13 @@ class Config:
                 if not line or line.startswith('#'):
                     continue
                 if '=' not in line:
-                    print(f"Warning: Invalid line {line_num} (will be ignored): {line}")
+                    get_logger().warning(f"Warning: Invalid line {line_num} (will be ignored): {line}")
                     continue
                 try:
                     key, value = line.split('=', 1)
                     config[key.strip()] = value.strip()
                 except Exception as e:
-                    print(f"Error parsing line {line_num}: {e}")
+                    get_logger().error(f"Error parsing line {line_num}: {e}")
         return config
     
     def check_required_values(self) -> None:

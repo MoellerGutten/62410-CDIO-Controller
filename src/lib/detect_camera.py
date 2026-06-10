@@ -4,6 +4,7 @@ import platform
 from typing import Optional
 import os
 import cv2
+from src.debug.log import get_logger
 
 # --------------------------------------------------------------------------- #
 #  Camera auto-detection                                                      #
@@ -29,17 +30,17 @@ def find_logitech_c930e(max_index: int = 10) -> int:
     try:
         index = _usb_enumerate(system)
         if index is not None:
-            print(f"[CameraDetect] Found Logitech C930e via USB enumeration → index {index}")
+            get_logger().info(f"[CameraDetect] Found Logitech C930e via USB enumeration → index {index}")
             return index
     except Exception as exc:
-        print(f"[CameraDetect] USB enumeration skipped ({exc})")
+        get_logger().warning(f"[CameraDetect] USB enumeration skipped ({exc})")
 
     index = _scan_by_name(max_index)
     if index is not None:
-        print(f"[CameraDetect] Found Logitech camera by name scan → index {index}")
+        get_logger().info(f"[CameraDetect] Found Logitech camera by name scan → index {index}")
         return index
 
-    print("[CameraDetect] Could not identify C930e; falling back to index 0.")
+    get_logger().warning("[CameraDetect] Could not identify C930e; falling back to index 0.")
     return 0
 
 
@@ -171,7 +172,7 @@ def _windows_find_camera() -> Optional[int]:
         ).decode(errors="replace")
         names = [l.strip().lower() for l in out.splitlines() if l.strip()]
         if names:
-            print(f"[CameraDetect] WMI found: {names} — assuming index 0")
+            get_logger().warning(f"[CameraDetect] WMI found: {names} — assuming index 0")
             return 0  # best guess without DirectShow
     except Exception:
         pass
