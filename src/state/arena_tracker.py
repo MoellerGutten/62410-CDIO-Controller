@@ -295,7 +295,7 @@ class ArenaTracker:
                 x2, y2 = corners_cm[1]
                 side_length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
 
-                state.cross = Cross(position=(cx, cy), orientation=orientation, size=side_length)
+                state.cross = Cross(position=(cx, cy), orientation=orientation, side_length=side_length)
 
         return state
 
