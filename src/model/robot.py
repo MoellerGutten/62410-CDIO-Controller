@@ -28,7 +28,7 @@ class Robot:
 
         return min(balls, key=lambda ball: self.distance_to_point(ball.position))
 
-    def get_vip_ball(self, balls: list[Ball]) -> Ball | None:
+    def get_nearest_vip_ball(self, balls: list[Ball]) -> Ball | None:
         """
         Return the VIP (orange) ball closest to the robot,
         or None if no VIP ball exists.

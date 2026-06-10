@@ -1,11 +1,9 @@
 from numpy import median
 
 from src.state.state_manager import update_state
-from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
-from time import sleep
 from src.autonomous_mode.movement_helpers import _nudge_robot
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
@@ -24,12 +22,13 @@ def _await_robot(state: ArenaState, connection: RobotConnection, logger: Logger)
     _nudge_robot(connection)
     return None
 
-
-def _test_for_ball_presence(state: ArenaState, logger: Logger = None, amount: int = 100) -> int:
-    arena_states = []
-    for __ in range(amount):
-        update_state(state, logger) 
-        arena_states.append(len(state.balls))
-    
-    return median(arena_states)
-
+def update_ball_count_estimate(state: ArenaState, logger: Logger = None) -> int:
+    ball_counts = []
+    BALL_COUNT_ESTIMATION_SNAPSHOTS = 10
+    for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
+        update_state(state, logger)
+        ball_counts.append(len(state.balls))
+    estimated_ball_count = round(sum(ball_counts) / len(ball_counts))
+    with state.lock:
+        state.estimated_ball_count = estimated_ball_count
+    return estimated_ball_count
