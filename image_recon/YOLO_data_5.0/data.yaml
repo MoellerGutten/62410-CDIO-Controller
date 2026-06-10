@@ -1,9 +1,0 @@
-path: image_recon/YOLO_data_5.0
-train: images/train
-val: images/val
-nc: 3
-names:
-  0: WBall
-  1: OBall
-  2: X
-kpt_shape: [4, 3]
