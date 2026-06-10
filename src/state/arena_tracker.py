@@ -278,6 +278,7 @@ class ArenaTracker:
         state.robot = self._get_aruco_robot(frame)
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
+
         for d in detections:
             lbl = d["label"]
             if "ball" in lbl:
@@ -285,12 +286,17 @@ class ArenaTracker:
                     position=(d["ax"], d["ay"]),
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
-            elif "cross" in lbl:
+            elif "x" in lbl:
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
                 orientation = self._cross_orientation(corners_cm)
-                state.cross = Cross(position=(cx, cy), orientation=orientation)
+                # Get side length: distance between first two adjacent corners
+                x1, y1 = corners_cm[0]
+                x2, y2 = corners_cm[1]
+                side_length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+
+                state.cross = Cross(position=(cx, cy), orientation=orientation, side_length=side_length)
 
         return state
 
