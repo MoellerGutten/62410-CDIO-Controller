@@ -42,6 +42,8 @@ def start_collecting_vip_balls(state: ArenaState, connection: RobotConnection, l
 
         drive_into_ball(robot, ball_point, connection, state, logger)
 
+        break
+
 
 def start_collecting_normal_balls(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
     while True:
@@ -65,7 +67,7 @@ def start_collecting_normal_balls(state: ArenaState, connection: RobotConnection
 
 
 def drive_into_ball(robot, ball_point, connection, state, logger):
-    if robot.distance_to_point(ball_point) < 10:
+    if robot.distance_to_point(ball_point) < 15:
         _collect_ball(state, connection, logger, ball_point)
         update_ball_count_estimate(state, logger)
     else:
