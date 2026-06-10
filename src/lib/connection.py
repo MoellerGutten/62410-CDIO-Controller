@@ -2,6 +2,7 @@ from src.lib.config import Config
 from socket import socket, AF_INET, SOCK_STREAM
 from sys import exit
 from protocol import Message, serialize_message
+from src.debug.log import get_logger
 
 class RobotConnection:
 
@@ -13,16 +14,16 @@ class RobotConnection:
         try:
             host = config.getStr("EV3_HOST")
             port = config.getNum("EV3_PORT")
-            print(f"Connecting to {host}:{port}...")
+            get_logger().info(f"Connecting to {host}:{port}...")
             self.socket.connect((host, port))
-            print("Connected! Type 'exit' to exit.")
+            get_logger().info("Connected! Type 'exit' to exit.")
         except ConnectionRefusedError:
             self.socket.close()
-            print("Error: Could not connect. Is the robot running?")
+            get_logger().critical("Error: Could not connect. Is the robot running?")
             exit(1)
         except KeyboardInterrupt:
             self.socket.close()
-            print("\nClosing connection.")
+            get_logger().info("\nClosing connection.")
             exit(1)
 
     def send_message(self, message: Message) -> str:

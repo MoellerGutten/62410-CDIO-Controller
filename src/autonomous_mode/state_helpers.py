@@ -16,9 +16,9 @@ def _await_robot(state: ArenaState, connection: RobotConnection):
         update_state(state)
         if state.robot is not None:
             return state.robot
-        print(f"Robot not detected (attempt {attempt + 1}/{MAX_ROBOT_DETECTION_ATTEMPTS})")
+        get_logger().warning(f"Robot not detected (attempt {attempt + 1}/{MAX_ROBOT_DETECTION_ATTEMPTS})")
 
-    print("Robot still not detected — nudging robot")
+    get_logger().warning("Robot still not detected — nudging robot")
     _nudge_robot(connection)
     return None
 

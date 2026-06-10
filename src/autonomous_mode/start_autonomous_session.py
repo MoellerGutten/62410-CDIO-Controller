@@ -25,7 +25,7 @@ def start_autonomous_session(state: ArenaState) -> None:
         get_logger().debug("Finding ball to collect")
         vip = robot.get_nearest_vip_ball(state.balls)
         if vip is not None:
-            print("VIP ball detected — prio is the orange ball")
+            get_logger().debug("VIP ball detected — prio is the orange ball")
             ball_point = vip.position
         else:
             nearest = robot.get_nearest_ball(state.balls)
