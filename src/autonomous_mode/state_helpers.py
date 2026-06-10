@@ -5,7 +5,6 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from logging import Logger
 from src.autonomous_mode.movement_helpers import _nudge_robot
-from math import round
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
 
