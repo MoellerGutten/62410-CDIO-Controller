@@ -9,12 +9,8 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     arena_height = 121.5
     arena_width = 167
     
-    # Sequence should be (excluding cross problem):
-    # Aim for y = arena_h/2, i.e. straight up or down from robot (turn first ofc)
-    # Drive to goal
-    # Eject balls
-    
-    # Turning off ball collection
+    get_logger().debug("Deliver balls")
+
     get_logger().debug("Turning off ball motor")
     _stop_ball_intake(connection)
     
@@ -25,6 +21,8 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     get_logger().debug("Ejaculating")
     _start_ejaculation(connection)
 
+    get_logger().debug("Deliver balls done\n")
+
 
 def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
     center_line_point = [state.robot.position[0], arena_height / 2]
@@ -34,17 +32,15 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(center_line_point) < 5):
-            break
+        if (robot.distance_to_point(center_line_point) < 5): break
 
-        # Goal point is middle point of goal a
-        get_logger().debug("Intermediate target point (robot.x, FIELD_H/2): " + str(center_line_point))
+        get_logger().debug("Drive to center")
 
-        get_logger().debug("Turning towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
         _turn_toward_point(state, connection, center_line_point)
-
-        get_logger().debug("Driving towards center line point: " + str(center_line_point) + " current point: " + str(robot.position))
         _drive_toward_point(state, connection, center_line_point)
+
+        get_logger().debug("End of loop\n")
+
         
 
 def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
@@ -55,13 +51,11 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(goal) < 10):
-            break
+        if (robot.distance_to_point(goal) < 10): break
 
-        # Goal point is middle point of goal a
-        get_logger().debug("Target goal coords: " + str(goal))
+        get_logger().debug("Drive to goal")
 
-        get_logger().debug("Turning towards goal point: " + str(goal) + " current point: " + str(robot.position))
         _turn_toward_point(state, connection, goal)
-        get_logger().debug("Driving towards goal point: " + str(goal) + " current point: " + str(robot.position))
         _drive_toward_point(state, connection, goal)
+
+        get_logger().debug("End of loop\n")

@@ -3,8 +3,8 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _collect_ball, _start_ball_intake, _stop_ball_intake, _turn_toward_point, _drive_toward_point
-from src.autonomous_mode.state_helpers import _await_robot, has_vip_balls, update_ball_count_estimate
+from src.autonomous_mode.movement_helpers import _collect_ball, _start_ball_intake, _stop_ball_intake, _turn_toward_point
+from src.autonomous_mode.state_helpers import _await_robot, drive_and_collect_ball, has_vip_balls, update_ball_count_estimate
 
 
 def start_autonomous_session(state: ArenaState) -> None:
@@ -18,23 +18,23 @@ def start_autonomous_session(state: ArenaState) -> None:
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        start_collecting_vip_balls(state, connection, logger)
+        start_collecting_vip_balls(state, connection)
 
-        start_collecting_normal_balls(state, connection, logger)
+        start_collecting_normal_balls(state, connection)
         
         break
 
 
-def start_collecting_vip_balls(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
+def start_collecting_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
     while True:
-        robot = _await_robot(state, connection, logger)
+        robot = _await_robot(state, connection)
         if robot is None:
-            print("Robot not detected after nudge — retrying main loop")
+            get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
         if not has_vip_balls(state):
-            if update_ball_count_estimate(state, logger) > 3: continue
-            deliver_balls(state, connection, logger)
+            if update_ball_count_estimate(state) > 3: continue
+            deliver_balls(state, connection)
             break
 
         get_logger().debug("Finding VIP ball to collect")
@@ -42,18 +42,18 @@ def start_collecting_vip_balls(state: ArenaState, connection: RobotConnection, l
         if vip is None: continue
         ball_point = vip.position
 
-        get_logger().debug("Turning towards ball")
-        _turn_toward_point(state, connection, logger, ball_point)
-        get_logger().debug("Turned towards ball")
+        _turn_toward_point(state, connection, ball_point)
 
-        drive_into_ball(robot, ball_point, connection, state, logger)
+        drive_and_collect_ball(robot, ball_point, connection, state)
+
+        get_logger().debug("End of loop\n")
 
 
-def start_collecting_normal_balls(state: ArenaState, connection: RobotConnection, logger: Logger) -> None:
+def start_collecting_normal_balls(state: ArenaState, connection: RobotConnection) -> None:
     while True:
-        robot = _await_robot(state, connection, logger)
+        robot = _await_robot(state, connection)
         if robot is None:
-            print("Robot not detected after nudge — retrying main loop")
+            get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
         if not state.balls:
@@ -66,18 +66,10 @@ def start_collecting_normal_balls(state: ArenaState, connection: RobotConnection
         if nearest is None:continue
         ball_point = nearest.position
 
-        get_logger().debug("Turning towards ball")
-        _turn_toward_point(state, connection, logger, ball_point)
-        get_logger().debug("Turned towards ball")
+        _turn_toward_point(state, connection, ball_point)
 
-        drive_into_ball(robot, ball_point, connection, state, logger)
+        drive_and_collect_ball(robot, ball_point, connection, state)
 
+        get_logger().debug("End of loop\n")
 
-def drive_into_ball(robot, ball_point, connection, state, logger):
-    if robot.distance_to_point(ball_point) < 15:
-        get_logger().debug("Collecting ball")
-        _collect_ball(state, connection, logger, ball_point)
-        update_ball_count_estimate(state, logger)
-    else:
-        _drive_toward_point(state, connection, logger, ball_point)
 

@@ -56,6 +56,8 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: li
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
 
+        get_logger().debug(f"Turning: command={command}, l_speed={l_speed}, r_speed={r_speed}")
+
         inst = Instruction(
             name=command,
             type=InstructionType.COMMAND,
@@ -75,7 +77,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: l
     fwd_ms = max(100, min(2000, int(distance * 5)))
     fwd_speed =  max(30, min(100, int(distance * 0.8)))
 
-    get_logger().debug(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    get_logger().debug(f"Driving: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.FORWARD,
