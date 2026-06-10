@@ -4,15 +4,17 @@ from math import hypot
 class Cross:
     """Represents the cross-shaped obstacle on the field."""
 
-    def __init__(self, position: tuple[int, int], orientation: float):
+    def __init__(self, position: tuple[int, int], orientation: float, side_length: float = 10):
         """
         Args:
             position:    (x, y) pixel coordinates of the cross centre.
             orientation: Rotation of the cross in degrees, clamped to [0, 90)
                          due to its 4-fold symmetry.
+            side_length:        Length of a side of the bounding box
         """
         self.position = position
         self.orientation = orientation % 90
+        self.side_length = side_length
 
     # ------------------------------------------------------------------
     # Distance helpers
