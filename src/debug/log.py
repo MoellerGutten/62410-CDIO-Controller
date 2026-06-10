@@ -5,7 +5,7 @@ from sys import stdout
 
 _logger: Logger | None = None
 
-FORMAT = "[%(asctime)s] [%(levelname)s]%(source_tag)s %(message)s\n"
+FORMAT = "[%(asctime)s] [%(levelname)s]%(source_tag)s %(message)s"
 
 class _Formatter(Formatter):
     def format(self, record):
@@ -33,12 +33,17 @@ def _setup_logger() -> Logger:
     path = f"logs/{timestamp}.log"
     logger = getLogger("controller")
     logger.setLevel(DEBUG)
+    logger.propagate = False
     formatter = _Formatter(FORMAT)
 
     file_handler = FileHandler(path, encoding="utf-8")
     file_handler.setFormatter(formatter)
 
+    stream_handler = StreamHandler(stdout)
+    stream_handler.setFormatter(formatter)
+
     logger.addHandler(file_handler)
+    logger.addHandler(stream_handler)
     _logger = logger
     return logger
 
