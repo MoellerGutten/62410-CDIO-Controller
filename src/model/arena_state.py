@@ -12,7 +12,7 @@ class ArenaState:
         self.lock = Lock()
         self.robot: Robot | None = None
         self.balls: list[Ball] = []
-        self.estimated_ball_count: int = 0
+        self.estimated_ball_count: int = 11 # 11 balls on the field
         self.cross: Cross | None = None
         self.corners: list[Corner] = []
 

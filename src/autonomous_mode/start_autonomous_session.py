@@ -9,6 +9,7 @@ from src.autonomous_mode.state_helpers import _await_robot, update_ball_count_es
 def start_autonomous_session(state: ArenaState, logger: Logger) -> None:
     connection = RobotConnection()
     _start_ball_intake(connection)
+    update_ball_count_estimate(state, logger)
 
     while True:
         robot = _await_robot(state, connection, logger)
