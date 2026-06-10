@@ -2,7 +2,7 @@ from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
-from logging import Logger
+from src.debug.log import get_logger
 from time import sleep
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -41,7 +41,7 @@ def _nudge_robot(connection: RobotConnection) -> None:
     sleep(0.35)
 
 
-def _turn_toward_point(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
+def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
     while True:
         if state.robot is None or point is None:
             break
@@ -64,11 +64,10 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, logger: L
         connection.send_message(Message(instruction=inst))
         sleep(turn_ms / 1000 + 0.05)
 
-        update_state(state, logger)
-        # ball = state.balls[0] if state.balls else None
+        update_state(state)
 
 
-def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
+def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
     if state.robot is None:
         return
 
@@ -76,7 +75,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: 
     fwd_ms = max(100, min(2000, int(distance * 10)))
     fwd_speed =  max(30, min(100, int(distance * 0.8)))
 
-    print(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    get_logger().debug(f"Driving toward ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -86,7 +85,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, logger: 
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
 
-def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger, point: list[int]) -> None:
+def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
     if state.robot is None:
         return
 
@@ -94,7 +93,7 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, logger: Logger
     fwd_ms = 500
     fwd_speed = 75
 
-    print(f"Collecting ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    get_logger().debug(f"Collecting ball: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.FORWARD,
