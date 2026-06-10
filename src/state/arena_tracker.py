@@ -15,10 +15,9 @@ from src.lib.detect_camera import find_camera_index
 from src.model.ball import Ball
 from src.model.cross import Cross
 from src.model.robot import Robot
-from src.model.corner import Corner
 from src.model.arena_state import ArenaState
 from src.state.arena_config import ArenaConfig
-
+from src.debug.log import get_logger
 
 class ArenaTracker:
     """
@@ -62,6 +61,8 @@ class ArenaTracker:
         self._resolved_index: int                        = 0
         self._scan_lock:      _threading.Lock            = _threading.Lock()
 
+        self.logger = get_logger("ArenaTracker")
+
         try:
             self._aruco_dict     = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             self._aruco_params   = cv2.aruco.DetectorParameters()
@@ -97,8 +98,8 @@ class ArenaTracker:
             self._cap.read()
 
         self._running = True
-        print(
-            f"[ArenaTracker] Ready — camera index {self._resolved_index}, "
+        self.logger.debug(
+            f"Ready — camera index {self._resolved_index}, "
             f"arena {self._cfg.width_cm} × {self._cfg.height_cm} cm"
         )
 
@@ -114,7 +115,7 @@ class ArenaTracker:
             self._cap.release()
             self._cap = None
         self._running = False
-        print("[ArenaTracker] Stopped.")
+        self.logger.info("Stopped")
 
     def __enter__(self) -> "ArenaTracker":
         self.start()
@@ -131,7 +132,7 @@ class ArenaTracker:
         model = YOLO(self._cfg.model_path)
         cap   = self._open_camera()
         if not cap.isOpened():
-            print(f"[ERROR] Cannot open camera (index {self._resolved_index}).")
+            self.logger.error(f"Cannot open camera (index {self._resolved_index}).")
             return
 
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
@@ -143,7 +144,7 @@ class ArenaTracker:
 
         self._compute_perspective()
         cam_mtx, cam_dist = self._load_camera_calibration()
-        print(f"[ArenaTracker] Arena locked: {self._cfg.width_cm} × {self._cfg.height_cm} cm")
+        self.logger.info(f"Arena locked: {self._cfg.width_cm} × {self._cfg.height_cm} cm")
 
         win = "Live Preview"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
@@ -166,7 +167,7 @@ class ArenaTracker:
                 show_visuals = not show_visuals
             elif key == ord("c"):
                 continuous = not continuous
-                print(f"-> Continuous: {'ON' if continuous else 'OFF'}")
+                self.logger.info(f"-> Continuous: {'ON' if continuous else 'OFF'}")
             elif key == ord("r"):
                 cv2.destroyWindow(win)
                 if self._setup_arena(cap):
@@ -183,8 +184,7 @@ class ArenaTracker:
                 vis    = self._render_debug_frame(frame, result, model)
 
                 if key == ord("s"):
-                    print("\n--- SCAN ---")
-                    print(repr(result))
+                    self.logger.info(repr(result))
                     cv2.imwrite("image_recon/latest_scan.jpg", vis)
                     if show_visuals:
                         w2 = "Result — any key to resume"
@@ -371,10 +371,10 @@ class ArenaTracker:
             self._goal_a_pts = [tuple(p) for p in data.get("goal_a_pts", [])]
             self._goal_b_pts = [tuple(p) for p in data.get("goal_b_pts", [])]
             if len(self._corners) == 4:
-                print("[ArenaTracker] Arena calibration loaded.")
+                self.logger.debug("Arena calibration loaded.")
                 return True
         except Exception as exc:
-            print(f"[WARNING] Could not load calibration: {exc}")
+            self.logger.warning(f"Could not load calibration: {exc}")
         return False
 
     def _save_calibration(self) -> None:
@@ -387,12 +387,12 @@ class ArenaTracker:
                 },
                 f, indent=4,
             )
-        print("[ArenaTracker] Calibration saved.")
+        self.logger.info("Calibration saved.")
 
     def _load_camera_calibration(self) -> tuple[Optional[np.ndarray], Optional[np.ndarray]]:
         if os.path.exists(self._cfg.camera_calib_file):
             with np.load(self._cfg.camera_calib_file) as data:
-                print("[ArenaTracker] Lens calibration loaded.")
+                self.logger.debug("Lens calibration loaded.")
                 return data["mtx"], data["dist"]
         return None, None
 
@@ -406,8 +406,8 @@ class ArenaTracker:
         measured = width / height
         expected = self._cfg.width_cm / self._cfg.height_cm
         if abs(measured - expected) > 0.15:
-            print(
-                f"[WARNING] Hjørner ser skæve ud! "
+            self.logger.warning(
+                f"Hjørner ser skæve ud! "
                 f"Målt ratio: {measured:.2f}, forventet: {expected:.2f}"
             )
             return False
@@ -451,7 +451,6 @@ class ArenaTracker:
         self._goal_b_pts.clear()
         self._setup_step = "CORNERS"
 
-        print("\n--- ARENA SETUP ---")
         for _ in range(5):
             cap.read()
 
