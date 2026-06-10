@@ -36,9 +36,9 @@ def _setup_logger() -> Logger:
     logger.propagate = False
     formatter = _Formatter(FORMAT)
 
+    logger.handlers.clear()
     file_handler = FileHandler(path, encoding="utf-8")
     file_handler.setFormatter(formatter)
-
     stream_handler = StreamHandler(stdout)
     stream_handler.setFormatter(formatter)
 
