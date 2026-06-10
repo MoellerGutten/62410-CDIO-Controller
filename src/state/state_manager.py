@@ -17,7 +17,6 @@ def update_state(state: ArenaState) -> None:
     """
     tracker  = _get_tracker()
     new      = tracker.scan()
-    get_logger().info("Updating state")
 
     with state.lock:
         state.robot = new.robot
