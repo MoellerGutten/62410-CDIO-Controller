@@ -34,7 +34,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(center_line_point) < 7.5):
+        if (robot.distance_to_point(center_line_point) < 5):
             break
 
         # Goal point is middle point of goal a

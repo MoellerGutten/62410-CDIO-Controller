@@ -32,3 +32,11 @@ def update_ball_count_estimate(state: ArenaState) -> int:
     with state.lock:
         state.estimated_ball_count = estimated_ball_count
     return estimated_ball_count
+
+def has_vip_balls(state: ArenaState, logger: Logger = None) -> bool:
+    balls_contain_vip = False
+    for ball in state.balls:
+        if ball.is_vip:
+            balls_contain_vip = True
+            break
+    return balls_contain_vip
