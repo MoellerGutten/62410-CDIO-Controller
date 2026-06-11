@@ -46,7 +46,7 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
     while True:
         robot = await_robot(state, connection)
 
-        if (robot.distance_to_point(goal) < 20): 
+        if (robot.distance_to_point(goal) < 25): 
                 adjust_heading(state, connection, goal)
                 if (robot.distance_to_point(goal) < 15): break
 
