@@ -130,7 +130,15 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
 
     intersections = intersect_line_with_box(state.robot.position, point, inflate_bounding_box(state.cross.bounding_box))
 
-    for edgeStart, edgeEnd in intersections:
+    if not intersections and len(intersections) != 2:
+        raise ValueError("Has to have two intersections")
+
+    # Intersected edges touching = shortest path using 1 waypoint
+    if edges_are_parallel(intersections[0], intersections[1]) == False:
+        return tuple(set(intersections[0]) & (set(intersections[1])))
+
+    # Edges are opposite = shortest path using 2 waypoints
+    if edges_are_parallel(intersections[0], intersections[1]) == True:
         pass
     
     pass
@@ -158,7 +166,7 @@ def line_segment_intersect(p1, p2, p3, p4):
     return None
 
 
-def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[float, float], float]:
+def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[tuple[float, float], tuple[float, float]]]:
     """Find alle kanter i kassen som linjen skærer.
 
     Returns:
@@ -175,7 +183,7 @@ def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[floa
         if pt is not None:
             if not any(abs(pt[0] - ex_pt[0]) < 1e-9 and abs(pt[1] - ex_pt[1]) < 1e-9
                        for _, ex_pt in results):
-                results.append(((edge_start, edge_end), pt))
+                results.append(((edge_start, edge_end)))
 
     return results
 
