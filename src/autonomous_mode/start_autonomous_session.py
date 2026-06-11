@@ -69,6 +69,7 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
             deliver_balls(state, connection)
             balls_in_arena_after_delivery = update_ball_count_estimate(state)
             normal_balls_delivered += balls_in_arena_before_delivery - balls_in_arena_after_delivery
+            balls_in_robot = 0
             _start_ball_intake(connection) # resume ball intake after delivery
             continue
 
