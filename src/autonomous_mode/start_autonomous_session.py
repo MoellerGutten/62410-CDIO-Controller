@@ -64,7 +64,7 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
         robot = await_robot(state, connection)
 
         if balls_in_robot >= 4 or state.estimated_ball_count == 0:
-            balls_in_arena_before_delivery = state.estimated_ball_count
+            balls_in_arena_before_delivery = total_normal_balls - normal_balls_delivered
             logger.debug(f"Balls in robot: {balls_in_robot}, estimated ball count: {state.estimated_ball_count}. Commencing delivery")
             # 4 balls in robot, deliver
             deliver_balls(state, connection)
