@@ -11,17 +11,21 @@ from time import time
 
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
 
-def _await_robot(state: ArenaState, connection: RobotConnection):
-    """Poll for robot detection. If not found after MAX attempts, nudge the robot and return None."""
-    for attempt in range(MAX_ROBOT_DETECTION_ATTEMPTS):
+def await_robot(state: ArenaState, connection: RobotConnection):
+    """Block until the robot is detected, nudging periodically if needed."""
+    logger = get_logger("await_robot")
+    attempt = 0
+    while True:
         update_state(state)
         if state.robot is not None:
             return state.robot
-        get_logger().warning(f"Robot not detected (attempt {attempt + 1}/{MAX_ROBOT_DETECTION_ATTEMPTS})")
 
-    get_logger().warning("Robot still not detected — nudging robot")
-    _nudge_robot(connection)
-    return None
+        attempt += 1
+        logger.warning(f"Robot not detected (attempt {attempt})")
+
+        if attempt % MAX_ROBOT_DETECTION_ATTEMPTS == 0:
+            logger.warning("Robot still not detected — nudging robot")
+            _nudge_robot(connection)
 
 
 def update_ball_count_estimate(state: ArenaState) -> int:
