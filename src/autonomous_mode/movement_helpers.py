@@ -158,7 +158,6 @@ def line_segment_intersect(p1, p2, p3, p4):
     return None
 
 
-
 def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[float, float], float]:
     """Find alle kanter i kassen som linjen skærer.
 
@@ -179,3 +178,20 @@ def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[floa
                 results.append(((edge_start, edge_end), pt))
 
     return results
+
+
+def edges_are_parallel(edge1, edge2):
+    """Tjekker om to kanter er parallelle.
+
+    Args:
+        edge1: ((x1, y1), (x2, y2))
+        edge2: ((x3, y3), (x4, y4))
+    Returns: True hvis kanterne er parallelle
+    """
+    dx1 = edge1[1][0] - edge1[0][0]
+    dy1 = edge1[1][1] - edge1[0][1]
+    dx2 = edge2[1][0] - edge2[0][0]
+    dy2 = edge2[1][1] - edge2[0][1]
+
+    # Krydsprodukt == 0 betyder parallelle
+    return abs(dx1 * dy2 - dy1 * dx2) < 1e-10
