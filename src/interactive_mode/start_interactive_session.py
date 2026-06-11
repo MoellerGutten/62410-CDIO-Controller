@@ -13,5 +13,5 @@ def start_interactive_session() -> None:
         name, kwargs = parse_input(inp)
         msg = build_message_from_short_command(name, kwargs)
         response = connection.send_message(msg)
-        get_logger().info("Robot response:", response)
+        get_logger().info(f"Robot response: {response}")
     get_logger().info("\nClosing connection.")
