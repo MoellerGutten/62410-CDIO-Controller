@@ -53,9 +53,8 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
             continue
 
         if (robot.distance_to_point(goal) < 20): 
-            if (robot.distance_to_point(goal) < 10): 
                 adjust_heading(state, connection, goal)
-                break
+                if (robot.distance_to_point(goal) < 15): break
 
         get_logger().debug("Drive to goal")
 
