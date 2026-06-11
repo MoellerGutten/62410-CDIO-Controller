@@ -45,7 +45,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: li
     while True:
         if state.robot is None or point is None:
             break
-        if state.robot.is_facing_point(point, tolerance_deg=8.0):
+        if state.robot.is_facing_point(point, tolerance_deg=6.0):
             break
 
         angle = state.robot.angle_to_point(point)
@@ -89,7 +89,8 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: l
 
 def drive_and_collect_ball(robot, ball_point, connection, state):
     from src.autonomous_mode.state_helpers import update_ball_count_estimate
-    if robot.distance_to_point(ball_point) < 10:
+    if robot.distance_to_point(ball_point) < 12:
+        adjust_heading(state, connection, ball_point)
         _collect_ball(state, connection, ball_point)
         update_ball_count_estimate(state)
     else:
