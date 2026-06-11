@@ -25,7 +25,7 @@ def start_autonomous_session(state: ArenaState) -> None:
 def collect_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
     logger = get_logger("collect_vip_balls")
     while True:
-        _tick()
+        _tick(state)
 
         robot = await_robot(state, connection)
 
@@ -52,7 +52,7 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
     normal_balls_delivered = 0
 
     while True:
-        _tick()
+        _tick(state)
         balls_in_robot = total_normal_balls - state.estimated_ball_count - normal_balls_delivered
 
         if state.estimated_ball_count == 0 and balls_in_robot == 0:
