@@ -354,10 +354,6 @@ class ArenaTracker:
             camera_height=self._cfg.camera_height,
             aruco_height=self._cfg.aruco_height,
         )
-        get_logger().debug(
-            f"ArUco detected at raw (cm): ({center_x:.1f}, {center_y:.1f})")
-        get_logger().debug(
-            f"ArUco compensation at (cm): ({corrected_x:.1f}, {corrected_y:.1f})")
 
 
         return Robot(position=(round(corrected_x, 1), round(corrected_y, 1)), orientation=heading)
