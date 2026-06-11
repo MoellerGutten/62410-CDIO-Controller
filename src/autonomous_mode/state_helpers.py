@@ -4,7 +4,7 @@ from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot
+from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot, adjust_heading
 from time import time
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
@@ -49,6 +49,7 @@ def has_vip_balls(state: ArenaState) -> bool:
 
 def drive_and_collect_ball(robot, ball_point, connection, state):
     if robot.distance_to_point(ball_point) < 15:
+        adjust_heading(state, connection, ball_point)
         _collect_ball(state, connection, ball_point)
         update_ball_count_estimate(state)
     else:

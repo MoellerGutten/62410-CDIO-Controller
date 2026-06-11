@@ -25,6 +25,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 
 
 def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
+    if (state.robot == None): return
     center_line_point = [state.robot.position[0], arena_height / 2]
     while True:
         robot = _await_robot(state, connection)
