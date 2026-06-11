@@ -122,7 +122,7 @@ def go_to(state: ArenaState, connection: RobotConnection, point: tuple[float, fl
 
     pass
 
-def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: list[int]) -> list[tuple[float, float]]:
+def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> list[tuple[float, float]]:
     """
     Bruteforce hvilket waypoint man skal køre til for at få
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
