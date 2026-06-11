@@ -50,7 +50,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: li
 
         angle = state.robot.angle_to_point(point)
         turn_ms    = max(100, min(500, int(abs(angle) * 5)))
-        turn_speed = max(30, min(100, int(abs(angle) * 0.4)))
+        turn_speed = max(10, min(100, int(abs(angle) * 0.4)))
 
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
