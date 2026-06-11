@@ -5,6 +5,7 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot
+from time import time
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
 
@@ -24,6 +25,7 @@ def _await_robot(state: ArenaState, connection: RobotConnection):
 
 
 def update_ball_count_estimate(state: ArenaState) -> int:
+    begin = time()
     ball_counts = []
     BALL_COUNT_ESTIMATION_SNAPSHOTS = 50
     for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
@@ -32,6 +34,7 @@ def update_ball_count_estimate(state: ArenaState) -> int:
     estimated_ball_count = round(sum(ball_counts) / len(ball_counts))
     with state.lock:
         state.estimated_ball_count = estimated_ball_count
+    get_logger().debug(f"update_ball_count_estimate took {time() - begin}ms with {BALL_COUNT_ESTIMATION_SNAPSHOTS} snapshots")
     return estimated_ball_count
 
 
