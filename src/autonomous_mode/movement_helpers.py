@@ -3,7 +3,7 @@ from protocol import CommandName, Arguments, Instruction, InstructionType, Messa
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.model.cross import inflate_bounding_box
+from src.model.cross import Cross
 from time import sleep
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -128,7 +128,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
     """
 
-    intersections = intersect_line_with_box(state.robot.position, point, inflate_bounding_box(state.cross.bounding_box))
+    intersections = intersect_line_with_box(state.robot.position, point, Cross.inflate_bounding_box(state.cross.bounding_box))
     result = ()
 
 
