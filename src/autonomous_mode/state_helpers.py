@@ -31,7 +31,7 @@ def await_robot(state: ArenaState, connection: RobotConnection):
 def update_ball_count_estimate(state: ArenaState) -> int:
     begin = time()
     ball_counts = []
-    BALL_COUNT_ESTIMATION_SNAPSHOTS = 50
+    BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
     for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
         update_state(state)
         ball_counts.append(len(state.balls))
