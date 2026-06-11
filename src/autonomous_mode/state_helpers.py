@@ -4,7 +4,7 @@ from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot
+from src.autonomous_mode.movement_helpers import nudge_robot
 from time import time
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
@@ -25,7 +25,7 @@ def await_robot(state: ArenaState, connection: RobotConnection):
 
         if attempt % MAX_ROBOT_DETECTION_ATTEMPTS == 0:
             logger.warning("Robot still not detected — nudging robot")
-            _nudge_robot(connection)
+            nudge_robot(connection)
 
 
 def update_ball_count_estimate(state: ArenaState) -> int:
@@ -49,11 +49,3 @@ def has_vip_balls(state: ArenaState) -> bool:
             balls_contain_vip = True
             break
     return balls_contain_vip
-
-
-def drive_and_collect_ball(robot, ball_point, connection, state):
-    if robot.distance_to_point(ball_point) < 15:
-        _collect_ball(state, connection, ball_point)
-        update_ball_count_estimate(state)
-    else:
-        _drive_toward_point(state, connection, ball_point)

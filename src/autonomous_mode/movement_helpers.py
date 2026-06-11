@@ -31,7 +31,7 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
 
-def _nudge_robot(connection: RobotConnection) -> None:
+def nudge_robot(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -86,6 +86,14 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: l
     )
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
+
+def drive_and_collect_ball(robot, ball_point, connection, state):
+    from src.autonomous_mode.state_helpers import update_ball_count_estimate
+    if robot.distance_to_point(ball_point) < 15:
+        _collect_ball(state, connection, ball_point)
+        update_ball_count_estimate(state)
+    else:
+        _drive_toward_point(state, connection, ball_point)
 
 def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
     if state.robot is None:
