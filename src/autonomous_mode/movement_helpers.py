@@ -104,3 +104,27 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[in
     )
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
+
+# ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
+
+def _go_to(state: ArenaState, connection: RobotConnection, point: list[int]):
+    """
+    1. Tag robot pos og tjek om den intercepter inflated bounding box
+    2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
+    2.1. Nærmeste* waypoint\n
+    2.2. Tjek om den stadig kører igennem inflated bounding box\n
+    2.3. Kør til waypoint som er tættest på originalt punkt\n
+    3. Kør mod originalt punkt
+    
+    *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
+    """
+
+    pass
+
+def _calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: list[int]):
+    """
+    Bruteforce hvilket waypoint man skal køre til for at få
+    den kortest samlede tur fra robot -> waypoint -> target punkt 
+    """
+    
+    pass
