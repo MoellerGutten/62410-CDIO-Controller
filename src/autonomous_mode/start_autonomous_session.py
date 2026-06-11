@@ -30,7 +30,6 @@ def collect_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
         robot = await_robot(state, connection)
 
         if not has_vip_balls(state):
-            if update_ball_count_estimate(state) > 3: continue
             deliver_balls(state, connection)
             break
 
