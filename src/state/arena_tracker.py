@@ -285,7 +285,8 @@ class ArenaTracker:
                     position=(d["ax"], d["ay"]),
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
-            elif "cross" in lbl:
+            elif "x" in lbl:
+                print(lbl["x"])
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
