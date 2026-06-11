@@ -309,6 +309,7 @@ class ArenaTracker:
 
         measured_pos_cm : (x, y) – rå position fra homografien
         camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
+        camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
         camera_height   : kameraets højde over banen (cm)
         aruco_height    : ArUco-markørens højde over banen (cm)
         """
