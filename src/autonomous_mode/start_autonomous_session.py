@@ -58,6 +58,7 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
             # done
             _stop_ball_intake(connection)
             _send_win_message(connection)
+            logger.debug("All balls delivered, stopping.")
             break
 
         robot = await_robot(state, connection)
@@ -71,6 +72,7 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
             normal_balls_delivered += balls_in_arena_before_delivery - balls_in_arena_after_delivery
             balls_in_robot = 0
             _start_ball_intake(connection) # resume ball intake after delivery
+            logger.debug(f"balls_in_robot: {balls_in_robot}, total_normal_balls: {total_normal_balls}, normal_balls_delivered: {normal_balls_delivered}, estimated_ball_count: {state.estimated_ball_count}, balls_in_arena_before_delivery: {balls_in_arena_before_delivery}, balls_in_arena_after_delivery: {balls_in_arena_after_delivery}")
             continue
 
         logger.debug("Finding ball to collect")
