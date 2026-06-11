@@ -2,8 +2,8 @@ from src.autonomous_mode.deliver_balls import deliver_balls
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _stop_ball_intake, drive_and_collect_ball
-from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
+from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, adjust_heading, _stop_ball_intake
+from src.autonomous_mode.state_helpers import await_robot, drive_and_collect_ball, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
 

@@ -45,7 +45,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: li
     while True:
         if state.robot is None or point is None:
             break
-        if state.robot.is_facing_point(point, tolerance_deg=6.0):
+        if state.robot.is_facing_point(point, tolerance_deg=12.0):
             break
 
         angle = state.robot.angle_to_point(point)
@@ -112,3 +112,29 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[in
     )
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
+
+
+def adjust_heading(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+    get_logger().debug(f"adjusting heading")
+    while True:
+        if state.robot is None or point is None: break
+        if state.robot.is_facing_point(point, tolerance_deg=2.0): break
+
+        angle = state.robot.angle_to_point(point)
+        turn_ms    = 100
+        turn_speed = 10
+
+        command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
+        l_speed = turn_speed if angle > 0 else -turn_speed
+        r_speed = -turn_speed if angle > 0 else turn_speed
+
+
+        inst = Instruction(
+            name=command,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=turn_ms / 1000, lspeed=l_speed, rspeed=r_speed),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(turn_ms / 1000 + 0.05)
+
+        update_state(state)
