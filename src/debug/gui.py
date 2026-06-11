@@ -8,6 +8,7 @@ from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
 from src.state.arena_config import ArenaConfig
+from time import time
 # ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
@@ -54,6 +55,8 @@ BIG_GOAL_RATIO   = 0.131
 SMALL_GOAL_RATIO = 0.07
 
 FPS = 60
+
+_start_time = 0
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -251,6 +254,8 @@ def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, i
 def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
                corners: list[Corner], estimated_ball_count: int):
+    global _start_time
+
     px = WINDOW_W - PANEL_W + 15
     pw = PANEL_W - FIELD_MARGIN // 2
     panel_rect = pygame.Rect(WINDOW_W - PANEL_W, 0, PANEL_W, WINDOW_H)
@@ -307,15 +312,23 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     row("Ball count", estimated_ball_count)
     y += 16
 
+   # time passed
+    heading("Time")
+    elapsed = int(time() - _start_time)
+    row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
 def run_gui(state: ArenaState):
+    global _start_time
+
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
     pygame.display.set_caption("")
     clock  = pygame.time.Clock()
+    _start_time = time()
 
     font_sm = pygame.font.SysFont("monospace", 13)
     font_md = pygame.font.SysFont("monospace", 15, bold=True)
