@@ -129,20 +129,43 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
     """
 
     intersections = intersect_line_with_box(state.robot.position, point, inflate_bounding_box(state.cross.bounding_box))
+    result = ()
 
-    if not intersections and len(intersections) != 2:
+
+    if not intersections or len(intersections) != 2:
         raise ValueError("Has to have two intersections")
 
     # Intersected edges touching = shortest path using 1 waypoint
     if edges_are_parallel(intersections[0], intersections[1]) == False:
-        return tuple(set(intersections[0]) & (set(intersections[1])))
+        result = tuple(set(intersections[0]) & (set(intersections[1])))
 
     # Edges are opposite = shortest path using 2 waypoints
-    if edges_are_parallel(intersections[0], intersections[1]) == True:
-        pass
-    
-    pass
+    elif edges_are_parallel(intersections[0], intersections[1]) == True:
+        if dist_to_point(state.robot.position, intersections[0][0]) < dist_to_point(state.robot.position, intersections[1][0]):
+            close_edge_index = 0
+            far_edge_index = 1
+        else:
+            close_edge_index = 1
+            far_edge_index = 0
+        closest_edge = intersections[close_edge_index]
+        far_edge = intersections[far_edge_index]
 
+        # Since vertex indexes are flipped in close and far edges we have to flip the index to go to the waypoints
+        # that are in a "line". The cause of this is the for loop in the "intersect_line_with_box" function.
+        if dist_to_point(state.robot.position, closest_edge[0]) < dist_to_point(state.robot.position, closest_edge[1]):
+            close_edge_point_index = 0
+            far_edge_point_index = 1
+        else:
+            close_edge_point_index = 0
+            far_edge_point_index = 1
+        
+        waypoints = [closest_edge[close_edge_point_index], far_edge[far_edge_point_index]]
+        result = waypoints
+
+    return result
+
+def dist_to_point(start: tuple[float, float], target_point: tuple[float, float]) -> float:
+    return ((target_point[0] - start[0])**2 + (target_point[1] - start[1])**2)**0.5
 
 def line_segment_intersect(p1, p2, p3, p4):
     """Find skæring mellem to linjestykker (p1-p2 og p3-p4).
