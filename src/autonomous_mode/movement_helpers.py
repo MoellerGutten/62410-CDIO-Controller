@@ -128,3 +128,76 @@ def _calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnec
     """
     
     pass
+
+
+def line_segment_intersect(p1, p2, p3, p4):
+    """Find skæring mellem to linjestykker (p1-p2 og p3-p4).
+    Returnerer skæringspunkt eller None."""
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+    x4, y4 = p4
+
+    denom = (x1 - x2) * (y3 - y4) - (y1 - y2) * (x3 - x4)
+    if abs(denom) < 1e-10:
+        return None  # Parallelle linjer
+
+    t = ((x1 - x3) * (y3 - y4) - (y1 - y3) * (x3 - x4)) / denom
+    u = ((x1 - x3) * (y1 - y2) - (y1 - y3) * (x1 - x2)) / denom
+
+    if 0 <= t <= 1 and 0 <= u <= 1:
+        x = x1 + t * (x2 - x1)
+        y = y1 + t * (y2 - y1)
+        return (x, y)
+    return None
+
+
+def intersect_line_with_box(line_start, line_end, box_points):
+    """Find alle skæringer mellem en linje og en kasse (4 punkter).
+
+    Args:
+        line_start: (x, y) - linjens startpunkt
+        line_end:   (x, y) - linjens slutpunkt
+        box_points: liste af 4 (x, y) punkter i rækkefølge
+
+    Returns:
+        Liste med 1 eller 2 skæringspunkter
+    """
+    intersections = []
+
+    # Kasser har 4 kanter: 0-1, 1-2, 2-3, 3-0
+    n = len(box_points)
+    for i in range(n):
+        edge_start = box_points[i]
+        edge_end = box_points[(i + 1) % n]
+
+        pt = line_segment_intersect(line_start, line_end, edge_start, edge_end)
+        if pt is not None:
+            # Undgå dubletter (hjørneskæringer)
+            if not any(abs(pt[0] - ex[0]) < 1e-9 and abs(pt[1] - ex[1]) < 1e-9
+                       for ex in intersections):
+                intersections.append(pt)
+
+    return intersections
+
+
+def intersect_line_with_box(line_start, line_end, box_points):
+    """Find alle kanter i kassen som linjen skærer.
+
+    Returns:
+        Liste af tuples: ((kant_start, kant_slut), skæringspunkt)
+    """
+    results = []
+
+    n = len(box_points)
+    for i in range(n):
+        edge_start = box_points[i]
+        edge_end = box_points[(i + 1) % n]
+
+        pt = line_segment_intersect(line_start, line_end, edge_start, edge_end)
+        if pt is not None:
+            if not any(abs(pt[0] - ex_pt[0]) < 1e-9 and abs(pt[1] - ex_pt[1]) < 1e-9
+                       for _, ex_pt in results):
+                results.append(((edge_start, edge_end), pt))
+
+    return results
