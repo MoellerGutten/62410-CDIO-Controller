@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake, adjust_heading
 from src.autonomous_mode.state_helpers import _await_robot
 from src.debug.gui import FIELD_H
 from src.model.arena_state import ArenaState
@@ -25,6 +25,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 
 
 def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
+    if (state.robot == None): return
     center_line_point = [state.robot.position[0], arena_height / 2]
     while True:
         robot = _await_robot(state, connection)
@@ -51,7 +52,9 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(goal) < 12): break
+        if (robot.distance_to_point(goal) < 20): 
+                adjust_heading(state, connection, goal)
+                if (robot.distance_to_point(goal) < 15): break
 
         get_logger().debug("Drive to goal")
 

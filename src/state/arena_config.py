@@ -13,7 +13,7 @@ class ArenaConfig:
     #  YOLO-model                                                        #
     # ------------------------------------------------------------------ #
     model_path:     str   = "runs/pose/train12/weights/best.pt"
-    detection_conf: float = 0.30
+    detection_conf: float = 0.50
 
     # ------------------------------------------------------------------ #
     #  Kamera                                                            #
