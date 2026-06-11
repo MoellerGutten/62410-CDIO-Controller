@@ -3,7 +3,6 @@ from protocol import CommandName, Arguments, Instruction, InstructionType, Messa
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.model.cross import Cross
 from time import sleep
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -131,6 +130,7 @@ def adjust_heading(state: ArenaState, connection: RobotConnection, point: list[i
         sleep(turn_ms / 1000 + 0.05)
 
         update_state(state)
+
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
