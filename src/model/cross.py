@@ -6,7 +6,7 @@ class Cross:
 
     def __init__(self, position: tuple[int, int], 
                  orientation: float, 
-                 bounding_box: list[tuple[int, int], tuple[int, int], tuple[int, int], tuple[int, int]], 
+                 bounding_box: list[tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]],
                  side_length: float = 10):
         """
         Args:
@@ -32,7 +32,7 @@ class Cross:
     # Bounding box/waypoint zone helpers
     # ------------------------------------------------------------------
 
-    def inflate_bounding_box(self, inflation_cm) -> list[tuple[int, int], tuple[int, int], tuple[int, int], tuple[int, int]]:
+    def inflate_bounding_box(self, inflation_cm) -> list[tuple[float, float], tuple[float, float], tuple[float, float], tuple[float, float]]:
         result = []
         result.append(tuple(self.bounding_box[0][0] - inflation_cm, self.bounding_box[0][1] + inflation_cm))
         result.append(tuple(self.bounding_box[1][0] + inflation_cm, self.bounding_box[1][1] + inflation_cm))

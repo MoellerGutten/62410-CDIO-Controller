@@ -3,6 +3,7 @@ from protocol import CommandName, Arguments, Instruction, InstructionType, Messa
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
+from src.model.cross import inflate_bounding_box
 from time import sleep
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -107,7 +108,7 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[in
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
-def go_to(state: ArenaState, connection: RobotConnection, point: list[int]):
+def go_to(state: ArenaState, connection: RobotConnection, point: tuple[float, float]):
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -121,12 +122,16 @@ def go_to(state: ArenaState, connection: RobotConnection, point: list[int]):
 
     pass
 
-def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: list[int]) -> list[tuple[int, int]]:
+def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: list[int]) -> list[tuple[float, float]]:
     """
     Bruteforce hvilket waypoint man skal køre til for at få
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
     """
 
+    intersections = intersect_line_with_box(state.robot.position, point, inflate_bounding_box(state.cross.bounding_box))
+
+    for edgeStart, edgeEnd in intersections:
+        pass
     
     pass
 
@@ -153,36 +158,8 @@ def line_segment_intersect(p1, p2, p3, p4):
     return None
 
 
-def intersect_line_with_box(line_start, line_end, box_points):
-    """Find alle skæringer mellem en linje og en kasse (4 punkter).
 
-    Args:
-        line_start: (x, y) - linjens startpunkt
-        line_end:   (x, y) - linjens slutpunkt
-        box_points: liste af 4 (x, y) punkter i rækkefølge
-
-    Returns:
-        Liste med 1 eller 2 skæringspunkter
-    """
-    intersections = []
-
-    # Kasser har 4 kanter: 0-1, 1-2, 2-3, 3-0
-    n = len(box_points)
-    for i in range(n):
-        edge_start = box_points[i]
-        edge_end = box_points[(i + 1) % n]
-
-        pt = line_segment_intersect(line_start, line_end, edge_start, edge_end)
-        if pt is not None:
-            # Undgå dubletter (hjørneskæringer)
-            if not any(abs(pt[0] - ex[0]) < 1e-9 and abs(pt[1] - ex[1]) < 1e-9
-                       for ex in intersections):
-                intersections.append(pt)
-
-    return intersections
-
-
-def intersect_line_with_box(line_start, line_end, box_points):
+def intersect_line_with_box(line_start, line_end, box_points) -> list[tuple[float, float], float]:
     """Find alle kanter i kassen som linjen skærer.
 
     Returns:
