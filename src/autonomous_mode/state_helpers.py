@@ -4,11 +4,7 @@ from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-<<<<<<< HEAD
 from src.autonomous_mode.movement_helpers import nudge_robot
-=======
-from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot, adjust_heading
->>>>>>> main
 from time import time
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
