@@ -25,7 +25,7 @@ def start_autonomous_session(state: ArenaState) -> None:
 
         start_collecting_vip_balls(state, connection)
 
-        # start_collecting_normal_balls(state, connection)
+        start_collecting_normal_balls(state, connection)
         
         break
 
