@@ -13,6 +13,8 @@ class Robot:
         """
         self.position = position
         self.orientation = orientation % 360
+        self.robot_width_cm = 14
+        self.robot_length_cm = 24
 
     # ------------------------------------------------------------------
     # Distance helpers

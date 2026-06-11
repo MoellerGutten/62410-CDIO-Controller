@@ -4,7 +4,10 @@ from math import hypot
 class Cross:
     """Represents the cross-shaped obstacle on the field."""
 
-    def __init__(self, position: tuple[int, int], orientation: float, side_length: float = 10):
+    def __init__(self, position: tuple[int, int], 
+                 orientation: float, 
+                 bounding_box: list[tuple[int, int], tuple[int, int], tuple[int, int], tuple[int, int]], 
+                 side_length: float = 10):
         """
         Args:
             position:    (x, y) pixel coordinates of the cross centre.
@@ -15,6 +18,7 @@ class Cross:
         self.position = position
         self.orientation = orientation % 90
         self.side_length = side_length
+        self.bounding_box = bounding_box
 
     # ------------------------------------------------------------------
     # Distance helpers
@@ -23,6 +27,18 @@ class Cross:
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance from the cross centre to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
+
+    # ------------------------------------------------------------------
+    # Bounding box/waypoint zone helpers
+    # ------------------------------------------------------------------
+
+    def inflate_bounding_box(self, inflation_cm) -> list[tuple[int, int], tuple[int, int], tuple[int, int], tuple[int, int]]:
+        result = []
+        result.append(tuple(self.bounding_box[0][0] - inflation_cm, self.bounding_box[0][1] + inflation_cm))
+        result.append(tuple(self.bounding_box[1][0] + inflation_cm, self.bounding_box[1][1] + inflation_cm))
+        result.append(tuple(self.bounding_box[2][0] + inflation_cm, self.bounding_box[2][1] - inflation_cm))
+        result.append(tuple(self.bounding_box[3][0] - inflation_cm, self.bounding_box[3][1] - inflation_cm))
+        return result
 
     # ------------------------------------------------------------------
     # Orientation helpers
