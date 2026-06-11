@@ -34,10 +34,22 @@ class Cross:
 
     def inflate_bounding_box(self, inflation_cm) -> list[tuple[float, float]]:
         result = []
+
+        # The corners are slightly off, so we just force them to be the same :-)
+        
+        result.append((self.bounding_box[0][0] - inflation_cm, self.bounding_box[0][1] + inflation_cm))
+        result.append((self.bounding_box[1][0] + inflation_cm, self.bounding_box[0][1] + inflation_cm))
+        result.append((self.bounding_box[1][0] + inflation_cm, self.bounding_box[2][1] - inflation_cm))
+        result.append((self.bounding_box[0][0] - inflation_cm, self.bounding_box[2][1] - inflation_cm))
+
+        """
+        Old version:
         result.append((self.bounding_box[0][0] - inflation_cm, self.bounding_box[0][1] + inflation_cm))
         result.append((self.bounding_box[1][0] + inflation_cm, self.bounding_box[1][1] + inflation_cm))
         result.append((self.bounding_box[2][0] + inflation_cm, self.bounding_box[2][1] - inflation_cm))
         result.append((self.bounding_box[3][0] - inflation_cm, self.bounding_box[3][1] - inflation_cm))
+        """
+
         return result
 
     # ------------------------------------------------------------------
