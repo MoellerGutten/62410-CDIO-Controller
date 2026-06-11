@@ -5,9 +5,10 @@ from src.autonomous_mode.start_autonomous_session import start_autonomous_sessio
 from src.state.state_manager import poll_state
 from src.debug.gui import run_gui, get_test_field_state
 from src.model.arena_state import ArenaState
-from src.debug.log import get_logger
+from src.debug.log import get_logger, setup_logger
 
 def start() -> None:
+    setup_logger()
     args = parse_args()
     state = get_test_field_state()
 
