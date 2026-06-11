@@ -17,7 +17,7 @@ from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from src.state.arena_config import ArenaConfig
-from src.debug.log import get_logger
+from src.debug.log import get_logger, setup_logger
 
 class ArenaTracker:
     """
@@ -623,4 +623,5 @@ class ArenaTracker:
 
 
 if __name__ == "__main__":
+    setup_logger()
     ArenaTracker().run()
