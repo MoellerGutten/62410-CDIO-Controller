@@ -278,7 +278,6 @@ class ArenaTracker:
         state.robot = self._get_aruco_robot(frame)
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
-
         for d in detections:
             lbl = d["label"]
             if "ball" in lbl:
@@ -286,23 +285,42 @@ class ArenaTracker:
                     position=(d["ax"], d["ay"]),
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
-            elif "x" in lbl:
+            elif "cross" in lbl:
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
                 orientation = self._cross_orientation(corners_cm)
-                # Get side length: distance between first two adjacent corners
-                x1, y1 = corners_cm[0]
-                x2, y2 = corners_cm[1]
-                side_length = math.sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
-
-                state.cross = Cross(position=(cx, cy), orientation=orientation, side_length=side_length)
+                state.cross = Cross(position=(cx, cy), orientation=orientation)
 
         return state
 
     # ------------------------------------------------------------------ #
     #  ArUco robot detection                                               #
     # ------------------------------------------------------------------ #
+    @staticmethod
+    def _correct_for_height(
+            measured_pos_cm: tuple[float, float],
+            camera_pos_cm: tuple[int, int],
+            camera_height: int,
+            aruco_height: int,
+    ) -> tuple[float, float]:
+        """
+        Korrigerer for parallax-fejl når ArUco-markøren sidder hævet over banen.
+
+        measured_pos_cm : (x, y) – rå position fra homografien
+        camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
+        camera_height   : kameraets højde over banen (cm)
+        aruco_height    : ArUco-markørens højde over banen (cm)
+        """
+        cx, cy = camera_pos_cm
+        mx, my = measured_pos_cm
+        scale = (camera_height - aruco_height) / camera_height
+
+        return (
+            cx + (mx - cx) * scale,
+            cy + (my - cy) * scale,
+        )
+
     def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
         if self._aruco_detector:
             corners, ids, _ = self._aruco_detector.detectMarkers(frame)
@@ -330,7 +348,19 @@ class ArenaTracker:
 
         heading = round(math.degrees(math.atan2(front_mid_y - center_y, front_mid_x - center_x)), 1)
 
-        return Robot(position=(round(center_x, 1), round(center_y, 1)), orientation=heading)
+        corrected_x, corrected_y = self._correct_for_height(
+            measured_pos_cm=(center_x, center_y),
+            camera_pos_cm=(self._cfg.camera_x, self._cfg.camera_y),
+            camera_height=self._cfg.camera_height,
+            aruco_height=self._cfg.aruco_height,
+        )
+        get_logger().debug(
+            f"ArUco detected at raw (cm): ({center_x:.1f}, {center_y:.1f})")
+        get_logger().debug(
+            f"ArUco compensation at (cm): ({corrected_x:.1f}, {corrected_y:.1f})")
+
+
+        return Robot(position=(round(corrected_x, 1), round(corrected_y, 1)), orientation=heading)
 
     # ------------------------------------------------------------------ #
     #  Geometry helpers                                                    #

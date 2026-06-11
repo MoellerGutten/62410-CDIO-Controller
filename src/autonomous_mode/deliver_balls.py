@@ -32,7 +32,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(center_line_point) < 5): break
+        if (robot.distance_to_point(center_line_point) < 10): break
 
         get_logger().debug("Drive to center")
 
@@ -51,7 +51,7 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        if (robot.distance_to_point(goal) < 10): break
+        if (robot.distance_to_point(goal) < 12): break
 
         get_logger().debug("Drive to goal")
 

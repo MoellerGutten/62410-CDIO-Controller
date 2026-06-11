@@ -4,19 +4,19 @@ from dataclasses import dataclass
 @dataclass(frozen=True)
 class ArenaConfig:
     # ------------------------------------------------------------------ #
-    #  Fysiske mål på banen (mål dem én gang med målebånd)               #
+    #  Fysiske mål på banen                                              #
     # ------------------------------------------------------------------ #
     width_cm:  float = 167.0
     height_cm: float = 121.5
 
     # ------------------------------------------------------------------ #
-    #  YOLO-model                                                          #
+    #  YOLO-model                                                        #
     # ------------------------------------------------------------------ #
     model_path:     str   = "runs/pose/train7/weights/best.pt"
     detection_conf: float = 0.30
 
     # ------------------------------------------------------------------ #
-    #  Kamera                                                              #
+    #  Kamera                                                            #
     # ------------------------------------------------------------------ #
     camera_index:  int = -1       # -1 = auto-detect
     frame_width:   int = 1280
@@ -24,12 +24,20 @@ class ArenaConfig:
     frame_fps:     int = 30
 
     # ------------------------------------------------------------------ #
-    #  Filer                                                               #
+    # Kamera position og aruco højde                                     #
+    # ------------------------------------------------------------------ #
+    camera_height: int = 170
+    camera_x:      int = 79
+    camera_y:      int = 59
+    aruco_height:  int = 12
+
+    # ------------------------------------------------------------------ #
+    #  Filer                                                             #
     # ------------------------------------------------------------------ #
     arena_config_file: str = "image_recon/arena_config.json"
     camera_calib_file: str = "image_recon/camera_calib.npz"
 
     # ------------------------------------------------------------------ #
-    #  ArUco                                                               #
+    #  ArUco                                                             #
     # ------------------------------------------------------------------ #
     aruco_target_id: int = 0
