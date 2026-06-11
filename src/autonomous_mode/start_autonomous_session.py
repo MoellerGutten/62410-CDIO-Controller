@@ -9,6 +9,8 @@ from protocol import Instruction, InstructionType, CommandName, Arguments, Messa
 
 _last_ball_count_update_time = 0 # time at which the estimated ball count was last updated
 
+COLLECT_BALLS_PER_DELIVERY = 4
+
 def start_autonomous_session(state: ArenaState) -> None:
     global _last_ball_count_update
 
@@ -63,10 +65,10 @@ def collect_normal_balls(state: ArenaState, connection: RobotConnection) -> None
 
         robot = await_robot(state, connection)
 
-        if balls_in_robot >= 4 or state.estimated_ball_count == 0:
+        if balls_in_robot >= COLLECT_BALLS_PER_DELIVERY or state.estimated_ball_count == 0:
             balls_in_arena_before_delivery = total_normal_balls - normal_balls_delivered
             logger.debug(f"Balls in robot: {balls_in_robot}, estimated ball count: {state.estimated_ball_count}. Commencing delivery")
-            # 4 balls in robot, deliver
+            # COLLECT_BALLS_PER_DELIVERY balls in robot, deliver
             deliver_balls(state, connection)
             balls_in_arena_after_delivery = update_ball_count_estimate(state)
             normal_balls_delivered += balls_in_arena_before_delivery - balls_in_arena_after_delivery
