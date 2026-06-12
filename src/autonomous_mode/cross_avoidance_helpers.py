@@ -10,7 +10,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
     """
 
     intersections = intersect_line_with_box(state.robot.position, point, state.cross.inflate_bounding_box(inflation_cm=10))
-    result = ()
+    result = []
 
 
     if not intersections or len(intersections) != 2:
