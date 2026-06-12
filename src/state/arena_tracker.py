@@ -285,12 +285,12 @@ class ArenaTracker:
                     position=(d["ax"], d["ay"]),
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
-            elif "cross" in lbl:
+            elif "x" in lbl:
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
                 orientation = self._cross_orientation(corners_cm)
-                state.cross = Cross(position=(cx, cy), orientation=orientation)
+                state.cross = Cross(position=(cx, cy), orientation=orientation, bounding_box=corners_cm)
 
         return state
 
@@ -308,6 +308,7 @@ class ArenaTracker:
         Korrigerer for parallax-fejl når ArUco-markøren sidder hævet over banen.
 
         measured_pos_cm : (x, y) – rå position fra homografien
+        camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
         camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
         camera_height   : kameraets højde over banen (cm)
         aruco_height    : ArUco-markørens højde over banen (cm)

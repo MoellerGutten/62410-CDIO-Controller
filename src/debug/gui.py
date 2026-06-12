@@ -241,7 +241,7 @@ def draw_robot(surf, robot: Robot, corners):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
-def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
+def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
     x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
     y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom
@@ -253,7 +253,7 @@ def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, i
 
 def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
-               corners: list[Corner], estimated_ball_count: int):
+               corners: list[Corner], estimated_ball_count: int, estimated_balls_in_robot: int, estimated_balls_delivered: int):
     global _start_time
 
     px = WINDOW_W - PANEL_W + 15
@@ -308,8 +308,10 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     y += 16
 
     # estimated ball count
-    heading("Estimates")
-    row("Ball count", estimated_ball_count)
+    heading("Ball estimates")
+    row("In arena", estimated_ball_count)
+    row("In robot", estimated_balls_in_robot)
+    row("Delivered", estimated_balls_delivered)
     y += 16
 
    # time passed
@@ -352,6 +354,8 @@ def run_gui(state: ArenaState):
             cross = state.cross
             corners = list(state.corners)
             estimated_ball_count = state.estimated_ball_count
+            estimated_balls_in_robot = state.estimated_balls_in_robot
+            estimated_balls_delivered = state.estimated_balls_delivered
 
         # ------------------------------------------------------------------
         # Draw
@@ -366,7 +370,7 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered)
 
         pygame.display.flip()
 
@@ -390,7 +394,7 @@ def get_test_field_state():
         Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
     ]
     state.cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
-                   orientation=25.0)
+                   orientation=25.0, bounding_box=[(60, 80), (70, 80), (70, 60), (60, 60)])
     state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
                    orientation=35.0)
     return state
