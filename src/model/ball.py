@@ -28,13 +28,13 @@ class Ball:
         """Returns a boolean based on if the ball is next to a edge"""
         print(self.position)
         if (self.position[0] >= 150):
-            return [True, tuple[140, self.position[1]]]
+            return [True, tuple[135, self.position[1]]]
         if (self.position[0] <= 10):
-            return [True, tuple[20, self.position[1]]]
+            return [True, tuple[25, self.position[1]]]
         if (self.position[1] >= 105):
-            return [True, tuple[self.position[0], 95]]
+            return [True, tuple[self.position[0], 90]]
         if (self.position[1] <= 10):
-            return [True, tuple[self.position[0], 20]]
+            return [True, tuple[self.position[0], 25]]
         return [False, self.position]
 
     def __repr__(self) -> str:

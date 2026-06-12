@@ -41,12 +41,14 @@ def collect_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
         ball_point = vip.position
         
         is_edge_ball, new_ball_point = vip.is_edge_ball()
-        if (is_edge_ball): ball_point = new_ball_point
+        if (is_edge_ball):
+            _turn_toward_point(state, connection, new_ball_point)
 
+            drive_and_collect_ball(robot, new_ball_point, connection, state)
+        else:
+            _turn_toward_point(state, connection, ball_point)
 
-        _turn_toward_point(state, connection, ball_point)
-
-        #drive_and_collect_ball(robot, ball_point, connection, state)
+            drive_and_collect_ball(robot, ball_point, connection, state)
 
         logger.debug("End of loop\n")
 
