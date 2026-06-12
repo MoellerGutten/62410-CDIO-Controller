@@ -14,7 +14,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
 
 
     if not intersections or len(intersections) != 2:
-        raise ValueError("Has to have two intersections")
+        return result
 
     # Intersected edges touching = shortest path using 1 waypoint
     if edges_are_parallel(intersections[0], intersections[1]) == False:
