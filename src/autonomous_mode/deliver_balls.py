@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import drive_forward, turn_to_point, _start_ejaculation, _stop_ball_intake, adjust_heading
+from src.autonomous_mode.movement_helpers import drive_forward, turn_to_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot
 from src.debug.gui import FIELD_H
 from src.model.arena_state import ArenaState
@@ -46,9 +46,7 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
     while True:
         robot = await_robot(state, connection)
 
-        if (robot.distance_to_point(goal) < 25): 
-                adjust_heading(state, connection, goal)
-                if (robot.distance_to_point(goal) < 15): break
+        if (robot.distance_to_point(goal) < 15): break
 
         get_logger().debug("Drive to goal")
 
