@@ -44,19 +44,20 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
     if (is_edge_ball):
         go_to(state, connection, new_ball_point)
 
-        turn_to_point(state, connection, ball.position, True)
+        turn_to_point(state, connection, ball.position)
         while True:
             robot = await_robot(state, connection)
-            if (robot.distance_to_point(ball.position) < 10):
+            if (robot.distance_to_point(ball.position) < 12):
+                burst_into_ball(state, connection, ball.position)
                 update_ball_count_estimate(state)
                 drive_backward(state, connection)
                 break
             else:
+                turn_to_point(state, connection, ball.position, True)
                 drive_forward(state, connection, ball.position)
             
     else: 
         go_to(state, connection, ball.position)
-        burst_into_ball(state, connection, ball.position)
         update_ball_count_estimate(state)
 
 
