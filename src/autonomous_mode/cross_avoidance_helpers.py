@@ -9,7 +9,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
     """
 
-    intersections = intersect_line_with_box(state.robot.position, point, Cross.inflate_bounding_box(state.cross.bounding_box))
+    intersections = intersect_line_with_box(state.robot.position, point, Cross.inflate_bounding_box(state.cross.bounding_box, inflation_cm=10))
     result = ()
 
 
