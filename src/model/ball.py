@@ -23,6 +23,13 @@ class Ball:
     def distance_to_point(self, point: tuple[int, int]) -> float:
         """Euclidean distance to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
+    
+    def is_edge_ball(self) -> bool:
+        """Returns a boolean based on if the ball is next to a edge"""
+        print(self.position)
+        if (self.position[0] >= 150 or self.position[1] >= 105 or self.position[0] <= 10 or self.position [1] <= 10):
+            return True
+        return False
 
     def __repr__(self) -> str:
         return f"Ball(position={self.position}, is_vip={self.is_vip})"

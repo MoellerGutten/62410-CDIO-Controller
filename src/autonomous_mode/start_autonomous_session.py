@@ -39,10 +39,11 @@ def collect_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
         vip = robot.get_nearest_vip_ball(state.balls)
         if vip is None: continue
         ball_point = vip.position
+        print(vip.is_edge_ball())
 
         _turn_toward_point(state, connection, ball_point)
 
-        drive_and_collect_ball(robot, ball_point, connection, state)
+        #drive_and_collect_ball(robot, ball_point, connection, state)
 
         logger.debug("End of loop\n")
 
