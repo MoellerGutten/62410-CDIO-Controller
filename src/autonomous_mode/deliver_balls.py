@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake, adjust_heading
+from src.autonomous_mode.movement_helpers import drive_forward, turn_to_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot
 from src.debug.gui import FIELD_H
 from src.model.arena_state import ArenaState
@@ -34,8 +34,8 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
 
         get_logger().debug("Drive to center")
 
-        _turn_toward_point(state, connection, center_line_point)
-        _drive_toward_point(state, connection, center_line_point)
+        turn_to_point(state, connection, center_line_point)
+        drive_forward(state, connection, center_line_point)
 
         get_logger().debug("End of loop\n")
 
@@ -47,12 +47,12 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
         robot = await_robot(state, connection)
 
         if (robot.distance_to_point(goal) < 25): 
-                adjust_heading(state, connection, goal)
+                turn_to_point(state, connection, goal, True)
                 if (robot.distance_to_point(goal) < 15): break
 
         get_logger().debug("Drive to goal")
 
-        _turn_toward_point(state, connection, goal)
-        _drive_toward_point(state, connection, goal)
+        turn_to_point(state, connection, goal)
+        drive_forward(state, connection, goal)
 
         get_logger().debug("End of loop\n")
