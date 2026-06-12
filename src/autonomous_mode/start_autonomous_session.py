@@ -79,9 +79,10 @@ def start_autonomous_session(state: ArenaState) -> None:
         robot = await_robot(state, connection)
 
         if _should_deliver(state.estimated_balls_in_robot, state):
-            logger.debug(f"Delivering — balls_in_robot={state.estimated_balls_in_robot}, estimated={state.estimated_ball_count}")
+            logger.debug(f"Delivering — estimated_balls_in_robot={state.estimated_balls_in_robot}, estimated_ball_count={state.estimated_ball_count}, estimated_balls_delivered={state.estimated_balls_delivered}")
+            balls_delivered_so_far = _deliver_and_recount(state, connection, total_balls, state.estimated_balls_delivered)
             with state.lock:
-                state.estimated_balls_delivered = _deliver_and_recount(state, connection, total_balls, state.estimated_balls_delivered)
+                state.estimated_balls_delivered = balls_delivered_so_far
                 state.estimated_balls_in_robot = 0
             continue
 
