@@ -42,7 +42,7 @@ def nudge_robot(connection: RobotConnection) -> None:
     sleep(0.35)
 
 
-def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     while True:
         if state.robot is None or point is None:
             break
@@ -89,15 +89,14 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     sleep(fwd_ms / 1000 + 0.05)
 
 
-def drive_backward(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:
         return
 
-    distance = state.robot.distance_to_point(point)
-    fwd_ms = max(100, min(2000, int(distance * 5)))
-    fwd_speed =  max(30, min(100, int(distance * 0.8)))
+    fwd_ms = 500
+    fwd_speed =  50
 
-    get_logger().debug(f"Driving backward: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    get_logger().debug(f"Driving backward: speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.BACKWARD,
@@ -179,7 +178,7 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
     for waypoint in waypoints:
         _iter = 0
         while distance > distance_tolerance or _iter <= max_iter:
-            _turn_toward_point(state, connection, waypoint)
+            turn_to_point(state, connection, waypoint)
             drive_forward(state, connection, waypoint)
 
             distance = dist_to_point(robot.position, waypoint)

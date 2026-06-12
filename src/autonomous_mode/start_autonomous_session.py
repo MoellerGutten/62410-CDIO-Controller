@@ -4,7 +4,7 @@ from src.model.arena_state import ArenaState
 from src.model.robot import Robot
 from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, _turn_toward_point, _stop_ball_intake, adjust_heading, burst_into_ball, drive_backward, go_to
+from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, turn_to_point, _stop_ball_intake, adjust_heading, burst_into_ball, drive_backward, go_to
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
@@ -43,16 +43,19 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
     is_edge_ball, new_ball_point = ball.is_edge_ball()
     if (is_edge_ball):
         go_to(state, connection, new_ball_point)
-        _turn_toward_point(state, connection, ball.position)
+
+        while state.robot.distance_to_point(ball.position) < 12:
+            turn_to_point(state, connection, ball.position)
+            drive_forward(state, connection)
+
         burst_into_ball(state, connection, ball.position)
         update_ball_count_estimate(state)
         drive_backward(state, connection)
             
     else: 
         go_to(state, connection, ball.position)
-        if state.robot.distance_to_point(ball.position) < 12:
-            burst_into_ball(state, connection, ball.position)
-            update_ball_count_estimate(state)
+        burst_into_ball(state, connection, ball.position)
+        update_ball_count_estimate(state)
 
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> tuple[int, int]:
