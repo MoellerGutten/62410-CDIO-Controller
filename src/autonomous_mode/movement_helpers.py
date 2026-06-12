@@ -136,7 +136,7 @@ def adjust_heading(state: ArenaState, connection: RobotConnection, point: tuple[
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
 def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float]):
-    if state.robot is None or point is None:
+    if state.robot is None or target_point is None:
         return
     
     get_logger().debug(f"Going to point: {target_point}")

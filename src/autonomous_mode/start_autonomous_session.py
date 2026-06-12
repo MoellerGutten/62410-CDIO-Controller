@@ -23,7 +23,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             get_logger().warning("Robot not detected after nudge — retrying main loop")
             continue
 
-        start_collecting_vip_balls(state, connection)
+        #start_collecting_vip_balls(state, connection)
 
         start_collecting_normal_balls(state, connection)
         
