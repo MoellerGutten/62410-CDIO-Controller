@@ -3,31 +3,36 @@ from numpy import median
 from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
+from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _collect_ball, _drive_toward_point, _nudge_robot, adjust_heading
+from src.autonomous_mode.movement_helpers import nudge_robot
 from time import time
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
 
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
 
-def _await_robot(state: ArenaState, connection: RobotConnection):
-    """Poll for robot detection. If not found after MAX attempts, nudge the robot and return None."""
-    for attempt in range(MAX_ROBOT_DETECTION_ATTEMPTS):
+def await_robot(state: ArenaState, connection: RobotConnection):
+    """Block until the robot is detected, nudging periodically if needed."""
+    logger = get_logger("await_robot")
+    attempt = 0
+    while True:
         update_state(state)
         if state.robot is not None:
             return state.robot
-        get_logger().warning(f"Robot not detected (attempt {attempt + 1}/{MAX_ROBOT_DETECTION_ATTEMPTS})")
 
-    get_logger().warning("Robot still not detected — nudging robot")
-    _nudge_robot(connection)
-    return None
+        attempt += 1
+        logger.warning(f"Robot not detected (attempt {attempt})")
+
+        if attempt % MAX_ROBOT_DETECTION_ATTEMPTS == 0:
+            logger.warning("Robot still not detected — nudging robot")
+            nudge_robot(connection)
 
 
 def update_ball_count_estimate(state: ArenaState) -> int:
     begin = time()
     ball_counts = []
-    BALL_COUNT_ESTIMATION_SNAPSHOTS = 50
+    BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
     for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
         update_state(state)
         ball_counts.append(len(state.balls))
@@ -39,18 +44,4 @@ def update_ball_count_estimate(state: ArenaState) -> int:
 
 
 def has_vip_balls(state: ArenaState) -> bool:
-    balls_contain_vip = False
-    for ball in state.balls:
-        if ball.is_vip:
-            balls_contain_vip = True
-            break
-    return balls_contain_vip
-
-
-def drive_and_collect_ball(robot, ball_point, connection, state):
-    if robot.distance_to_point(ball_point) < 15:
-        adjust_heading(state, connection, ball_point)
-        _collect_ball(state, connection, ball_point)
-        update_ball_count_estimate(state)
-    else:
-        _drive_toward_point(state, connection, ball_point)
+    return any(ball.is_vip for ball in state.balls)
