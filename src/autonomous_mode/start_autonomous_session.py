@@ -39,7 +39,10 @@ def collect_vip_balls(state: ArenaState, connection: RobotConnection) -> None:
         vip = robot.get_nearest_vip_ball(state.balls)
         if vip is None: continue
         ball_point = vip.position
-        print(vip.is_edge_ball())
+        
+        is_edge_ball, new_ball_point = vip.is_edge_ball()
+        if (is_edge_ball): ball_point = new_ball_point
+
 
         _turn_toward_point(state, connection, ball_point)
 
