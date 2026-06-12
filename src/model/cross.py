@@ -4,7 +4,7 @@ from math import hypot
 class Cross:
     """Represents the cross-shaped obstacle on the field."""
 
-    def __init__(self, position: tuple[int, int], 
+    def __init__(self, position: tuple[float, float], 
                  orientation: float, 
                  bounding_box: list[tuple[float, float]],
                  side_length: float = 10):
@@ -24,7 +24,7 @@ class Cross:
     # Distance helpers
     # ------------------------------------------------------------------
 
-    def distance_to_point(self, point: tuple[int, int]) -> float:
+    def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance from the cross centre to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
 

@@ -238,7 +238,7 @@ def draw_robot(surf, robot: Robot, corners):
     # Orientation arrow (pygame y is flipped → negate angle)
     draw_arrow(surf, C_ROBOT_ARROW, (x, y), robot.orientation, r + 10, tip_size=7, width=2)
 
-def field_to_screen(pos: tuple[int, int], corners: list[Corner]) -> tuple[int, int]:
+def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
     x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
     y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom

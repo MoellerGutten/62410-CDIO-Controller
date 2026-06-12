@@ -42,7 +42,7 @@ def _nudge_robot(connection: RobotConnection) -> None:
     sleep(0.35)
 
 
-def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     while True:
         if state.robot is None or point is None:
             break
@@ -70,7 +70,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: li
         update_state(state)
 
 
-def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     if state.robot is None:
         return
 
@@ -88,7 +88,7 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: l
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
 
-def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def _collect_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     if state.robot is None:
         return
 
@@ -107,7 +107,7 @@ def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[in
     sleep(fwd_ms / 1000 + 0.05)
 
 
-def adjust_heading(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def adjust_heading(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     get_logger().debug(f"adjusting heading")
     while True:
         if state.robot is None or point is None: break
@@ -158,5 +158,6 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
     waypoints.append(target_point)
 
     for point in waypoints:
+        # TODO: use turning function that turns around the robots axis, without moving the robot
         adjust_heading(state, connection, point)
         _drive_toward_point(state, connection, point)
