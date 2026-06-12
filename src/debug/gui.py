@@ -308,10 +308,10 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     y += 16
 
     # estimated ball count
-    heading("Estimates")
-    row("Ball count", estimated_ball_count)
-    row("Balls in robot", estimated_balls_in_robot)
-    row("Balls delivered", estimated_balls_delivered)
+    heading("Ball estimates")
+    row("In arena", estimated_ball_count)
+    row("In robot", estimated_balls_in_robot)
+    row("Delivered", estimated_balls_delivered)
     y += 16
 
    # time passed
