@@ -46,7 +46,9 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: 
     while True:
         robot = await_robot(state, connection)
 
-        if (robot.distance_to_point(goal) < 15): break
+        if (robot.distance_to_point(goal) < 25): 
+                turn_to_point(state, connection, goal, True)
+                if (robot.distance_to_point(goal) < 15): break
 
         get_logger().debug("Drive to goal")
 

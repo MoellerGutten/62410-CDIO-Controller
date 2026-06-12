@@ -42,14 +42,12 @@ def nudge_robot(connection: RobotConnection) -> None:
     sleep(0.35)
 
 
-def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool) -> None:
+def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
     while True:
-        if state.robot is None or point is None:
-            break
+        if state.robot is None or point is None: break
 
-        tolerance_deg = 6.0 if precise_mode else 2.0
-        if state.robot.is_facing_point(point, tolerance_deg):
-            break
+        tolerance_deg = 2.0 if precise_mode else 6.0
+        if state.robot.is_facing_point(point, tolerance_deg): break
 
         angle = state.robot.angle_to_point(point)
         if (precise_mode):
