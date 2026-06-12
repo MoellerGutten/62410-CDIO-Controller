@@ -1,4 +1,5 @@
-from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
+from autonomous_mode.state_helpers import _await_robot
+from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
@@ -136,10 +137,6 @@ def adjust_heading(state: ArenaState, connection: RobotConnection, point: tuple[
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
 def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float]):
-    if state.robot is None or target_point is None:
-        return
-    
-    get_logger().debug(f"Going to point: {target_point}")
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -150,17 +147,21 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
+    robot = _await_robot(state, connection)
+    get_logger().debug(f"Going to point: {target_point}")
+
+    distance = dist_to_point(robot.position, target_point)
+    distance_tolerance = 10.0
+    max_iter = 20
+
     waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
-    if len(waypoints) == 0:
-        get_logger().debug(f"Not colliding with cross. Going to: {target_point}")
-    elif len(waypoints) == 1:
-        get_logger().debug(f"Using 1 waypoint. Going to: {target_point}")
-    elif len(waypoints) == 2:
-        get_logger().debug(f"Using 2 waypoints. Going to: {target_point}")
-
     waypoints.append(target_point)
+    for waypoint in waypoints:
+        _iter = 0
+        while distance > distance_tolerance or _iter <= max_iter:
+            _turn_toward_point(state, connection, waypoint)
+            _drive_toward_point(state, connection, waypoint)
 
-    for point in waypoints:
-        # TODO: use turning function that turns around the robots axis, without moving the robot
-        adjust_heading(state, connection, point)
-        _drive_toward_point(state, connection, point)
+            distance = dist_to_point(robot.position, waypoint)
+            _iter += 1
+            robot = _await_robot(state, connection)
