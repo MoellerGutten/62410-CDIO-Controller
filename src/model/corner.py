@@ -4,7 +4,7 @@ from math import hypot
 class Corner:
     """Represents one detected corner of the field boundary."""
 
-    def __init__(self, position: tuple[int, int]):
+    def __init__(self, position: tuple[float, float]):
         """
         Args:
             position: (x, y) pixel coordinates of the corner.
@@ -22,7 +22,7 @@ class Corner:
             self.position[1] - other.position[1],
         )
 
-    def distance_to_point(self, point: tuple[int, int]) -> float:
+    def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
 
@@ -31,7 +31,7 @@ class Corner:
     # ------------------------------------------------------------------
 
     @staticmethod
-    def bounding_box(corners: list["Corner"]) -> tuple[tuple[int, int], tuple[int, int]]:
+    def bounding_box(corners: list["Corner"]) -> tuple[tuple[float, float], tuple[float, float]]:
         """
         Given a list of Corner objects, returns the axis-aligned bounding box
         as ((min_x, min_y), (max_x, max_y)).
