@@ -70,7 +70,7 @@ def _turn_toward_point(state: ArenaState, connection: RobotConnection, point: tu
         update_state(state)
 
 
-def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     if state.robot is None:
         return
 
@@ -108,16 +108,7 @@ def drive_backward(state: ArenaState, connection: RobotConnection, point: list[i
     sleep(fwd_ms / 1000 + 0.05)
 
 
-def drive_and_collect_ball(robot, ball_point, connection, state):
-    from src.autonomous_mode.state_helpers import update_ball_count_estimate
-    if robot.distance_to_point(ball_point) < 12:
-        adjust_heading(state, connection, ball_point)
-        _collect_ball(state, connection, ball_point)
-        update_ball_count_estimate(state)
-    else:
-        _drive_toward_point(state, connection, ball_point)
-
-def _collect_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+def burst_into_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
     if state.robot is None:
         return
 
@@ -189,7 +180,7 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
         _iter = 0
         while distance > distance_tolerance or _iter <= max_iter:
             _turn_toward_point(state, connection, waypoint)
-            _drive_toward_point(state, connection, waypoint)
+            drive_forward(state, connection, waypoint)
 
             distance = dist_to_point(robot.position, waypoint)
             _iter += 1
