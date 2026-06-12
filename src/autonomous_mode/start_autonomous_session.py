@@ -43,15 +43,15 @@ def _collect_ball(robot: Robot, ball_point: tuple[float, float], connection: Rob
     drive_and_collect_ball(robot, ball_point, connection, state)
 
 
-def _deliver_and_recount( state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> tuple[int, int]:
+def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> tuple[int, int]:
     """
-    Deliver balls, recount estimated ball count, and return updated (total_balls, balls_delivered_so_far).
+    Deliver balls, recount estimated ball count, and return updated balls_delivered_so_far.
     """
     balls_in_arena_before = total_balls - balls_delivered_so_far
     deliver_balls(state, connection)
     balls_in_arena_after = update_ball_count_estimate(state)
     newly_delivered = balls_in_arena_before - balls_in_arena_after
-    return total_balls, balls_delivered_so_far + newly_delivered
+    return balls_delivered_so_far + newly_delivered
 
 
 def start_autonomous_session(state: ArenaState) -> None:
@@ -63,15 +63,14 @@ def start_autonomous_session(state: ArenaState) -> None:
 
     total_balls = update_ball_count_estimate(state)
     _last_ball_count_update_time = time()
-    balls_delivered = 0
-    balls_in_robot = 0
 
     while True:
         _tick(state)
 
-        balls_in_robot = total_balls - state.estimated_ball_count - balls_delivered
+        with state.lock:
+            state.estimated_balls_in_robot = total_balls - state.estimated_ball_count - state.estimated_balls_delivered
 
-        if _all_balls_delivered(balls_in_robot, state):
+        if _all_balls_delivered(state.estimated_balls_in_robot, state):
             logger.debug("All balls delivered, stopping.")
             _stop_ball_intake(connection)
             _send_win_message(connection)
@@ -79,13 +78,14 @@ def start_autonomous_session(state: ArenaState) -> None:
 
         robot = await_robot(state, connection)
 
-        if _should_deliver(balls_in_robot, state):
-            logger.debug(f"Delivering — balls_in_robot={balls_in_robot}, estimated={state.estimated_ball_count}")
-            total_balls, balls_delivered = _deliver_and_recount(state, connection, total_balls, balls_delivered)
-            balls_in_robot = 0
+        if _should_deliver(state.estimated_balls_in_robot, state):
+            logger.debug(f"Delivering — balls_in_robot={state.estimated_balls_in_robot}, estimated={state.estimated_ball_count}")
+            with state.lock:
+                state.estimated_balls_delivered = _deliver_and_recount(state, connection, total_balls, state.estimated_balls_delivered)
+                state.estimated_balls_in_robot = 0
             continue
 
-        ball = _select_next_ball(robot, balls_in_robot, state)
+        ball = _select_next_ball(robot, state.estimated_balls_in_robot, state)
         if ball is None:
             continue
 
