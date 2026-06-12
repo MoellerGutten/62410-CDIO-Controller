@@ -1,4 +1,3 @@
-from autonomous_mode.state_helpers import _await_robot
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
@@ -147,6 +146,7 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
+    from src.autonomous_mode.state_helpers import _await_robot
     robot = _await_robot(state, connection)
     get_logger().debug(f"Going to point: {target_point}")
 
