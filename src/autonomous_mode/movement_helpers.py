@@ -155,8 +155,8 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
-    from src.autonomous_mode.state_helpers import _await_robot
-    robot = _await_robot(state, connection)
+    from src.autonomous_mode.state_helpers import await_robot
+    robot = await_robot(state, connection)
     get_logger().debug(f"Going to point: {target_point}")
 
     distance = dist_to_point(robot.position, target_point)
@@ -173,4 +173,4 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
 
             distance = dist_to_point(robot.position, waypoint)
             _iter += 1
-            robot = _await_robot(state, connection)
+            robot = await_robot(state, connection)
