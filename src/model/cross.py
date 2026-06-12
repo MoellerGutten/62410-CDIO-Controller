@@ -73,4 +73,4 @@ class Cross:
         return min(arms, key=lambda a: abs((a - angle + 180) % 360 - 180))
 
     def __repr__(self) -> str:
-        return f"Cross(position={self.position}, orientation={self.orientation:.1f}°)"
+        return f"Cross(position={self.position}, orientation={self.orientation:.1f}°, bounding_box={self.bounding_box})"
