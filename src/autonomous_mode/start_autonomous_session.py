@@ -4,7 +4,7 @@ from src.model.arena_state import ArenaState
 from src.model.robot import Robot
 from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, _turn_toward_point, _stop_ball_intake, adjust_heading, burst_into_ball, drive_and_collect_ball, drive_backward, go_to
+from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, _turn_toward_point, _stop_ball_intake, adjust_heading, burst_into_ball, drive_backward, go_to
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
@@ -43,14 +43,9 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
     is_edge_ball, new_ball_point = ball.is_edge_ball()
     if (is_edge_ball):
         go_to(state, connection, new_ball_point)
-        while True:
-            _turn_toward_point(state, connection, ball.position)
-            if state.robot.distance_to_point(ball.position) < 12:
-                burst_into_ball(state, connection, ball.position)
-                update_ball_count_estimate(state)
-                break
-            else:
-                drive_forward(state, connection, ball.position)
+        _turn_toward_point(state, connection, ball.position)
+        burst_into_ball(state, connection, ball.position)
+        update_ball_count_estimate(state)
         drive_backward(state, connection)
             
     else: 
@@ -108,7 +103,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             continue
 
         logger.debug(f"Collecting ball at {ball.position}")
-        _collect_ball(robot, ball.position, connection, state)
+        _collect_ball(robot, ball, connection, state)
         logger.debug("End of loop\n")
 
 
