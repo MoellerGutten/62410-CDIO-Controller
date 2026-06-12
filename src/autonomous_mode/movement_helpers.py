@@ -1,5 +1,5 @@
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
-from autonomous_mode.state_helpers import _await_robot
+from src.autonomous_mode.state_helpers import _await_robot
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection

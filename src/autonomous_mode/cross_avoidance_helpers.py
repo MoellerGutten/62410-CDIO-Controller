@@ -1,6 +1,6 @@
 from src.lib.connection import RobotConnection
-from model.arena_state import ArenaState
-from model.cross import Cross
+from src.model.arena_state import ArenaState
+from src.model.cross import Cross
 
 
 def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> list[tuple[float, float]]:
