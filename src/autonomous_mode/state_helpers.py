@@ -3,6 +3,7 @@ from numpy import median
 from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
+from src.model.ball import Ball
 from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import nudge_robot
 from time import time
@@ -43,9 +44,4 @@ def update_ball_count_estimate(state: ArenaState) -> int:
 
 
 def has_vip_balls(state: ArenaState) -> bool:
-    balls_contain_vip = False
-    for ball in state.balls:
-        if ball.is_vip:
-            balls_contain_vip = True
-            break
-    return balls_contain_vip
+    return any(ball.is_vip for ball in state.balls)
