@@ -360,3 +360,24 @@ def run_gui(state: ArenaState):
     pygame.quit()
     sys.exit()
 
+def get_test_field_state():
+    state = ArenaState()
+    state.corners = [
+        Corner((FIELD_X0, FIELD_Y0)),   # top-left
+        Corner((FIELD_X1, FIELD_Y0)),   # top-right
+        Corner((FIELD_X1, FIELD_Y1)),   # bottom-right
+        Corner((FIELD_X0, FIELD_Y1)),   # bottom-left
+    ]
+    state.balls = [
+        Ball((FIELD_X0 + 120, FIELD_Y0 + 90),  is_vip=False),
+        Ball((FIELD_X0 + 280, FIELD_Y0 + 200), is_vip=False),
+        Ball((FIELD_X0 + 420, FIELD_Y0 + 310), is_vip=True),   # VIP ball
+        Ball((FIELD_X0 + 180, FIELD_Y0 + 380), is_vip=False),
+        Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
+        Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
+    ]
+    state.cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
+                   orientation=25.0, bounding_box=[(60, 80), (70, 80), (70, 60), (60, 60)])
+    state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
+                   orientation=35.0)
+    return state
