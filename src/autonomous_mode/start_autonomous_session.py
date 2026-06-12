@@ -54,12 +54,10 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
         drive_backward(state, connection)
             
     else: 
-        _turn_toward_point(state, connection, ball.position)
+        go_to(state, connection, ball.position)
         if state.robot.distance_to_point(ball.position) < 12:
             burst_into_ball(state, connection, ball.position)
             update_ball_count_estimate(state)
-        else:
-            drive_forward(state, connection, ball.position)
 
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> tuple[int, int]:
