@@ -1,4 +1,5 @@
 from autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
+from autonomous_mode.state_helpers import _await_robot
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
@@ -136,6 +137,9 @@ def adjust_heading(state: ArenaState, connection: RobotConnection, point: tuple[
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
 def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float]):
+    if state.robot is None or point is None:
+        return
+    
     get_logger().debug(f"Going to point: {target_point}")
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
