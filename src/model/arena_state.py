@@ -13,6 +13,8 @@ class ArenaState:
         self.robot: Robot | None = None
         self.balls: list[Ball] = []
         self.estimated_ball_count: int = 11 # 11 balls on the field
+        self.estimated_balls_in_robot: int = 0
+        self.estimated_balls_delivered: int = 0
         self.cross: Cross | None = None
         self.corners: list[Corner] = []
 
