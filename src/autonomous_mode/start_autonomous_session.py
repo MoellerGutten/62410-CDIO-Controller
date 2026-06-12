@@ -1,6 +1,7 @@
 from src.autonomous_mode.deliver_balls import deliver_balls
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
+from src.model.robot import Robot
 from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _stop_ball_intake, drive_and_collect_ball
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
@@ -12,10 +13,13 @@ _last_ball_count_update_time = 0
 COLLECT_BALLS_PER_DELIVERY = 4
 
 
-def _select_next_ball(robot, state: ArenaState):
+def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
     Return the next ball to collect, or None if nothing is reachable.
     """
+    if has_vip_balls(state) and balls_in_robot == 3:
+        # if vip ball is on the field and the robot contains 3 balls
+        return robot.get_nearest_vip_ball(state.balls)
     return robot.get_nearest_ball(state.balls)
 
 
@@ -32,7 +36,7 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
     return state.estimated_ball_count == 0 and balls_in_robot == 0
 
 
-def _collect_ball(robot, ball_point, connection: RobotConnection, state: ArenaState) -> None:
+def _collect_ball(robot: Robot, ball_point: tuple[float, float], connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
     _turn_toward_point(state, connection, ball_point)
     drive_and_collect_ball(robot, ball_point, connection, state)
@@ -80,7 +84,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             balls_in_robot = 0
             continue
 
-        ball = _select_next_ball(robot, state)
+        ball = _select_next_ball(robot, balls_in_robot, state)
         if ball is None:
             continue
 
