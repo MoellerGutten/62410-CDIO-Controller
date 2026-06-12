@@ -150,8 +150,8 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
     distance = dist_to_point(robot.position, target_point)
     distance_tolerance = 10.0
     max_iter = 20
-
-    waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
+    if state.cross:
+        waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
     waypoints.append(target_point)
     for waypoint in waypoints:
         _iter = 0
