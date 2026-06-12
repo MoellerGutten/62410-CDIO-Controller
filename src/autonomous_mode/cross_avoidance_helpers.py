@@ -19,7 +19,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnect
     # Intersected edges touching = shortest path using 1 waypoint
     if edges_are_parallel(intersections[0], intersections[1]) == False:
         # TODO: points dont have the exact same coordinates, so this will have unintended behaviour
-        result = tuple(set(intersections[0]) & (set(intersections[1])))[0] # dont ask about the index :)
+        result.append(tuple(set(intersections[0]) & (set(intersections[1])))[0]) # dont ask about the index :)
 
     # Edges are opposite = shortest path using 2 waypoints
     elif edges_are_parallel(intersections[0], intersections[1]) == True:
