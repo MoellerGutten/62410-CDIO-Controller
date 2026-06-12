@@ -35,7 +35,7 @@ class Robot:
         """
         if balls is None or len(balls) == 0:
             return None
-        return min([ball for ball in balls if ball.is_vip], lambda ball: self.distance_to_point(ball.position))
+        return min([ball for ball in balls if not ball.is_vip], key=lambda ball: self.distance_to_point(ball.position))
 
     def get_nearest_vip_ball(self, balls: list[Ball]) -> Ball | None:
         """
