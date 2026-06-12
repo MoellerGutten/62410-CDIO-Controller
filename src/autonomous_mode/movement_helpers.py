@@ -87,6 +87,26 @@ def _drive_toward_point(state: ArenaState, connection: RobotConnection, point: l
     connection.send_message(Message(instruction=inst))
     sleep(fwd_ms / 1000 + 0.05)
 
+
+def drive_backward(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
+    if state.robot is None:
+        return
+
+    distance = state.robot.distance_to_point(point)
+    fwd_ms = max(100, min(2000, int(distance * 5)))
+    fwd_speed =  max(30, min(100, int(distance * 0.8)))
+
+    get_logger().debug(f"Driving backward: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+
+    inst = Instruction(
+        name=CommandName.BACKWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=fwd_ms / 1000, speed=fwd_speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(fwd_ms / 1000 + 0.05)
+
+
 def drive_and_collect_ball(robot, ball_point, connection, state):
     from src.autonomous_mode.state_helpers import update_ball_count_estimate
     if robot.distance_to_point(ball_point) < 12:

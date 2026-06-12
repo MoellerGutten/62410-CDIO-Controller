@@ -4,7 +4,7 @@ from src.model.arena_state import ArenaState
 from src.model.robot import Robot
 from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _stop_ball_intake, drive_and_collect_ball
+from src.autonomous_mode.movement_helpers import _start_ball_intake, _turn_toward_point, _stop_ball_intake, drive_and_collect_ball, drive_backward
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
@@ -42,13 +42,12 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
     """Navigate to and collect a single ball."""
     is_edge_ball, new_ball_point = ball.is_edge_ball()
     if (is_edge_ball):
-        # TODO Finshed edge balls.
+        while True:
         # Go to new_ball_point
-        # Adjust heading
-        # Collect the ball
-        # Go backwards
-        _turn_toward_point(state, connection, ball.position)
-        drive_and_collect_ball(robot, ball.position, connection, state)
+            _turn_toward_point(state, connection, ball.position)
+            drive_and_collect_ball(robot, ball.position, connection, state)
+            drive_backward(state, connection)
+            
     else: 
         _turn_toward_point(state, connection, ball.position)
         drive_and_collect_ball(robot, ball.position, connection, state)
