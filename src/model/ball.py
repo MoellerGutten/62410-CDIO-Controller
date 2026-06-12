@@ -32,7 +32,7 @@ class Ball:
         if self.position[0] <= 10.0:
             return [True, (30.0, self.position[1])]
         if self.position[1] >= 105.0:
-            return [True, (self.position[0], 85.0)]
+            return [True, (self.position[0], 90.0)]
         if self.position[1] <= 10.0:
             return [True, (self.position[0], 30.0)]
         return [False, self.position]
