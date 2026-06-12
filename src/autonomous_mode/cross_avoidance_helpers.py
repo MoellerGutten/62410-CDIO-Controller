@@ -1,5 +1,4 @@
-
-from lib.connection import RobotConnection
+from src.lib.connection import RobotConnection
 from model.arena_state import ArenaState
 from model.cross import Cross
 
