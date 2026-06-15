@@ -28,11 +28,12 @@ def _stop_ball_intake(connection: RobotConnection) -> None:
 
 def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
-        name=SequenceName.EJECT,
-        type=InstructionType.SEQUENCE,
-        args=Arguments(speed=100),
+        name=CommandName.BALL_OUT,
+        type=InstructionType.COMMAND,
+        args=Arguments(speed=100, seconds=5, block=True), # blocking to prevent short circuiting ejaculation
     )
     connection.send_message(Message(instruction=inst))
+    _start_ball_intake(connection) # start intake after ejaculation
 
 def nudge_robot(connection: RobotConnection) -> None:
     inst = Instruction(
