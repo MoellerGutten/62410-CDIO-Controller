@@ -153,8 +153,8 @@ def go_to(state: ArenaState
     get_logger().debug(f"Going to point: {target_point}")
 
     distance = dist_to_point(robot.position, target_point)
-    distance_tolerance = 3.0
-    max_iter = 20
+    distance_tolerance = 6.0
+    max_iter = 30
     waypoints = []
     if state.cross:
         waypoints = calculate_shortest_waypoint_path(state, connection, target_point)

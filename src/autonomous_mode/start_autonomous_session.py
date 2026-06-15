@@ -57,7 +57,7 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
                 drive_forward(state, connection, ball.position)
             
     else: 
-        go_to(state, connection, ball.position)
+        go_to(state, connection, ball.position, approach_radius=10.0)
         update_ball_count_estimate(state)
 
 
