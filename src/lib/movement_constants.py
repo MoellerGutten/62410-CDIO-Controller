@@ -10,6 +10,9 @@ BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10 # amount of seconds after which an
 
 WIN_MESSAGE = "I did it"
 
+SLEEP_BUFFER_SECONDS = 0.05
+"""When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
+
 ################################
 # _start_ball_intake constants #
 ################################
@@ -46,5 +49,32 @@ TURN_TO_POINT_PRECISE_SPEED = 10
 TURN_TO_POINT_PRECISE_MS = 100
 """Milliseconds to turn robot for in precise mode"""
 
-TURN_TO_POINT_SLEEP_BUFFER = 0.05
-"""After sending the instruction to turn, sleep for the turn time plus this buffer"""
+############################
+# drive_backward constants #
+############################
+
+BACKWARD_SPEED = 50
+"""The speed at which to drive backwards"""
+
+BACKWARD_MS = 500
+"""The amount of milliseconds to drive backwards"""
+
+#############################
+# burst_into_ball constants #
+#############################
+
+BURST_FORWARD_MS = 250
+"""The amount of miliseconds for which to burst forward when collecting a ball"""
+
+BURST_FORWARD_SPEED = 75
+"""The speed at which to burst forward when collecting a ball"""
+
+###################
+# go_to constants #
+###################
+
+GO_TO_DISTANCE_TOLERANCE = 10.0
+"""The tolerance with which go_to determines whether the robot has reached the target point"""
+
+GO_TO_MAX_MOVES = 20
+"""The maximum amount of moves allowed in go_to"""
