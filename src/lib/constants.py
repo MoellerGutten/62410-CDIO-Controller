@@ -2,13 +2,17 @@
 # start_autonomous_session constants #
 ######################################
 
-BALLS_PER_DELIVERY = 4 # how many balls to collect before delivery
+BALLS_PER_DELIVERY = 4
+"""How many balls to collect before delivering"""
 
-ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 12 # the distance within which the robot must be of a ball before bursting forwards
+ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 12
+"""The distance within which the robot must be of the robot before bursting forwards to collect the ball"""
 
-BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10 # amount of seconds after which an estimate of ball count is invalid and must be re-estimated
+BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10
+"""The amount of seconds after which an estimate of ball count is invalid and must be re-estimated"""
 
 WIN_MESSAGE = "I did it"
+"""Message said aloud by the robot when finishing"""
 
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
@@ -18,20 +22,27 @@ SLEEP_BUFFER_SECONDS = 0.05
 ################################
 
 BALL_INTAKE_ON_FOR_SECONDS = 500
+"""The amount of seconds for which the ball collection motor will run before stopping when started"""
+
 BALL_INTAKE_SPEED = 100
+"""The speed with which the ball collection motor will run when ingesting balls"""
 
 ################################
 # _start_ejaculation constants #
 ################################
 
 EJACULATE_SPEED = 100
+"""The speed with which the ball collection motor will run when spitting out balls"""
 
 # #######################
 # nudge_robot constants #
 #########################
 
 NUDGE_SPEED = 15
+"""The speed with which the robot will be nudged when it is not identified and the controller is attempting to re-acquire it"""
+
 NUDGE_SECONDS = 0.3
+"""The amount of seconds for which the robot will be nudged when it is not identified and the controller is attempting to re-acquire it"""
 
 ###########################
 # turn_to_point constants #
@@ -108,3 +119,4 @@ BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
 #########################
 
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
+"""The amount of attempts the controller will make to acquire the robot before attempting a nudge"""
