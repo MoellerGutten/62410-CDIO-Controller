@@ -154,10 +154,8 @@ def go_to(state: ArenaState
 
     distance_tolerance = 6.0
     max_iter = 50
-    waypoints = []
 
-    if state.cross is not None:
-        waypoints = calculate_shortest_waypoint_path(state, connection, point)
+    waypoints = calculate_shortest_waypoint_path(state, connection, point) if state.cross is not None else []
     waypoints.append(point)
 
     logger.debug(f"Waypoints: {waypoints}")
@@ -171,7 +169,7 @@ def go_to(state: ArenaState
 
         if approach_radius > 0.0 and i == len(waypoints) - 1:
             logger.debug(f"Approaching final waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
-
+            # TODO: flyt det her ud til helper
             dx = waypoint[0] - robot.position[0]
             dy = waypoint[1] - robot.position[1]
             d = hypot(dx, dy)
