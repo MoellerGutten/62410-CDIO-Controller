@@ -1,5 +1,7 @@
 from math import hypot
 
+from sympy.strategies.branch import debug
+
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
@@ -45,11 +47,13 @@ def nudge_robot(connection: RobotConnection) -> None:
 
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
+    from src.autonomous_mode.state_helpers import await_robot
+    robot = await_robot(state, connection)
     while True:
-        if state.robot is None or point is None: break
+        if robot is None or point is None: break
 
         tolerance_deg = 2.0 if precise_mode else 6.0
-        if state.robot.is_facing_point(point, tolerance_deg): break
+        if robot.is_facing_point(point, tolerance_deg): break
 
         angle = state.robot.angle_to_point(point)
         if (precise_mode):
@@ -73,15 +77,18 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         connection.send_message(Message(instruction=inst))
         sleep(turn_ms / 1000 + 0.05)
 
-        update_state(state)
+        # update_state(state)
+        robot = await_robot(state, connection)
 
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
-    if state.robot is None:
-        return
+    # if state.robot is None:
+    #     return
+    from src.autonomous_mode.state_helpers import await_robot
+    robot = await_robot(state, connection)
 
-    distance = state.robot.distance_to_point(point)
-    fwd_ms = max(100, min(2000, int(distance * 5)))
+    distance = robot.distance_to_point(point)
+    fwd_ms = max(100, min(2000, int(distance * 10)))
     fwd_speed =  max(30, min(100, int(distance * 0.8)))
 
     # get_logger().debug(f"Driving: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
@@ -150,7 +157,7 @@ def go_to(state: ArenaState
     """
     from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
-    get_logger().debug(f"Go_to point: {point} with approach radius: {approach_radius}")
+    get_logger().debug(f"Go_to point: ({point[0]:.1f}, {point[0]:.1f})  with approach radius: {approach_radius}")
 
     distance = dist_to_point(robot.position, point)
     distance_tolerance = 6.0
@@ -189,6 +196,8 @@ def go_to(state: ArenaState
         get_logger().debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
 
         while distance > distance_tolerance and _iter <= max_iter:
+            if _iter == 0: # for debug
+                get_logger().debug(f"Starting to move towards waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             turn_to_point(state, connection, current_target)
             drive_forward(state, connection, current_target)
 
@@ -196,4 +205,4 @@ def go_to(state: ArenaState
             _iter += 1
             robot = await_robot(state, connection)
 
-        get_logger().debug(f"iterations to get to wp: {_iter}")
+        get_logger().debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
