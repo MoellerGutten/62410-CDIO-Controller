@@ -51,7 +51,7 @@ def run_controller(state: ArenaState, args: Namespace) -> None:
         start_autonomous_session(state)
 
 
-def parse_args() -> None:
+def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
     parser.add_argument("--it",  action="store_true", help="Run interactive session")

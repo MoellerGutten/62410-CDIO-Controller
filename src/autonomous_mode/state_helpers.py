@@ -1,9 +1,6 @@
-from numpy import median
-
 from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
-from src.model.ball import Ball
 from src.debug.log import get_logger
 from time import time, sleep
 
@@ -26,7 +23,7 @@ def await_robot(state: ArenaState, connection: RobotConnection):
 
         if attempt % MAX_ROBOT_DETECTION_ATTEMPTS == 0:
             from src.autonomous_mode.movement_helpers import nudge_robot
-            logger.warning("Robot still not detected — nudging robot")  
+            logger.warning("Robot still not detected — nudging robot")
             nudge_robot(connection)
 
 

@@ -54,7 +54,7 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         if robot.is_facing_point(point, tolerance_deg): break
 
         angle = robot.angle_to_point(point)
-        if (precise_mode):
+        if precise_mode:
             turn_ms    = 100
             turn_speed = 10
         else:
@@ -80,9 +80,6 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
 
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
-    # if state.robot is None:
-    #     return
-    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
@@ -119,8 +116,6 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
 
 
 def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
-    # if state.robot is None:
-    #     return
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
@@ -154,7 +149,6 @@ def go_to(state: ArenaState
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
-    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
     logger = get_logger("go_to")
     logger.debug(f"Go_to point: ({point[0]:.1f}, {point[0]:.1f})  with approach radius: {approach_radius}")
