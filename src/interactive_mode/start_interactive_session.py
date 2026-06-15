@@ -11,8 +11,8 @@ def start_interactive_session() -> None:
             break
         if not inp:
             continue
-        name, kwargs = parse_input(inp)
         try:
+            name, kwargs = parse_input(inp)
             msg = build_message_from_short_command(name, kwargs)
             response = connection.send_message(msg)
             logger.info(f"Robot response: {response}")
