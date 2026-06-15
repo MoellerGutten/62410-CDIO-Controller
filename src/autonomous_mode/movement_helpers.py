@@ -53,7 +53,7 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         tolerance_deg = 2.0 if precise_mode else 6.0
         if robot.is_facing_point(point, tolerance_deg): break
 
-        angle = state.robot.angle_to_point(point)
+        angle = robot.angle_to_point(point)
         if (precise_mode):
             turn_ms    = 100
             turn_speed = 10
@@ -118,11 +118,12 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     sleep(fwd_ms / 1000 + 0.05)
 
 
-def burst_into_ball(state: ArenaState, connection: RobotConnection, point: list[int]) -> None:
-    if state.robot is None:
-        return
+def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+    # if state.robot is None:
+    #     return
+    robot = await_robot(state, connection)
 
-    distance = state.robot.distance_to_point(point)
+    distance = robot.distance_to_point(point)
     fwd_ms = 250
     fwd_speed = 75
 
