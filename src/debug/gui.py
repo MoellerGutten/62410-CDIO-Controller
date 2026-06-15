@@ -345,7 +345,7 @@ def run_gui(state: ArenaState):
         t += dt
 
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or state.isRobotDone:
                 running = False
 
         with state.lock:

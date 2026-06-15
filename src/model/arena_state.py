@@ -17,6 +17,7 @@ class ArenaState:
         self.estimated_balls_delivered: int = 0
         self.cross: Cross | None = None
         self.corners: list[Corner] = []
+        self.isRobotDone: bool = False
 
     def __repr__(self) -> str:
         ball_strs = ", ".join(repr(b) for b in self.balls)
