@@ -5,5 +5,5 @@ nc: 3
 names:
   0: WBall
   1: OBall
-  2: X
+  2: x
 kpt_shape: [4, 3]
