@@ -178,15 +178,15 @@ def go_to(state: ArenaState
             if d > approach_radius:
                 scale = (d - approach_radius) / d
                 current_target = (
-                    waypoint[0] + scale * dx,
-                    waypoint[1] + scale * dy
+                    robot.position[0] + scale * dx,
+                    robot.position[1] + scale * dy
                 )
             else:
                 # robotten er allerede inden for approach radius
                 get_logger().debug(f"Already within approach radius: {d:.2f} <= {approach_radius} exiting goto")
                 return
 
-        get_logger().debug(f"current waypoint: {waypoint}, current target point: {current_target}")
+        get_logger().debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
 
         while distance > distance_tolerance and _iter <= max_iter:
             turn_to_point(state, connection, current_target)
