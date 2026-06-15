@@ -1,4 +1,4 @@
-path: image_recon/YOLO_data_6.0
+path: image_recon/YOLO_data
 train: images/train
 val: images/val
 nc: 3
