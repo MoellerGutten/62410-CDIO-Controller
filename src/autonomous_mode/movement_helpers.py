@@ -162,26 +162,10 @@ def go_to(state: ArenaState
 
     for i, waypoint in enumerate(waypoints):
         _iter = 0
-        target_point = waypoint
+        while distance > distance_tolerance or _iter <= max_iter:
+            turn_to_point(state, connection, waypoint)
+            drive_forward(state, connection, waypoint)
 
-        if approach_radius > 0.0 and i == len(waypoints) - 1:
-            dx = waypoint[0] - robot.position[0]
-            dy = waypoint[1] - robot.position[1]
-            d = hypot(dx, dy)
-            if d > approach_radius:
-                scale = (d - approach_radius) / d
-                target_point = (
-                    waypoint[0] + scale * dx,
-                    waypoint[1] + scale * dy
-                )
-            else:
-                # Allerede inden for approach radius
-                return
-
-        while distance > distance_tolerance and _iter <= max_iter:
-            turn_to_point(state, connection, target_point)
-            drive_forward(state, connection, target_point)
-
-            distance = dist_to_point(robot.position, target_point)
+            distance = dist_to_point(robot.position, waypoint)
             _iter += 1
             robot = await_robot(state, connection)
