@@ -136,7 +136,7 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: list[
 
 def go_to(state: ArenaState
           , connection: RobotConnection
-          , target_point: tuple[float, float]
+          , point: tuple[float, float]
           , approach_radius: float= 0.0) -> None:
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
@@ -150,27 +150,34 @@ def go_to(state: ArenaState
     """
     from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
-    get_logger().debug(f"Going to point: {target_point}")
+    get_logger().debug(f"Going to point: {point}")
 
-    distance = dist_to_point(robot.position, target_point)
+    distance = dist_to_point(robot.position, point)
     distance_tolerance = 6.0
     max_iter = 30
     waypoints = []
     if state.cross:
-        waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
-    waypoints.append(target_point)
+        waypoints = calculate_shortest_waypoint_path(state, connection, point)
+    waypoints.append(point)
+
+    get_logger().debug(f"Waypoints: {waypoints}")
 
     for i, waypoint in enumerate(waypoints):
         _iter = 0
-        target_point = waypoint
+        current_target = waypoint
+
+        get_logger().debug(f"target Waypoint: {current_target}  current wp number: {i}")
 
         if approach_radius > 0.0 and i == len(waypoints) - 1:
+
+            get_logger().debug(f"Approaching final waypoint: {current_target}  wp number: {i}")
+
             dx = waypoint[0] - robot.position[0]
             dy = waypoint[1] - robot.position[1]
             d = hypot(dx, dy)
             if d > approach_radius:
                 scale = (d - approach_radius) / d
-                target_point = (
+                current_target = (
                     waypoint[0] + scale * dx,
                     waypoint[1] + scale * dy
                 )
@@ -179,9 +186,11 @@ def go_to(state: ArenaState
                 return
 
         while distance > distance_tolerance and _iter <= max_iter:
-            turn_to_point(state, connection, target_point)
-            drive_forward(state, connection, target_point)
+            turn_to_point(state, connection, current_target)
+            drive_forward(state, connection, current_target)
 
-            distance = dist_to_point(robot.position, target_point)
+            distance = dist_to_point(robot.position, current_target)
             _iter += 1
             robot = await_robot(state, connection)
+        
+        get_logger().debug(f"iterations to get to wp: {_iter}")
