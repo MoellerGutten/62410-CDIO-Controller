@@ -4,7 +4,7 @@ from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
 from src.state.arena_config import ArenaConfig
-from src.lib.movement_constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE
 
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     logger = get_logger("deliver_balls")    

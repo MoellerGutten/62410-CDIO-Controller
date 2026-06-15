@@ -8,7 +8,7 @@ from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_inta
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.movement_constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
+from src.lib.constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
 
 _last_ball_count_update_time = 0
 

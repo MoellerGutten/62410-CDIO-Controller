@@ -95,3 +95,10 @@ DRIVE_TO_GOAL_AT_GOAL_RANGE = 15
 
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
+
+###################################
+# ball count estimation constants #
+###################################
+
+BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
+"""The amount of images to capture and analyze when estimating ball count"""
