@@ -153,7 +153,6 @@ def go_to(state: ArenaState
     logger = get_logger("go_to")
     logger.debug(f"Go_to point: ({point[0]:.1f}, {point[0]:.1f})  with approach radius: {approach_radius}")
 
-    distance = dist_to_point(robot.position, point)
     distance_tolerance = 6.0
     max_iter = 50
     waypoints = []
@@ -165,12 +164,12 @@ def go_to(state: ArenaState
 
     for i, waypoint in enumerate(waypoints):
         _iter = 0
+        robot = await_robot(state, connection)
         current_target = waypoint
 
         logger.debug(f"target Waypoint: ({current_target[0]:.1f}, {current_target[1]:.2f})  current wp number: {i}")
 
         if approach_radius > 0.0 and i == len(waypoints) - 1:
-            robot = await_robot(state, connection)  # we need rob's current pos
             logger.debug(f"Approaching final waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
 
             dx = waypoint[0] - robot.position[0]
@@ -187,6 +186,7 @@ def go_to(state: ArenaState
                 logger.debug(f"Already within approach radius: {d:.2f} <= {approach_radius} exiting goto")
                 return
 
+        distance = dist_to_point(robot.position, current_target)
         logger.debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
 
         while distance > distance_tolerance and _iter <= max_iter:
