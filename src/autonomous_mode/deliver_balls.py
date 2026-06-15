@@ -25,17 +25,17 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 
 
 def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
-    if (state.robot == None): return
-    center_line_point = [state.robot.position[0], arena_height / 2]
+    robot = await_robot(state, connection)
+    center_line_point = [robot.position[0], arena_height / 2]
     while True:
-        robot = await_robot(state, connection)
 
-        if (robot.distance_to_point(center_line_point) < 10): break
+        if robot.distance_to_point(center_line_point) < 10: break
 
         get_logger().debug("Drive to center")
-
+        # TODO: fix center_line_point lige nu er det bare én float - det skal vel være et punkt?
         turn_to_point(state, connection, center_line_point)
         drive_forward(state, connection, center_line_point)
+        robot = await_robot(state, connection)
 
         get_logger().debug("End of loop\n")
 
