@@ -1,14 +1,12 @@
 from math import hypot
-
-from sympy.strategies.branch import debug
-
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
-from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
+from src.autonomous_mode.state_helpers import await_robot
+
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
 
@@ -47,7 +45,7 @@ def nudge_robot(connection: RobotConnection) -> None:
 
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
-    from src.autonomous_mode.state_helpers import await_robot
+    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
     while True:
         if robot is None or point is None: break
@@ -84,7 +82,7 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     # if state.robot is None:
     #     return
-    from src.autonomous_mode.state_helpers import await_robot
+    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
@@ -155,7 +153,7 @@ def go_to(state: ArenaState
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
-    from src.autonomous_mode.state_helpers import await_robot
+    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
     logger = get_logger("go_to")
     logger.debug(f"Go_to point: ({point[0]:.1f}, {point[0]:.1f})  with approach radius: {approach_radius}")
