@@ -1,3 +1,5 @@
+from math import hypot
+
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
@@ -136,7 +138,10 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: list[
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
-def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float]):
+def go_to(state: ArenaState
+          , connection: RobotConnection
+          , target_point: tuple[float, float]
+          , approach_radius: float= 0.0) -> None:
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -152,10 +157,13 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
     get_logger("go_to").debug(f"Going to point: {target_point}")
 
     distance = dist_to_point(robot.position, target_point)
+    waypoints = []
+
     if state.cross:
         waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
     waypoints.append(target_point)
-    for waypoint in waypoints:
+
+    for i, waypoint in enumerate(waypoints):
         _iter = 0
         while distance > GO_TO_DISTANCE_TOLERANCE or _iter <= GO_TO_MAX_MOVES:
             turn_to_point(state, connection, waypoint)
