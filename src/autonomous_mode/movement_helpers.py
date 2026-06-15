@@ -175,7 +175,7 @@ def go_to(state: ArenaState
                     waypoint[1] + scale * dy
                 )
             else:
-                # Allerede inden for approach radius
+                # robotten er allerede inden for approach radiusk
                 return
 
         while distance > distance_tolerance and _iter <= max_iter:
