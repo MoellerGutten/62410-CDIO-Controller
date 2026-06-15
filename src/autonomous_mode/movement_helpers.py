@@ -1,3 +1,5 @@
+from math import hypot
+
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from src.state.state_manager import update_state
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
@@ -132,7 +134,10 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: list[
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
-def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float]):
+def go_to(state: ArenaState
+          , connection: RobotConnection
+          , target_point: tuple[float, float]
+          , approach_radius: float= 0.0) -> None:
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -150,15 +155,33 @@ def go_to(state: ArenaState, connection: RobotConnection, target_point: tuple[fl
     distance = dist_to_point(robot.position, target_point)
     distance_tolerance = 10.0
     max_iter = 20
+    waypoints = []
     if state.cross:
         waypoints = calculate_shortest_waypoint_path(state, connection, target_point)
     waypoints.append(target_point)
-    for waypoint in waypoints:
-        _iter = 0
-        while distance > distance_tolerance or _iter <= max_iter:
-            turn_to_point(state, connection, waypoint)
-            drive_forward(state, connection, waypoint)
 
-            distance = dist_to_point(robot.position, waypoint)
+    for i, waypoint in enumerate(waypoints):
+        _iter = 0
+        target_point = waypoint
+
+        if approach_radius > 0.0 and i == len(waypoints) - 1:
+            dx = waypoint[0] - robot.position[0]
+            dy = waypoint[1] - robot.position[1]
+            d = hypot(dx, dy)
+            if d > approach_radius:
+                scale = (d - approach_radius) / d
+                target_point = (
+                    waypoint[0] + scale * dx,
+                    waypoint[1] + scale * dy
+                )
+            else:
+                # Allerede inden for approach radius
+                return
+
+        while distance > distance_tolerance and _iter <= max_iter:
+            turn_to_point(state, connection, target_point)
+            drive_forward(state, connection, target_point)
+
+            distance = dist_to_point(robot.position, target_point)
             _iter += 1
             robot = await_robot(state, connection)
