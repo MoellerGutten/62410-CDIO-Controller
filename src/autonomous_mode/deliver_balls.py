@@ -33,11 +33,12 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
 
         get_logger().debug("Drive to center")
         # TODO: fix center_line_point lige nu er det bare én float - det skal vel være et punkt?
+        #   og ændre til go_to fixed point mellem cross of goal.
         turn_to_point(state, connection, center_line_point)
         drive_forward(state, connection, center_line_point)
         robot = await_robot(state, connection)
 
-        get_logger().debug("End of loop\n")
+        # get_logger().debug("End of loop\n")
 
         
 
