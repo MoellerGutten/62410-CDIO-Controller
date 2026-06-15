@@ -63,7 +63,7 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
 
-        get_logger().debug(f"Turning: command={command}, l_speed={l_speed}, r_speed={r_speed}")
+        # get_logger().debug(f"Turning: command={command}, l_speed={l_speed}, r_speed={r_speed}")
 
         inst = Instruction(
             name=command,
@@ -84,7 +84,7 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     fwd_ms = max(100, min(2000, int(distance * 5)))
     fwd_speed =  max(30, min(100, int(distance * 0.8)))
 
-    get_logger().debug(f"Driving: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    # get_logger().debug(f"Driving: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -150,7 +150,7 @@ def go_to(state: ArenaState
     """
     from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
-    get_logger().debug(f"Going to point: {point}")
+    get_logger().debug(f"Go_to point: {point} with approach radius: {approach_radius}")
 
     distance = dist_to_point(robot.position, point)
     distance_tolerance = 6.0
@@ -182,8 +182,11 @@ def go_to(state: ArenaState
                     waypoint[1] + scale * dy
                 )
             else:
-                # robotten er allerede inden for approach radiusk
+                # robotten er allerede inden for approach radius
+                get_logger().debug(f"Already within approach radius: {d:.2f} <= {approach_radius} exiting goto")
                 return
+
+        get_logger().debug(f"current waypoint: {waypoint}, current target point: {current_target}")
 
         while distance > distance_tolerance and _iter <= max_iter:
             turn_to_point(state, connection, current_target)
@@ -192,5 +195,5 @@ def go_to(state: ArenaState
             distance = dist_to_point(robot.position, current_target)
             _iter += 1
             robot = await_robot(state, connection)
-        
+
         get_logger().debug(f"iterations to get to wp: {_iter}")
