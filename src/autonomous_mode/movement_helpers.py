@@ -160,13 +160,13 @@ def go_to(state: ArenaState
         waypoints = calculate_shortest_waypoint_path(state, connection, point)
     waypoints.append(point)
 
-    get_logger().debug(f"Waypoints: {waypoints:.2f}")
+    get_logger().debug(f"Waypoints: {waypoints}")
 
     for i, waypoint in enumerate(waypoints):
         _iter = 0
         current_target = waypoint
 
-        get_logger().debug(f"target Waypoint: {current_target:.2f}  current wp number: {i}")
+        get_logger().debug(f"target Waypoint: ({current_target[0]:.1f}, {current_target[1]:.2f})  current wp number: {i}")
 
         if approach_radius > 0.0 and i == len(waypoints) - 1:
             robot = await_robot(state, connection)  # we need rob's current pos
