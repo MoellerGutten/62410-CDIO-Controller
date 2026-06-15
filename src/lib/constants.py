@@ -102,3 +102,9 @@ DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25
 
 BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
 """The amount of images to capture and analyze when estimating ball count"""
+
+#########################
+# await_robot constants #
+#########################
+
+MAX_ROBOT_DETECTION_ATTEMPTS = 5

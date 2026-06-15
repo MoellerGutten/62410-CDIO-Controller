@@ -4,11 +4,9 @@ from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import nudge_robot
 from time import time
-from src.lib.constants import BALL_COUNT_ESTIMATION_SNAPSHOTS
+from src.lib.constants import BALL_COUNT_ESTIMATION_SNAPSHOTS, MAX_ROBOT_DETECTION_ATTEMPTS
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
-
-MAX_ROBOT_DETECTION_ATTEMPTS = 5
 
 def await_robot(state: ArenaState, connection: RobotConnection):
     """Block until the robot is detected, nudging periodically if needed."""
