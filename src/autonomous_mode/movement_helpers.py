@@ -5,6 +5,10 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
+from src.lib.movement_constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, NUDGE_SPEED, \
+TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, TURN_TO_POINT_SLEEP_BUFFER
+from src.lib.movement_algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed
+from src.lib.time import ms_to_seconds
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
 
@@ -12,7 +16,7 @@ def _start_ball_intake(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.BALL_IN,
         type=InstructionType.COMMAND,
-        args=Arguments(seconds=500, speed=100),
+        args=Arguments(seconds=BALL_INTAKE_ON_FOR_SECONDS, speed=BALL_INTAKE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
 
@@ -28,7 +32,7 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
         name=SequenceName.EJECT,
         type=InstructionType.SEQUENCE,
-        args=Arguments(speed=100),
+        args=Arguments(speed=EJACULATE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
 
@@ -36,7 +40,7 @@ def nudge_robot(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
-        args=Arguments(seconds=0.3, speed=15),
+        args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
     sleep(0.35)
@@ -46,16 +50,15 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
     while True:
         if state.robot is None or point is None: break
 
-        tolerance_deg = 2.0 if precise_mode else 6.0
-        if state.robot.is_facing_point(point, tolerance_deg): break
+        if state.robot.is_facing_point(point, TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE): break
 
         angle = state.robot.angle_to_point(point)
         if (precise_mode):
-            turn_ms    = 100
-            turn_speed = 10
+            turn_ms    = TURN_TO_POINT_PRECISE_MS
+            turn_speed = TURN_TO_POINT_PRECISE_SPEED
         else:
-            turn_ms    = max(100, min(500, int(abs(angle) * 5)))
-            turn_speed = max(30, min(100, int(abs(angle) * 0.4)))
+            turn_ms    = turn_to_point_turn_ms(angle)
+            turn_speed = turn_to_point_turn_speed(angle)
 
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
@@ -66,10 +69,10 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         inst = Instruction(
             name=command,
             type=InstructionType.COMMAND,
-            args=Arguments(seconds=turn_ms / 1000, lspeed=l_speed, rspeed=r_speed),
+            args=Arguments(seconds=ms_to_seconds(turn_ms), lspeed=l_speed, rspeed=r_speed),
         )
         connection.send_message(Message(instruction=inst))
-        sleep(turn_ms / 1000 + 0.05)
+        sleep(ms_to_seconds(turn_ms) + TURN_TO_POINT_SLEEP_BUFFER)
 
         update_state(state)
 

@@ -8,10 +8,9 @@ from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_inta
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
+from src.lib.movement_constants import BALLS_PER_DELIVERY
 
 _last_ball_count_update_time = 0
-
-COLLECT_BALLS_PER_DELIVERY = 4
 
 
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
@@ -20,7 +19,7 @@ def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
     vips_on_field = has_vip_balls(state)
     # if vip is on field and 3 balls in robot, select nearest vip ball, otherwise go for nearest ball
-    next_ball = robot.get_nearest_vip_ball(state.balls) if vips_on_field and balls_in_robot == 3 else robot.get_nearest_non_vip_ball(state.balls)
+    next_ball = robot.get_nearest_vip_ball(state.balls) if vips_on_field and balls_in_robot == BALLS_PER_DELIVERY - 1 else robot.get_nearest_non_vip_ball(state.balls)
     get_logger("_select_next_ball").debug(f"Next ball: {next_ball!r}, balls_in_robot: {balls_in_robot}, has_vip_balls: {vips_on_field}")
     return next_ball
 
@@ -29,7 +28,7 @@ def _should_deliver(balls_in_robot: int, state: ArenaState) -> bool:
     """
     Return True when the robot should head to the goal and deliver.
     """
-    return balls_in_robot >= COLLECT_BALLS_PER_DELIVERY or state.estimated_ball_count == 0
+    return balls_in_robot >= BALLS_PER_DELIVERY or state.estimated_ball_count == 0
 
 def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
     """
