@@ -78,3 +78,20 @@ GO_TO_DISTANCE_TOLERANCE = 10.0
 
 GO_TO_MAX_MOVES = 20
 """The maximum amount of moves allowed in go_to"""
+
+#############################
+# drive_to_center constants #
+#############################
+
+DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10
+"""The range of the target point within which the robot must be before beginning driving towards the goal"""
+
+###########################
+# drive_to_goal constants #
+###########################
+
+DRIVE_TO_GOAL_AT_GOAL_RANGE = 15
+"""When driving to goal, the robot is considered to be at the goal when within this distance"""
+
+DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25
+"""When driving to goal, the robot is considered to be close to the goal when within this distance"""
