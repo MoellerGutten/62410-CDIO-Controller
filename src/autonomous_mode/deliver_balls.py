@@ -42,12 +42,13 @@ def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height
 
 def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
     goal = (arena_width, arena_height/2)
+    # TODO: merge med drive_to_center() med go_to() efterfulgt af drive to goal
     while True:
         robot = await_robot(state, connection)
 
         if robot.distance_to_point(goal) < 25:
-                turn_to_point(state, connection, goal, True)
-                if robot.distance_to_point(goal) < 15: break
+            turn_to_point(state, connection, goal, True)
+            if robot.distance_to_point(goal) < 15: break
 
         get_logger().debug("Drive to goal")
 
