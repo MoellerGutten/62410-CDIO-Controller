@@ -1,13 +1,31 @@
+######################################
+# start_autonomous_session constants #
+######################################
+
 BALLS_PER_DELIVERY = 4 # how many balls to collect before delivery
+
+ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 12 # the distance within which the robot must be of a ball before bursting forwards
+
+BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10 # amount of seconds after which an estimate of ball count is invalid and must be re-estimated
+
+WIN_MESSAGE = "I did it"
+
+################################
+# _start_ball_intake constants #
+################################
 
 BALL_INTAKE_ON_FOR_SECONDS = 500
 BALL_INTAKE_SPEED = 100
 
+################################
+# _start_ejaculation constants #
+################################
+
 EJACULATE_SPEED = 100
 
-#
-# nudge_robot constants
-#
+# #######################
+# nudge_robot constants #
+#########################
 
 NUDGE_SPEED = 15
 NUDGE_SECONDS = 0.3

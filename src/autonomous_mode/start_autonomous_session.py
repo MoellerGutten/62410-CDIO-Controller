@@ -8,7 +8,7 @@ from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_inta
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.movement_constants import BALLS_PER_DELIVERY
+from src.lib.movement_constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
 
 _last_ball_count_update_time = 0
 
@@ -46,7 +46,7 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
         turn_to_point(state, connection, ball.position)
         while True:
             robot = await_robot(state, connection)
-            if (robot.distance_to_point(ball.position) < 12):
+            if (robot.distance_to_point(ball.position) < ROBOT_TO_POINT_DISTANCE_BEFORE_BURST):
                 burst_into_ball(state, connection, ball.position)
                 update_ball_count_estimate(state)
                 drive_backward(state, connection)
@@ -115,7 +115,7 @@ def start_autonomous_session(state: ArenaState) -> None:
 def _tick(state: ArenaState) -> None:
     global _last_ball_count_update_time
 
-    if time() - _last_ball_count_update_time >= 10:
+    if time() - _last_ball_count_update_time >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
         update_ball_count_estimate(state)
         _last_ball_count_update_time = time()
 
@@ -124,6 +124,6 @@ def _send_win_message(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.TALK,
         type=InstructionType.COMMAND,
-        args=Arguments(talk="I did it"),
+        args=Arguments(talk=WIN_MESSAGE),
     )
     connection.send_message(Message(instruction=inst))
