@@ -41,5 +41,5 @@ class ArenaConfig:
     #  ArUco + ArUco offset                                              #
     # ------------------------------------------------------------------ #
     aruco_target_id: int = 0
-    aruco_offset_x: float = -40
+    aruco_offset_x: float = -3
     aruco_offset_y: float = 0
