@@ -149,14 +149,14 @@ def go_to(state: ArenaState
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
-    robot = await_robot(state, connection)
     logger = get_logger("go_to")
     logger.debug(f"Go_to point: ({point[0]:.1f}, {point[0]:.1f})  with approach radius: {approach_radius}")
 
     distance_tolerance = 6.0
     max_iter = 50
     waypoints = []
-    if state.cross:
+
+    if state.cross is not None:
         waypoints = calculate_shortest_waypoint_path(state, connection, point)
     waypoints.append(point)
 
