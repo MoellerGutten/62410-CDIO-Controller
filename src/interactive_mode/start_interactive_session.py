@@ -3,6 +3,7 @@ from src.interactive_mode.interactice_command_util import parse_input, build_mes
 from src.debug.log import get_logger
 
 def start_interactive_session() -> None:
+    logger = get_logger("start_interactive_session")
     connection = RobotConnection()
     while True:
         inp = input("Robot instruction > ").strip()
@@ -10,8 +11,11 @@ def start_interactive_session() -> None:
             break
         if not inp:
             continue
-        name, kwargs = parse_input(inp)
-        msg = build_message_from_short_command(name, kwargs)
-        response = connection.send_message(msg)
-        get_logger().info(f"Robot response: {response}")
-    get_logger().info("\nClosing connection.")
+        try:
+            name, kwargs = parse_input(inp)
+            msg = build_message_from_short_command(name, kwargs)
+            response = connection.send_message(msg)
+            logger.info(f"Robot response: {response}")
+        except:
+            logger.error("Invalid command")
+    logger.info("\nClosing connection.")

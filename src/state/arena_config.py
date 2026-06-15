@@ -38,6 +38,8 @@ class ArenaConfig:
     camera_calib_file: str = "image_recon/camera_calib.npz"
 
     # ------------------------------------------------------------------ #
-    #  ArUco                                                             #
+    #  ArUco + ArUco offset                                              #
     # ------------------------------------------------------------------ #
     aruco_target_id: int = 0
+    aruco_offset_x: float = -3
+    aruco_offset_y: float = 0

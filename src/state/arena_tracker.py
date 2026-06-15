@@ -356,8 +356,14 @@ class ArenaTracker:
             aruco_height=self._cfg.aruco_height,
         )
 
+        # Offset the robot center of the robot compared to the center of the ArUco marker.
+        # Offset values can be found in arena_config.py
+        rad = math.radians(heading)
+        robot_center_x = corrected_x + self._cfg.aruco_offset_x * math.cos(rad) - self._cfg.aruco_offset_y * math.sin(rad)
+        robot_center_y = corrected_y + self._cfg.aruco_offset_x * math.sin(rad) + self._cfg.aruco_offset_y * math.cos(rad)
 
-        return Robot(position=(round(corrected_x, 1), round(corrected_y, 1)), orientation=heading)
+
+        return Robot(position=(round(robot_center_x, 1), round(robot_center_y, 1)), orientation=heading)
 
     # ------------------------------------------------------------------ #
     #  Geometry helpers                                                    #
