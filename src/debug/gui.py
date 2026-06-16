@@ -253,7 +253,9 @@ def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[in
 
 def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
-               corners: list[Corner], estimated_ball_count: int, estimated_balls_in_robot: int, estimated_balls_delivered: int):
+               corners: list[Corner], estimated_ball_count: int, 
+               estimated_balls_in_robot: int, estimated_balls_delivered: int,
+               all_balls_delivered: bool):
     global _start_time
 
     px = WINDOW_W - PANEL_W + 15
@@ -316,8 +318,11 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
    # time passed
     heading("Time")
-    elapsed = int(time() - _start_time)
-    row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
+    last_elapsed = elapsed
+    if not all_balls_delivered:
+        elapsed = int(time() - _start_time)
+
+    row("Passed", f"{last_elapsed // 60:02d}:{last_elapsed % 60:02d}")
 
 # ---------------------------------------------------------------------------
 # Main
@@ -370,7 +375,7 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
 
         pygame.display.flip()
 
