@@ -18,10 +18,10 @@ from src.debug.log import get_logger
 def drive_forward_ms(distance: float) -> int:
     """Determine for how many milliseconds to drive forwards based on the distance to the target"""
     # return max(100, min(2000, int(distance * 5)))
+    value = int(min(100 + (6/5) ** (2 / 3 * distance), 1500))
     get_logger().debug(f"distance: {distance}")
-    get_logger().debug(f"ms: {int(min(100 + (6/5) ** (2 / 3 * distance), 30000))}")
-    get_logger().debug(f"ms: {int(min(100 + (6/5) ** (2 / 3 * distance), 30000)/1000)}")
-    return int(min(100 + (6/5) ** (2 / 3 * distance), 1000))
+    get_logger().debug(f"ms: {value}")
+    return value
 
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
