@@ -12,7 +12,7 @@ class ArenaConfig:
     # ------------------------------------------------------------------ #
     #  YOLO-model                                                        #
     # ------------------------------------------------------------------ #
-    model_path:     str   = "runs/pose/train12/weights/best.pt"
+    model_path:     str   = "runs/pose/train15/weights/best.pt"
     detection_conf: float = 0.50
 
     # ------------------------------------------------------------------ #
