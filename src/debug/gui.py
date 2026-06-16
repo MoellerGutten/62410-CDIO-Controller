@@ -239,19 +239,12 @@ def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
 def draw_route_lines(surf, state: ArenaState, corners: list[Corner]):
     if state.robot is not None:
         robot_pos = field_to_screen(state.robot.position, corners)
-    if state.balls is not None or len(state.balls) != 0:
-        # Fix some misc. crashes
-        try:
-            target_ball = _select_next_ball(state.robot, state.estimated_balls_in_robot, state)
-        except:
-            target_ball = None
+    if state.target_point is not None:
+        waypoints = calculate_shortest_waypoint_path(state, state.target_point)
+        waypoints.append(state.target_point)
     else:
-        target_ball = None
-    if target_ball is None:
         return
-    else:
-        waypoints = calculate_shortest_waypoint_path(state, target_ball.position)
-        waypoints.append(target_ball.position)
+       
 
      # Build full path: robot -> waypoint 0 -> waypoint 1 -> ...
     path_points = [robot_pos] + [field_to_screen(p, corners) for p in waypoints]

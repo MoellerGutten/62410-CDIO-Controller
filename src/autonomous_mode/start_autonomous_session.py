@@ -41,7 +41,9 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
     """Navigate to and collect a single ball."""
     is_edge_ball, new_ball_point = ball.is_edge_ball()
     if is_edge_ball:
-        go_to(state, connection, new_ball_point)
+        with state.lock:
+            state.target_point = new_ball_point
+        go_to(state, connection, state.target_point)
 
         turn_to_point(state, connection, ball.position)
         while True:
@@ -56,7 +58,9 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
                 drive_forward(state, connection, ball.position)
             
     else: 
-        go_to(state, connection, ball.position, approach_radius=10.0)
+        with state.lock:
+            state.target_point = ball.position
+        go_to(state, connection, state.target_point, approach_radius=10.0)
         drive_forward(state, connection, ball.position)
         burst_into_ball(state, connection, ball.position)
         update_ball_count_estimate(state)
