@@ -237,17 +237,20 @@ class ArenaTracker:
         results    = model(masked, verbose=False, conf=self._cfg.detection_conf)[0]
         detections = self._parse_detections(results, model)
         return self._build_state(detections, frame)
+    
 
     def _parse_detections(self, results, model: YOLO) -> list[dict]:
         out = []
         if results.boxes is None:
             return out
 
+        has_keypoints = results.keypoints is not None
+
         for i in range(len(results.boxes)):
             cls   = int(results.boxes[i].cls[0].item())
             label = model.names[cls].lower()
 
-            if "robot" in label:        # robot comes strictly from ArUco
+            if "robot" in label:
                 continue
 
             x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
@@ -257,7 +260,7 @@ class ArenaTracker:
             if not (0 <= ax <= self._cfg.width_cm and 0 <= ay <= self._cfg.height_cm):
                 continue
 
-            out.append({
+            d = {
                 "label": label,
                 "ax":    ax,
                 "ay":    ay,
@@ -267,9 +270,21 @@ class ArenaTracker:
                     self._to_cm(x2, y2),
                     self._to_cm(x1, y2),
                 ],
-            })
+            }
+
+            # Extract keypoints for cross orientation
+            if has_keypoints:
+                kpts = results.keypoints[i].xy[0]  # shape [4, 2]
+                if len(kpts) == 4:
+                    d["keypoints_cm"] = [
+                        self._to_cm(float(kp[0]), float(kp[1]))
+                        for kp in kpts
+                    ]
+
+            out.append(d)
 
         return out
+
 
     def _build_state(self, detections: list[dict], frame: np.ndarray) -> ArenaState:
         state = ArenaState()
@@ -279,7 +294,6 @@ class ArenaTracker:
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
         for d in detections:
-            print(d)
             lbl = d["label"]
             if "ball" in lbl:
                 state.balls.append(Ball(
@@ -287,11 +301,15 @@ class ArenaTracker:
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
             elif "x" in lbl:
-                print(d)
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
-                orientation = self._cross_orientation(corners_cm)
+
+                print(d["keypoints_cm"])
+                if "keypoints_cm" in d:
+                    orientation = self._cross_orientation(d["keypoints_cm"])
+                else:
+                    orientation = 0.0 
                 print(orientation)
                 state.cross = Cross(position=(cx, cy), orientation=orientation, bounding_box=corners_cm)
 
@@ -378,21 +396,24 @@ class ArenaTracker:
         return round(float(tx), 1), round(float(ty), 1)
 
     @staticmethod
-    def _cross_orientation(corners_cm: list[tuple[float, float]]) -> float:
+    def _cross_orientation(keypoints_cm: list[tuple[float, float]]) -> float:
         """
-        Estimate cross orientation from its 4 arm-tip keypoints.
-        Keypoint order: top, bottom, right, left.
-        Returns angle in degrees, clamped to [0, 90) due to 4-fold symmetry.
+        Estimate cross orientation from its 4 bounding-box corner keypoints.
+        Uses the diagonal vectors to find the box tilt.
+        Returns angle in degrees relative to upright.
         """
-        top, bottom, right, left = corners_cm
+        tl, tr, bl, br = keypoints_cm  # order from your output
 
-        # Use both axes and average for robustness
-        angle_v = math.degrees(math.atan2(bottom[0] - top[0], bottom[1] - top[1]))
-        angle_h = math.degrees(math.atan2(right[1] - left[1], right[0] - left[0]))
+        # Two diagonals of the bounding box
+        dx1 = br[0] - tl[0]
+        dy1 = br[1] - tl[1]
+        dx2 = bl[0] - tr[0]
+        dy2 = bl[1] - tr[1]
 
-        # Average the two estimates (they should agree modulo 90)
-        angle = (angle_v % 90 + angle_h % 90) / 2
-        return angle
+        angle1 = math.degrees(math.atan2(dy1, dx1)) % 90
+        angle2 = math.degrees(math.atan2(dy2, dx2)) % 90
+
+        return (angle1 + angle2) / 2
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)
