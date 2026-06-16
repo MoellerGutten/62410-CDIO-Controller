@@ -1,6 +1,8 @@
 import math
 import sys
 import pygame
+from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
+from src.autonomous_mode.start_autonomous_session import _select_next_ball
 from src.lib.constants import BOUNDING_BOX_PADDING
 from src.model.ball import Ball
 from src.model.corner import Corner
@@ -234,6 +236,52 @@ def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
     for point in waypoints:
         pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
 
+def draw_route_lines(surf, state: ArenaState, corners: list[Corner]):
+    if state.robot is not None:
+        robot_pos = field_to_screen(state.robot.position, corners)
+    if state.balls is not None or len(state.balls) != 0:
+        # Fix some misc. crashes
+        try:
+            target_ball = _select_next_ball(state.robot, state.estimated_balls_in_robot, state)
+        except:
+            target_ball = None
+    else:
+        target_ball = None
+    if target_ball is None:
+        return
+    else:
+        waypoints = calculate_shortest_waypoint_path(state, target_ball.position)
+        waypoints.append(target_ball.position)
+
+     # Build full path: robot -> waypoint 0 -> waypoint 1 -> ...
+    path_points = [robot_pos] + [field_to_screen(p, corners) for p in waypoints]
+
+    # Create a font for labels (system font, size 20)
+    font = pygame.font.SysFont(None, 20)
+
+    # Draw line from robot to first waypoint (if there's at least 1 waypoint)
+    if len(path_points) >= 2:
+        pygame.draw.line(surf, (255, 0, 0), path_points[0], path_points[1], 3)
+
+    # Draw the rest of the path (waypoint 0 -> 1 -> 2 -> ...)
+    if len(path_points) > 2:
+        # path_points[1:] are the waypoints; draw lines between them
+        waypoint_path = path_points[1:]
+        pygame.draw.lines(surf, (0, 255, 0), False, waypoint_path, 3)
+
+    # Draw points as circles and label them
+    for i, pt in enumerate(path_points[1:]):
+        # Draw point as a circle
+        color = (0, 255, 255)  # robot in yellow, waypoints in cyan
+        pygame.draw.circle(surf, color, pt, 6)
+
+        # Draw label next to the point
+        label_text = str(i)
+        label_surf = font.render(label_text, True, (255, 255, 255))
+        label_pos = (pt[0] + 10, pt[1] - 10)
+        surf.blit(label_surf, label_pos)
+    
+
 def draw_robot(surf, robot: Robot, corners):
     x, y = field_to_screen(robot.position, corners)
     r    = 16
@@ -377,6 +425,7 @@ def run_gui(state: ArenaState):
         if cross is not None:
             draw_cross(screen, cross, corners)
             draw_waypoints(screen, cross, corners)
+        draw_route_lines(screen, state, corners)
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
@@ -403,8 +452,7 @@ def get_test_field_state():
         Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
         Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
     ]
-    state.cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
-                   orientation=25.0, bounding_box=[(60, 80), (70, 80), (70, 60), (60, 60)])
+    state.cross  = None
     state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
                    orientation=35.0)
     return state
