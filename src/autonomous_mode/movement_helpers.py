@@ -88,6 +88,7 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
+    logger = get_logger("drive_forward")
 
     distance = robot.distance_to_point(point)
     fwd_ms = drive_forward_ms(distance)
@@ -102,7 +103,9 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     )
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
-
+    logger.debug(f"sleep fwd ms: {fwd_ms}")
+    logger.debug(f"sleep fwd ms seconds: {ms_to_seconds(fwd_ms)}")
+    logger.debug(f"sleep time: {ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS}")
 
 def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:
