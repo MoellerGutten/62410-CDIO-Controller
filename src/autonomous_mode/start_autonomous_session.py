@@ -37,16 +37,16 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
     return state.estimated_ball_count == 0 and balls_in_robot == 0
 
 
-def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
+def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
     is_edge_ball, new_ball_point = ball.is_edge_ball()
-    if (is_edge_ball):
+    if is_edge_ball:
         go_to(state, connection, new_ball_point)
 
         turn_to_point(state, connection, ball.position)
         while True:
             robot = await_robot(state, connection)
-            if (robot.distance_to_point(ball.position) < ROBOT_TO_POINT_DISTANCE_BEFORE_BURST):
+            if robot.distance_to_point(ball.position) < ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
                 burst_into_ball(state, connection, ball.position)
                 update_ball_count_estimate(state)
                 drive_backward(state, connection)
@@ -56,11 +56,13 @@ def _collect_ball(robot: Robot, ball: Ball, connection: RobotConnection, state: 
                 drive_forward(state, connection, ball.position)
             
     else: 
-        go_to(state, connection, ball.position)
+        go_to(state, connection, ball.position, approach_radius=10.0)
+        drive_forward(state, connection, ball.position)
+        burst_into_ball(state, connection, ball.position)
         update_ball_count_estimate(state)
 
 
-def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> tuple[int, int]:
+def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:
     """
     Deliver balls, recount estimated ball count, and return updated balls_delivered_so_far.
     """
@@ -91,6 +93,8 @@ def start_autonomous_session(state: ArenaState) -> None:
             logger.debug("All balls delivered, stopping.")
             _stop_ball_intake(connection)
             _send_win_message(connection)
+            with state.lock:
+                state.all_balls_delivered = True
             break
 
         robot = await_robot(state, connection)
@@ -108,7 +112,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             continue
 
         logger.debug(f"Collecting ball at {ball.position}")
-        _collect_ball(robot, ball, connection, state)
+        _collect_ball(ball, connection, state)
         logger.debug("End of loop\n")
 
 
