@@ -27,7 +27,6 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
     logger.debug("Commence drive to center")
 
     while True:
-
         if robot.distance_to_point(center_line_point) < DRIVE_TO_CENTER_DISTANCE_TOLERANCE:
             break
         with state.lock:
@@ -42,6 +41,8 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_goal")
 
     goal: tuple[float, float] = (ArenaConfig.width_cm, ArenaConfig.height_cm / 2)
+    with state.lock:
+        state.target_point = goal
 
     logger.debug("Commence drive to goal")
 
