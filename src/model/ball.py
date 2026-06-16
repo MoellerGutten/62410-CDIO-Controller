@@ -26,7 +26,6 @@ class Ball:
 
     def is_edge_ball(self) -> bool:
         """Returns a boolean based on if the ball is next to an edge"""
-        print(self.position)
         if self.position[0] >= 150.0:
             return [True, (130.0, self.position[1])]
         if self.position[0] <= 10.0:
