@@ -3,56 +3,61 @@ from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
+from src.state.arena_config import ArenaConfig
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE
 
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
-    arena_height = 121.5
-    arena_width = 167
-    
-    get_logger().debug("Deliver balls")
+    logger = get_logger("deliver_balls")    
+    logger.debug("Commence delivery")
 
-    get_logger().debug("Turning off ball motor")
     _stop_ball_intake(connection)
-    
-    drive_to_center(state, connection, arena_height, arena_width)
-
-    drive_to_goal(state, connection, arena_height, arena_width)
-        
-    get_logger().debug("Ejaculating")
+    drive_to_center(state, connection)
+    drive_to_goal(state, connection)
     _start_ejaculation(connection)
 
-    get_logger().debug("Deliver balls done\n")
+    logger.debug("Delivery done\n")
 
 
-def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
+def drive_to_center(state: ArenaState, connection: RobotConnection):
+    logger = get_logger("drive_to_center")
+
     robot = await_robot(state, connection)
-    center_line_point = (robot.position[0], arena_height / 2)
+    center_line_point: tuple[float, float] = (robot.position[0], ArenaConfig.height_cm / 2) # TODO: ændre til go_to fixed point mellem cross of goal.
+
+    logger.debug("Commence drive to center")
+
     while True:
 
-        if robot.distance_to_point(center_line_point) < 10: break
+        if robot.distance_to_point(center_line_point) < DRIVE_TO_CENTER_DISTANCE_TOLERANCE:
+            break
 
-        get_logger().debug("Drive to center")
-        # TODO: ændre til go_to fixed point mellem cross of goal.
         turn_to_point(state, connection, center_line_point)
         drive_forward(state, connection, center_line_point)
         robot = await_robot(state, connection)
 
-        # get_logger().debug("End of loop\n")
+    logger.debug("At center\n")
 
         
+def drive_to_goal(state: ArenaState, connection: RobotConnection):
+    logger = get_logger("drive_to_goal")
 
-def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
-    goal = (arena_width, arena_height/2)
+    goal: tuple[float, float] = (ArenaConfig.width_cm, ArenaConfig.height_cm / 2)
+
+    logger.debug("Commence drive to goal")
+
     # TODO: merge med drive_to_center() med go_to() efterfulgt af drive to goal
     while True:
         robot = await_robot(state, connection)
 
-        if robot.distance_to_point(goal) < 25:
-            turn_to_point(state, connection, goal, True)
-            if robot.distance_to_point(goal) < 15: break
+        if robot.distance_to_point(goal) < DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE:
+            # when close, use precise mode for turning
+            turn_to_point(state, connection, goal, precise_mode=True)
 
-        get_logger().debug("Drive to goal")
+            if robot.distance_to_point(goal) < DRIVE_TO_GOAL_AT_GOAL_RANGE:
+                # when within range, we consider the robot to be at the goal
+                break
 
         turn_to_point(state, connection, goal)
         drive_forward(state, connection, goal)
 
-        # get_logger().debug("End of loop\n")
+    logger.debug("At goal\n")

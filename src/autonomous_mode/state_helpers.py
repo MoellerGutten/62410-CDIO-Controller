@@ -2,11 +2,10 @@ from src.state.state_manager import update_state
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
+from src.lib.constants import BALL_COUNT_ESTIMATION_SNAPSHOTS, MAX_ROBOT_DETECTION_ATTEMPTS
 from time import time, sleep
 
 # ── State Helpers ───────────────────────────────────────────────────────────────────
-
-MAX_ROBOT_DETECTION_ATTEMPTS = 5
 
 def await_robot(state: ArenaState, connection: RobotConnection):
     """Block until the robot is detected, nudging periodically if needed."""
@@ -30,7 +29,6 @@ def await_robot(state: ArenaState, connection: RobotConnection):
 def update_ball_count_estimate(state: ArenaState) -> int:
     begin = time()
     ball_counts = []
-    BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
     for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
         update_state(state)
         ball_counts.append(len(state.balls))

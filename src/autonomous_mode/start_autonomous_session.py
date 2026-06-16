@@ -8,10 +8,9 @@ from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_inta
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
+from src.lib.constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
 
 _last_ball_count_update_time = 0
-
-COLLECT_BALLS_PER_DELIVERY = 4
 
 
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
@@ -20,7 +19,7 @@ def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
     vips_on_field = has_vip_balls(state)
     # if vip is on field and 3 balls in robot, select nearest vip ball, otherwise go for nearest ball
-    next_ball = robot.get_nearest_vip_ball(state.balls) if vips_on_field and balls_in_robot == 3 else robot.get_nearest_non_vip_ball(state.balls)
+    next_ball = robot.get_nearest_vip_ball(state.balls) if vips_on_field and balls_in_robot == BALLS_PER_DELIVERY - 1 else robot.get_nearest_non_vip_ball(state.balls)
     get_logger("_select_next_ball").debug(f"Next ball: {next_ball!r}, balls_in_robot: {balls_in_robot}, has_vip_balls: {vips_on_field}")
     return next_ball
 
@@ -29,7 +28,7 @@ def _should_deliver(balls_in_robot: int, state: ArenaState) -> bool:
     """
     Return True when the robot should head to the goal and deliver.
     """
-    return balls_in_robot >= COLLECT_BALLS_PER_DELIVERY or state.estimated_ball_count == 0
+    return balls_in_robot >= BALLS_PER_DELIVERY or state.estimated_ball_count == 0
 
 def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
     """
@@ -47,7 +46,7 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         turn_to_point(state, connection, ball.position)
         while True:
             robot = await_robot(state, connection)
-            if robot.distance_to_point(ball.position) < 12:
+            if robot.distance_to_point(ball.position) < ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
                 burst_into_ball(state, connection, ball.position)
                 update_ball_count_estimate(state)
                 drive_backward(state, connection)
@@ -120,7 +119,7 @@ def start_autonomous_session(state: ArenaState) -> None:
 def _tick(state: ArenaState) -> None:
     global _last_ball_count_update_time
 
-    if time() - _last_ball_count_update_time >= 10:
+    if time() - _last_ball_count_update_time >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
         update_ball_count_estimate(state)
         _last_ball_count_update_time = time()
 
@@ -129,6 +128,6 @@ def _send_win_message(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.TALK,
         type=InstructionType.COMMAND,
-        args=Arguments(talk="I did it"),
+        args=Arguments(talk=WIN_MESSAGE),
     )
     connection.send_message(Message(instruction=inst))
