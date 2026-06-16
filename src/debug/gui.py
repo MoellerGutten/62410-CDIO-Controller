@@ -255,7 +255,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
                corners: list[Corner], estimated_ball_count: int, 
                estimated_balls_in_robot: int, estimated_balls_delivered: int,
-               all_balls_delivered):
+               all_balls_delivered: bool):
     global _start_time
 
     px = WINDOW_W - PANEL_W + 15
