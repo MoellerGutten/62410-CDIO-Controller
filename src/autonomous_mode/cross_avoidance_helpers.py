@@ -1,15 +1,18 @@
+from src.lib.constants import BOUNDING_BOX_PADDING
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.model.cross import Cross
 
 
-def calculate_shortest_waypoint_path(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> list[tuple[float, float]]:
+def calculate_shortest_waypoint_path(state: ArenaState, point: tuple[float, float]) -> list[tuple[float, float]]:
     """
     Bruteforce hvilket waypoint man skal køre til for at få
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
     """
-
-    intersections = intersect_line_with_box(state.robot.position, point, state.cross.inflate_bounding_box(inflation_cm=12))
+    if state.cross is not None:
+        intersections = intersect_line_with_box(state.robot.position, point, state.cross.inflate_bounding_box(inflation_cm=BOUNDING_BOX_PADDING))
+    else:
+        intersections = None
     result = []
 
 

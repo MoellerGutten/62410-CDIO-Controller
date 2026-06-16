@@ -1,6 +1,9 @@
 import math
 import sys
 import pygame
+from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
+from src.autonomous_mode.start_autonomous_session import _select_next_ball
+from src.lib.constants import BOUNDING_BOX_PADDING
 from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
@@ -31,6 +34,7 @@ C_GOAL_BIG      = ( 50, 200, 120)      # big goal highlight (left)
 C_GOAL_SMALL    = (200, 180,  40)      # small goal highlight (right)
 C_LABEL         = (200, 210, 200)
 C_PANEL_BG      = ( 22,  30,  38)
+C_CROSS_WAYPOINT= ( 222, 32, 29 )
 
 # ---------------------------------------------------------------------------
 # Layout constants
@@ -223,14 +227,55 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
-    #draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
-                    # C_CROSS, C_CROSS_OUTLINE, width=14)
-    # Cross bounding box is not correctly scaled. TODO: fix that
-    # TODO: fix orientation for cross, currently always about 45 degrees.
     draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length*5, cross.orientation, C_CROSS)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
+def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
+    waypoints = cross.inflate_bounding_box(inflation_cm=BOUNDING_BOX_PADDING)
+    for point in waypoints:
+        pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
+
+def draw_route_lines(surf, state: ArenaState, corners: list[Corner]):
+    if state.robot is not None:
+        robot_pos = field_to_screen(state.robot.position, corners)
+    try:
+        if state.target_point is not None:
+            waypoints = calculate_shortest_waypoint_path(state, state.target_point)
+            waypoints.append(state.target_point)
+        else:
+            return
+    except:
+        return    
+
+     # Build full path: robot -> waypoint 0 -> waypoint 1 -> ...
+    path_points = [robot_pos] + [field_to_screen(p, corners) for p in waypoints]
+
+    # Create a font for labels (system font, size 20)
+    font = pygame.font.SysFont(None, 20)
+
+    # Draw line from robot to first waypoint (if there's at least 1 waypoint)
+    if len(path_points) >= 2:
+        pygame.draw.line(surf, (0, 255, 0), path_points[0], path_points[1], 3)
+
+    # Draw the rest of the path (waypoint 0 -> 1 -> 2 -> ...)
+    if len(path_points) > 2:
+        # path_points[1:] are the waypoints; draw lines between them
+        waypoint_path = path_points[1:]
+        pygame.draw.lines(surf, (0, 255, 0), False, waypoint_path, 3)
+
+    # Draw points as circles and label them
+    for i, pt in enumerate(path_points[1:]):
+        # Draw point as a circle
+        color = (0, 255, 255)  # robot in yellow, waypoints in cyan
+        pygame.draw.circle(surf, color, pt, 6)
+
+        # Draw label next to the point
+        label_text = str(i)
+        label_surf = font.render(label_text, True, (255, 255, 255))
+        label_pos = (pt[0] + 10, pt[1] - 10)
+        surf.blit(label_surf, label_pos)
+    
 
 def draw_robot(surf, robot: Robot, corners):
     x, y = field_to_screen(robot.position, corners)
@@ -374,6 +419,8 @@ def run_gui(state: ArenaState):
         draw_corners(screen, corners)
         if cross is not None:
             draw_cross(screen, cross, corners)
+            draw_waypoints(screen, cross, corners)
+        draw_route_lines(screen, state, corners)
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
@@ -400,8 +447,7 @@ def get_test_field_state():
         Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
         Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
     ]
-    state.cross  = Cross(position=(FIELD_X0 + FIELD_W // 2, FIELD_Y0 + FIELD_H // 2),
-                   orientation=25.0, bounding_box=[(60, 80), (70, 80), (70, 60), (60, 60)])
+    state.cross  = None
     state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
                    orientation=35.0)
     return state
