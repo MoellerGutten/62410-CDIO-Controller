@@ -3,7 +3,7 @@ import sys
 import pygame
 from src.model.ball import Ball
 from src.model.corner import Corner
-from src.model.cross import Cross
+from src.model.cross import Cross, inflate_bounding_box
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
@@ -223,14 +223,12 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
-    #draw_cross_shape(surf, field_to_screen(cross.position, corners), 40*1.42, cross.orientation,
-                    # C_CROSS, C_CROSS_OUTLINE, width=14)
-    # Cross bounding box is not correctly scaled. TODO: fix that
-    # TODO: fix orientation for cross, currently always about 45 degrees.
     draw_cross_bounding_box(surf, field_to_screen(cross.position, corners), cross.side_length*5, cross.orientation, C_CROSS)
     pygame.draw.circle(surf, C_CROSS_OUTLINE, field_to_screen(cross.position, corners), 6)
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
+def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
+    waypoints = cross.inflate_bounding_box()
 
 def draw_robot(surf, robot: Robot, corners):
     x, y = field_to_screen(robot.position, corners)
@@ -374,6 +372,7 @@ def run_gui(state: ArenaState):
         draw_corners(screen, corners)
         if cross is not None:
             draw_cross(screen, cross, corners)
+            draw_waypoints(screen, cross, corners)
         draw_balls(screen, balls, corners)
         if robot is not None:
             draw_robot(screen, robot, corners)
