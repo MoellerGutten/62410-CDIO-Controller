@@ -1,9 +1,10 @@
 import math
 import sys
 import pygame
+from src.lib.constants import BOUNDING_BOX_PADDING
 from src.model.ball import Ball
 from src.model.corner import Corner
-from src.model.cross import Cross, inflate_bounding_box
+from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
@@ -31,6 +32,7 @@ C_GOAL_BIG      = ( 50, 200, 120)      # big goal highlight (left)
 C_GOAL_SMALL    = (200, 180,  40)      # small goal highlight (right)
 C_LABEL         = (200, 210, 200)
 C_PANEL_BG      = ( 22,  30,  38)
+C_CROSS_WAYPOINT= ( 222, 32, 29 )
 
 # ---------------------------------------------------------------------------
 # Layout constants
@@ -228,7 +230,9 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
-    waypoints = cross.inflate_bounding_box()
+    waypoints = cross.inflate_bounding_box(inflation_cm=BOUNDING_BOX_PADDING)
+    for point in waypoints:
+        pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
 
 def draw_robot(surf, robot: Robot, corners):
     x, y = field_to_screen(robot.position, corners)

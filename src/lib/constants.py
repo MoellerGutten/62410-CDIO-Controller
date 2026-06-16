@@ -120,3 +120,10 @@ BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
 
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
 """The amount of attempts the controller will make to acquire the robot before attempting a nudge"""
+
+#####################################
+# Bounding box / waypoint constants #
+#####################################
+
+BOUNDING_BOX_PADDING = 12
+"""The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
