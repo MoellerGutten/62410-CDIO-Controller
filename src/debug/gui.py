@@ -318,7 +318,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
    # time passed
     heading("Time")
-    last_elapsed = elapsed
+    last_elapsed = elapsed if elapsed is not None else 0
     if not all_balls_delivered:
         elapsed = int(time() - _start_time)
 
