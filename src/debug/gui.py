@@ -316,13 +316,15 @@ def draw_panel(surf, font_sm, font_md, font_lg,
     row("Delivered", estimated_balls_delivered)
     y += 16
 
-   # time passed
+    # time passed
     heading("Time")
-    last_elapsed = elapsed if elapsed is not None else 0
-    if not all_balls_delivered:
-        elapsed = int(time() - _start_time)
+    elapsed = int(time() - _start_time)
+    if all_balls_delivered:
+        elapsed = draw_panel._frozen_elapsed if hasattr(draw_panel, '_frozen_elapsed') else elapsed
+    else:
+        draw_panel._frozen_elapsed = elapsed
 
-    row("Passed", f"{last_elapsed // 60:02d}:{last_elapsed % 60:02d}")
+    row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
 
 # ---------------------------------------------------------------------------
 # Main
