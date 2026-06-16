@@ -4,7 +4,7 @@
 
 def turn_to_point_turn_ms(angle: float) -> int:
     """Determine how many milliseconds to turn for based on the angle to the point to which the robot is turning"""
-    return max(100, min(500, int(abs(angle) * 5)))
+    return max(100, min(500, int(abs(angle) * 8)))
 
 def turn_to_point_turn_speed(angle: float) -> int:
     """Determine the speed with which to turn based on the angle to the point to which the robot is turning"""
@@ -16,7 +16,8 @@ def turn_to_point_turn_speed(angle: float) -> int:
 
 def drive_forward_ms(distance: float) -> int:
     """Determine for how many milliseconds to drive forwards based on the distance to the target"""
-    return max(100, min(2000, int(distance * 5)))
+    # return max(100, min(2000, int(distance * 5)))
+    return int(min(100 + 6/5 ** (2 / 3 * distance), 1000))
 
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
