@@ -1,4 +1,4 @@
-from state.arena_config import ArenaConfig
+from src.state.arena_config import ArenaConfig
 
 ######################################
 # Arena tracker constants #
@@ -14,7 +14,7 @@ ARUCO_OFFSET_X = abs(ArenaConfig().aruco_offset_x)
 BALLS_PER_DELIVERY = 4
 """How many balls to collect before delivering"""
 
-ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 12 + ARUCO_OFFSET_X
+ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 10 + ARUCO_OFFSET_X
 """The distance within which the robot must be of the robot before bursting forwards to collect the ball"""
 
 BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10
@@ -25,6 +25,9 @@ WIN_MESSAGE = "I did it"
 
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
+
+GO_TO_NORMAL_BALL_APPROACH_RADIUS = 7.0
+"""Approach radius for go_to for normal balls"""
 
 ################################
 # _start_ball_intake constants #
@@ -83,7 +86,7 @@ BACKWARD_MS = 500
 # burst_into_ball constants #
 #############################
 
-BURST_FORWARD_MS = 250
+BURST_FORWARD_MS = 400
 """The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75
