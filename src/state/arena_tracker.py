@@ -17,7 +17,7 @@ from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from src.state.arena_config import ArenaConfig
-from src.debug.log import get_logger
+from src.debug.log import get_logger, setup_logger
 
 class ArenaTracker:
     """
@@ -279,6 +279,7 @@ class ArenaTracker:
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
         for d in detections:
+            print(d)
             lbl = d["label"]
             if "ball" in lbl:
                 state.balls.append(Ball(
@@ -286,12 +287,13 @@ class ArenaTracker:
                     is_vip=("orange" in lbl or "vip" in lbl or lbl == "oball"),
                 ))
             elif "x" in lbl:
-                print(lbl["x"])
+                print(d)
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
                 orientation = self._cross_orientation(corners_cm)
-                state.cross = Cross(position=(cx, cy), orientation=orientation)
+                print(orientation)
+                state.cross = Cross(position=(cx, cy), orientation=orientation, bounding_box=corners_cm)
 
         return state
 
@@ -309,6 +311,7 @@ class ArenaTracker:
         Korrigerer for parallax-fejl når ArUco-markøren sidder hævet over banen.
 
         measured_pos_cm : (x, y) – rå position fra homografien
+        camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
         camera_pos_cm   : (cx, cy) – kameraets nadir-punkt i bane-koordinater (cm)
         camera_height   : kameraets højde over banen (cm)
         aruco_height    : ArUco-markørens højde over banen (cm)
@@ -356,8 +359,14 @@ class ArenaTracker:
             aruco_height=self._cfg.aruco_height,
         )
 
+        # Offset the robot center of the robot compared to the center of the ArUco marker.
+        # Offset values can be found in arena_config.py
+        rad = math.radians(heading)
+        robot_center_x = corrected_x + self._cfg.aruco_offset_x * math.cos(rad) - self._cfg.aruco_offset_y * math.sin(rad)
+        robot_center_y = corrected_y + self._cfg.aruco_offset_x * math.sin(rad) + self._cfg.aruco_offset_y * math.cos(rad)
 
-        return Robot(position=(round(corrected_x, 1), round(corrected_y, 1)), orientation=heading)
+
+        return Robot(position=(round(robot_center_x, 1), round(robot_center_y, 1)), orientation=heading)
 
     # ------------------------------------------------------------------ #
     #  Geometry helpers                                                    #
@@ -371,12 +380,19 @@ class ArenaTracker:
     @staticmethod
     def _cross_orientation(corners_cm: list[tuple[float, float]]) -> float:
         """
-        Estimate cross orientation from its bounding-box corners.
+        Estimate cross orientation from its 4 arm-tip keypoints.
+        Keypoint order: top, bottom, right, left.
         Returns angle in degrees, clamped to [0, 90) due to 4-fold symmetry.
         """
-        (x1, y1), (x2, _), _, (_, y2) = corners_cm
-        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
-        return angle % 90
+        top, bottom, right, left = corners_cm
+
+        # Use both axes and average for robustness
+        angle_v = math.degrees(math.atan2(bottom[0] - top[0], bottom[1] - top[1]))
+        angle_h = math.degrees(math.atan2(right[1] - left[1], right[0] - left[0]))
+
+        # Average the two estimates (they should agree modulo 90)
+        angle = (angle_v % 90 + angle_h % 90) / 2
+        return angle
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)
@@ -624,4 +640,5 @@ class ArenaTracker:
 
 
 if __name__ == "__main__":
+    setup_logger()
     ArenaTracker().run()

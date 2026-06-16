@@ -1,6 +1,5 @@
-from src.autonomous_mode.movement_helpers import _drive_toward_point, _turn_toward_point, _start_ejaculation, _stop_ball_intake
-from src.autonomous_mode.state_helpers import _await_robot
-from src.debug.gui import FIELD_H
+from src.autonomous_mode.movement_helpers import drive_forward, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
@@ -25,37 +24,35 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 
 
 def drive_to_center(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
-    center_line_point = [state.robot.position[0], arena_height / 2]
+    robot = await_robot(state, connection)
+    center_line_point = (robot.position[0], arena_height / 2)
     while True:
-        robot = _await_robot(state, connection)
-        if robot is None:
-            get_logger().warning("Robot not detected after nudge — retrying main loop")
-            continue
 
-        if (robot.distance_to_point(center_line_point) < 10): break
+        if robot.distance_to_point(center_line_point) < 10: break
 
         get_logger().debug("Drive to center")
+        # TODO: ændre til go_to fixed point mellem cross of goal.
+        turn_to_point(state, connection, center_line_point)
+        drive_forward(state, connection, center_line_point)
+        robot = await_robot(state, connection)
 
-        _turn_toward_point(state, connection, center_line_point)
-        _drive_toward_point(state, connection, center_line_point)
-
-        get_logger().debug("End of loop\n")
+        # get_logger().debug("End of loop\n")
 
         
 
 def drive_to_goal(state: ArenaState, connection: RobotConnection, arena_height: float, arena_width: float):
-    goal = [arena_width, arena_height/2]
+    goal = (arena_width, arena_height/2)
+    # TODO: merge med drive_to_center() med go_to() efterfulgt af drive to goal
     while True:
-        robot = _await_robot(state, connection)
-        if robot is None:
-            get_logger().warning("Robot not detected after nudge — retrying main loop")
-            continue
+        robot = await_robot(state, connection)
 
-        if (robot.distance_to_point(goal) < 12): break
+        if robot.distance_to_point(goal) < 25:
+            turn_to_point(state, connection, goal, True)
+            if robot.distance_to_point(goal) < 15: break
 
         get_logger().debug("Drive to goal")
 
-        _turn_toward_point(state, connection, goal)
-        _drive_toward_point(state, connection, goal)
+        turn_to_point(state, connection, goal)
+        drive_forward(state, connection, goal)
 
-        get_logger().debug("End of loop\n")
+        # get_logger().debug("End of loop\n")

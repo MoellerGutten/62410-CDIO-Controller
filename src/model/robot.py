@@ -4,7 +4,7 @@ from src.model.ball import Ball
 class Robot:
     """Represents the robot on the field."""
 
-    def __init__(self, position: tuple[int, int], orientation: float):
+    def __init__(self, position: tuple[float, float], orientation: float):
         """
         Args:
             position:    (x, y) pixel coordinates of the robot's centre.
@@ -13,6 +13,8 @@ class Robot:
         """
         self.position = position
         self.orientation = orientation % 360
+        self.robot_width_cm = 14
+        self.robot_length_cm = 24
 
     # ------------------------------------------------------------------
     # Distance helpers
@@ -21,12 +23,21 @@ class Robot:
     def get_nearest_ball(self, balls: list[Ball]) -> Ball | None:
         """
         Return the ball closest to the robot, or None if the list is empty.
+        Can also return VIP balls.
         """
 
         if balls is None or len(balls) == 0:
             return None
 
         return min(balls, key=lambda ball: self.distance_to_point(ball.position))
+    
+    def get_nearest_non_vip_ball(self, balls: list[Ball]) -> Ball | None:
+        """
+        Return the VIP ball that is closest to the robot, or None if there are no VIP balls on the field.
+        """
+        if balls is None or len(balls) == 0:
+            return None
+        return min([ball for ball in balls if not ball.is_vip], key=lambda ball: self.distance_to_point(ball.position))
 
     def get_nearest_vip_ball(self, balls: list[Ball]) -> Ball | None:
         """
@@ -38,7 +49,7 @@ class Robot:
             return None
         return min(vip_balls, key=lambda ball: self.distance_to_point(ball.position))
 
-    def distance_to_point(self, point: tuple[int, int]) -> float:
+    def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
 
@@ -46,7 +57,7 @@ class Robot:
     # Orientation helpers
     # ------------------------------------------------------------------
 
-    def bearing_to_point(self, point: tuple[int, int]) -> float:
+    def bearing_to_point(self, point: tuple[float, float]) -> float:
         """
         Absolute bearing (degrees) from the robot to a point.
         0° = right (+x), increasing counter-clockwise, result in [0, 360).
@@ -55,7 +66,7 @@ class Robot:
         dy = point[1] - self.position[1]
         return degrees(atan2(dy, dx)) % 360
 
-    def angle_to_point(self, point: tuple[int, int]) -> float:
+    def angle_to_point(self, point: tuple[float, float]) -> float:
         """
         Signed angle (degrees) the robot must rotate to face a point.
         Positive = counter-clockwise, negative = clockwise.
@@ -65,7 +76,7 @@ class Robot:
         diff = (bearing - self.orientation + 180) % 360 - 180
         return diff
 
-    def is_facing_point(self, point: tuple[int, int], tolerance_deg: float = 5.0) -> bool:
+    def is_facing_point(self, point: tuple[float, float], tolerance_deg: float = 5.0) -> bool:
         """Return True if the robot is facing the point within *tolerance_deg*."""
         return abs(self.angle_to_point(point)) <= tolerance_deg
 

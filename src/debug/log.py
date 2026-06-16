@@ -2,10 +2,13 @@ from logging import Logger, getLogger, DEBUG, Formatter, FileHandler, StreamHand
 from datetime import datetime
 from os import makedirs
 from sys import stdout
+from threading import Lock
 
 _logger: Logger | None = None
+_setup_lock = Lock()
 
 FORMAT = "[%(asctime)s] [%(levelname)s]%(source_tag)s %(message)s"
+
 
 class _Formatter(Formatter):
     def format(self, record):
@@ -13,10 +16,11 @@ class _Formatter(Formatter):
             record.source = None
         record.source_tag = f" [{record.source}]" if record.source else ""
         return super().format(record)
-    
+
+
 class ExtendedLogger:
     def __init__(self, source: str | None = None):
-        self._logger = _logger  # not get_logger()
+        self._logger = _logger
         self._extra = {"source": source} if source else {}
 
     def debug(self, msg: str)    -> None: self._logger.debug(msg, extra=self._extra)
@@ -25,29 +29,36 @@ class ExtendedLogger:
     def error(self, msg: str)    -> None: self._logger.error(msg, extra=self._extra)
     def critical(self, msg: str) -> None: self._logger.critical(msg, extra=self._extra)
 
-def _setup_logger() -> Logger:
+
+def setup_logger() -> Logger:
+    """Call this once at program entry, before spawning threads."""
     global _logger
 
-    makedirs("logs", exist_ok=True)
-    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
-    path = f"logs/{timestamp}.log"
-    logger = getLogger("controller")
-    logger.setLevel(DEBUG)
-    logger.propagate = False
-    formatter = _Formatter(FORMAT)
+    with _setup_lock:
+        if _logger is not None:
+            return _logger  # already initialized, don't add handlers again
 
-    logger.handlers.clear()
-    file_handler = FileHandler(path, encoding="utf-8")
-    file_handler.setFormatter(formatter)
-    stream_handler = StreamHandler(stdout)
-    stream_handler.setFormatter(formatter)
+        makedirs("logs", exist_ok=True)
+        timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+        path = f"logs/{timestamp}.log"
+        logger = getLogger("controller")
+        logger.setLevel(DEBUG)
+        logger.propagate = False
+        formatter = _Formatter(FORMAT)
 
-    logger.addHandler(file_handler)
-    logger.addHandler(stream_handler)
-    _logger = logger
-    return logger
+        logger.handlers.clear()
+        file_handler = FileHandler(path, encoding="utf-8")
+        file_handler.setFormatter(formatter)
+        stream_handler = StreamHandler(stdout)
+        stream_handler.setFormatter(formatter)
+
+        logger.addHandler(file_handler)
+        logger.addHandler(stream_handler)
+        _logger = logger
+        return logger
+
 
 def get_logger(source: str | None = None) -> ExtendedLogger:
     if _logger is None:
-        _setup_logger()
+        raise RuntimeError("get_logger called when _logger is None, call setup_logger first")
     return ExtendedLogger(source)

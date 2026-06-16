@@ -4,7 +4,7 @@ from math import hypot
 class Ball:
     """Represents a table tennis ball detected on the field."""
 
-    def __init__(self, position: tuple[int, int], is_vip: bool = False):
+    def __init__(self, position: tuple[float, float], is_vip: bool = False):
         """
         Args:
             position: (x, y) pixel coordinates of the ball.
@@ -20,9 +20,21 @@ class Ball:
             self.position[1] - other.position[1],
         )
 
-    def distance_to_point(self, point: tuple[int, int]) -> float:
+    def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
+
+    def is_edge_ball(self) -> bool:
+        """Returns a boolean based on if the ball is next to an edge"""
+        if self.position[0] >= 150.0:
+            return [True, (130.0, self.position[1])]
+        if self.position[0] <= 10.0:
+            return [True, (30.0, self.position[1])]
+        if self.position[1] >= 105.0:
+            return [True, (self.position[0], 90.0)]
+        if self.position[1] <= 10.0:
+            return [True, (self.position[0], 30.0)]
+        return [False, self.position]
 
     def __repr__(self) -> str:
         return f"Ball(position={self.position}, is_vip={self.is_vip})"
