@@ -35,7 +35,7 @@ class Robot:
         """
         Return the VIP ball that is closest to the robot, or None if there are no VIP balls on the field.
         """
-        if balls is None or len(balls) == 0:
+        if balls is None or len(balls) == 0 or (len(balls) == 1 and balls[0].is_vip):
             return None
         return min([ball for ball in balls if not ball.is_vip], key=lambda ball: self.distance_to_point(ball.position))
 
