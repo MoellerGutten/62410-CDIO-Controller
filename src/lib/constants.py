@@ -26,7 +26,7 @@ WIN_MESSAGE = "I did it"
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
 
-GO_TO_NORMAL_BALL_APPROACH_RADIUS = 7.0
+GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0
 """Approach radius for go_to for normal balls"""
 
 ################################
