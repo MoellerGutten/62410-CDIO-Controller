@@ -1,3 +1,3 @@
 def ms_to_seconds(ms: int) -> float:
     """Convert milliseconds to seconds"""
-    return ms / 100
+    return ms / 1000
