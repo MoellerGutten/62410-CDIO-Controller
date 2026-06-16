@@ -93,7 +93,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             _stop_ball_intake(connection)
             _send_win_message(connection)
             with state.lock:
-                state.isRobotDone = True
+                state.all_balls_delivered = True
             break
 
         robot = await_robot(state, connection)
