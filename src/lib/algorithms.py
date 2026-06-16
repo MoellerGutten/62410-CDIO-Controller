@@ -21,7 +21,7 @@ def drive_forward_ms(distance: float) -> int:
     get_logger().debug(f"distance: {distance}")
     get_logger().debug(f"ms: {int(min(100 + (6/5) ** (2 / 3 * distance), 30000))}")
     get_logger().debug(f"ms: {int(min(100 + (6/5) ** (2 / 3 * distance), 30000)/1000)}")
-    return int(min(100 + 6/5 ** (2 / 3 * distance), 1000))
+    return int(min(100 + (6/5) ** (2 / 3 * distance), 1000))
 
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
