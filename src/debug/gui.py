@@ -261,7 +261,7 @@ def draw_route_lines(surf, state: ArenaState, corners: list[Corner]):
 
     # Draw line from robot to first waypoint (if there's at least 1 waypoint)
     if len(path_points) >= 2:
-        pygame.draw.line(surf, (255, 0, 0), path_points[0], path_points[1], 3)
+        pygame.draw.line(surf, (0, 255, 0), path_points[0], path_points[1], 3)
 
     # Draw the rest of the path (waypoint 0 -> 1 -> 2 -> ...)
     if len(path_points) > 2:
