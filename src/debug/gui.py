@@ -9,6 +9,7 @@ from src.model.arena_state import ArenaState
 from math import floor
 from src.state.arena_config import ArenaConfig
 from time import time
+from src.lib.cross_approach_points import get_cross_approach_points
 # ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
@@ -378,6 +379,8 @@ def run_gui(state: ArenaState):
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
+        for point in get_cross_approach_points(cross):
+            pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
 
         pygame.display.flip()
 

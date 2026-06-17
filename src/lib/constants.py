@@ -120,3 +120,12 @@ BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
 
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
 """The amount of attempts the controller will make to acquire the robot before attempting a nudge"""
+
+#######################################
+# get_cross_approach_points constants #
+#######################################
+
+CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
+
+CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
+
