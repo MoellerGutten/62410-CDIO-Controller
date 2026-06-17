@@ -8,7 +8,7 @@ from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APP
 
 def get_cross_approach_points(cross: Cross) -> list[tuple[float, float]]:
     """Get a list of approach points for the cross."""
-    cross = Cross(position=(ArenaConfig.width_cm / 2, ArenaConfig.height_cm / 2), orientation=0.0, bounding_box=[(0,0),(0,0),(0,0),(0,0)]) # for testing
+    #cross = Cross(position=(ArenaConfig.width_cm / 2, ArenaConfig.height_cm / 2), orientation=0.0, bounding_box=[(0,0),(0,0),(0,0),(0,0)]) # for testing
     return [_get_q1_cross_approach_point(cross), _get_q2_cross_approach_point(cross), _get_q3_cross_approach_point(cross), _get_q4_cross_approach_point(cross)]
 
 def _get_q1_cross_approach_point(cross: Cross) -> tuple[float, float]:
