@@ -156,6 +156,8 @@ def go_to(state: ArenaState
 
     *Nærmeste = Kortest fra robot til punkt og waypoint til punkt
     """
+    with state.lock:
+        state.target_point = point
     logger = get_logger("go_to")
     logger.debug(f"Go_to point: ({point[0]:.1f}, {point[1]:.1f})  with approach radius: {approach_radius}")
 

@@ -29,9 +29,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
     while True:
         if robot.distance_to_point(center_line_point) < DRIVE_TO_CENTER_DISTANCE_TOLERANCE:
             break
-        with state.lock:
-            state.target_point = center_line_point
-        go_to(state, connection, state.target_point)
+        go_to(state, connection, center_line_point)
         robot = await_robot(state, connection)
 
     logger.debug("At center\n")
