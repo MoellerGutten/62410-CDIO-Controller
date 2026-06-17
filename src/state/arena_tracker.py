@@ -237,17 +237,20 @@ class ArenaTracker:
         results    = model(masked, verbose=False, conf=self._cfg.detection_conf)[0]
         detections = self._parse_detections(results, model)
         return self._build_state(detections, frame)
+    
 
     def _parse_detections(self, results, model: YOLO) -> list[dict]:
         out = []
         if results.boxes is None:
             return out
 
+        has_keypoints = results.keypoints is not None
+
         for i in range(len(results.boxes)):
             cls   = int(results.boxes[i].cls[0].item())
             label = model.names[cls].lower()
 
-            if "robot" in label:        # robot comes strictly from ArUco
+            if "robot" in label:
                 continue
 
             x1, y1, x2, y2 = results.boxes[i].xyxy[0].tolist()
@@ -257,7 +260,7 @@ class ArenaTracker:
             if not (0 <= ax <= self._cfg.width_cm and 0 <= ay <= self._cfg.height_cm):
                 continue
 
-            out.append({
+            d = {
                 "label": label,
                 "ax":    ax,
                 "ay":    ay,
@@ -267,9 +270,21 @@ class ArenaTracker:
                     self._to_cm(x2, y2),
                     self._to_cm(x1, y2),
                 ],
-            })
+            }
+
+            # Extract keypoints for cross orientation
+            if has_keypoints:
+                kpts = results.keypoints[i].xy[0]  # shape [4, 2]
+                if len(kpts) == 4:
+                    d["keypoints_cm"] = [
+                        self._to_cm(float(kp[0]), float(kp[1]))
+                        for kp in kpts
+                    ]
+
+            out.append(d)
 
         return out
+
 
     def _build_state(self, detections: list[dict], frame: np.ndarray) -> ArenaState:
         state = ArenaState()
@@ -289,7 +304,13 @@ class ArenaTracker:
                 corners_cm = d["corners_cm"]
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
-                orientation = self._cross_orientation(corners_cm)
+
+                print(d["keypoints_cm"])
+                if "keypoints_cm" in d:
+                    orientation = self._cross_orientation(d["keypoints_cm"])
+                else:
+                    orientation = 0.0 
+                print(orientation)
                 state.cross = Cross(position=(cx, cy), orientation=orientation, bounding_box=corners_cm)
 
         return state
@@ -375,14 +396,24 @@ class ArenaTracker:
         return round(float(tx), 1), round(float(ty), 1)
 
     @staticmethod
-    def _cross_orientation(corners_cm: list[tuple[float, float]]) -> float:
+    def _cross_orientation(keypoints_cm: list[tuple[float, float]]) -> float:
         """
-        Estimate cross orientation from its bounding-box corners.
-        Returns angle in degrees, clamped to [0, 90) due to 4-fold symmetry.
+        Estimate cross orientation from its 4 bounding-box corner keypoints.
+        Uses the diagonal vectors to find the box tilt.
+        Returns angle in degrees relative to upright.
         """
-        (x1, y1), (x2, _), _, (_, y2) = corners_cm
-        angle = math.degrees(math.atan2(y2 - y1, x2 - x1))
-        return angle % 90
+        tl, tr, bl, br = keypoints_cm  # order from your output
+
+        # Two diagonals of the bounding box
+        dx1 = br[0] - tl[0]
+        dy1 = br[1] - tl[1]
+        dx2 = bl[0] - tr[0]
+        dy2 = bl[1] - tr[1]
+
+        angle1 = math.degrees(math.atan2(dy1, dx1)) % 90
+        angle2 = math.degrees(math.atan2(dy2, dx2)) % 90
+
+        return (angle1 + angle2) / 2
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)
