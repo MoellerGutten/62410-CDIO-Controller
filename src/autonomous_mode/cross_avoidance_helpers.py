@@ -1,4 +1,4 @@
-from src.lib.constants import BOUNDING_BOX_PADDING
+from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.model.cross import Cross
@@ -10,7 +10,7 @@ def calculate_shortest_waypoint_path(state: ArenaState, point: tuple[float, floa
     den kortest samlede tur fra robot -> waypoint (evt. -> waypoint 2) -> target punkt 
     """
     if state.cross is not None:
-        intersections = intersect_line_with_box(state.robot.position, point, state.cross.inflate_bounding_box(inflation_cm=BOUNDING_BOX_PADDING))
+        intersections = intersect_line_with_box(state.robot.position, point, state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET))
     else:
         intersections = None
     result = []

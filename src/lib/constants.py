@@ -125,5 +125,5 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 # Bounding box / waypoint constants #
 #####################################
 
-BOUNDING_BOX_PADDING = 12
+CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""

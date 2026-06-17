@@ -3,7 +3,7 @@ import sys
 import pygame
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
 from src.autonomous_mode.start_autonomous_session import _select_next_ball
-from src.lib.constants import BOUNDING_BOX_PADDING
+from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
 from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
@@ -232,7 +232,7 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
-    waypoints = cross.inflate_bounding_box(inflation_cm=BOUNDING_BOX_PADDING)
+    waypoints = cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET)
     for point in waypoints:
         pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
 
