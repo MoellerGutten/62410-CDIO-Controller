@@ -2,7 +2,6 @@ from src.debug.log import get_logger
 from src.model.arena_state import ArenaState
 from src.state.arena_tracker import ArenaTracker
 
-
 def _get_tracker() -> ArenaTracker:
     """Return the singleton tracker, starting it if needed."""
     tracker = ArenaTracker()

@@ -19,6 +19,36 @@ from src.model.arena_state import ArenaState
 from src.state.arena_config import ArenaConfig
 from src.debug.log import get_logger, setup_logger
 
+class CameraReader:
+    def __init__(self, cap: cv2.VideoCapture) -> None:
+        self._cap     = cap
+        self._frame:  Optional[np.ndarray] = None
+        self._lock    = _threading.Lock()
+        self._running = True
+        self._ready = _threading.Event()
+        self._thread  = _threading.Thread(target=self._capture_loop, daemon=True)
+        self._thread.start()
+        self._ready.wait(timeout=5.0)
+        if self._frame is None:
+            raise RuntimeError("camera thread failed to deliver a frame within 5 seconds")
+
+    def _capture_loop(self) -> None:
+        while self._running:
+            ret, frame = self._cap.read()
+            if ret:
+                with self._lock:
+                    self._frame = frame
+                self._ready.set()
+
+    def get_latest(self) -> Optional[np.ndarray]:
+        with self._lock:
+            return None if self._frame is None else self._frame.copy()
+
+    def stop(self) -> None:
+        self._running = False
+        self._thread.join(timeout=2.0)
+        self._cap.release()
+
 class ArenaTracker:
     """
     Singleton camera + YOLO + ArUco tracker.
@@ -92,10 +122,8 @@ class ArenaTracker:
         self._M, self._M_inv          = self._compute_perspective()
         self._model                   = YOLO(self._cfg.model_path)
         self._cam_mtx, self._cam_dist = self._load_camera_calibration()
-        self._cap                     = self._open_camera()
-
-        for _ in range(5):          # flush stale frames from buffer
-            self._cap.read()
+        cap = self._open_camera()
+        self._camera_reader = CameraReader(cap)
 
         self._running = True
         self.logger.debug(
@@ -111,9 +139,10 @@ class ArenaTracker:
             return self._process_frame(frame)
 
     def stop(self) -> None:
-        if self._cap is not None:
-            self._cap.release()
-            self._cap = None
+        if hasattr(self, "_camera_reader"):
+            self._camera_reader.stop()
+            self._camera_reader = None
+        self._cap = None   # cap ejes nu af CameraReader
         self._running = False
         self.logger.info("Stopped")
 
@@ -210,13 +239,13 @@ class ArenaTracker:
         cv2.destroyAllWindows()
 
     # ------------------------------------------------------------------ #
-    #  Core processing                                                     #
+    #  Core processing                                                   #
     # ------------------------------------------------------------------ #
-
+    
     def _grab_frame(self) -> np.ndarray:
-        ret, frame = self._cap.read()
-        if not ret:
-            raise RuntimeError("Failed to read frame from camera.")
+        frame = self._camera_reader.get_latest()
+        if frame is None:
+            raise RuntimeError("No frame available yet from camera thread.")
         if self._cam_mtx is not None:
             frame = cv2.undistort(frame, self._cam_mtx, self._cam_dist, None, self._cam_mtx)
         return frame
@@ -504,6 +533,7 @@ class ArenaTracker:
         if not cap.isOpened():
             raise RuntimeError(f"Cannot open camera at index {idx} on {system}.")
 
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)
         cap.set(cv2.CAP_PROP_FRAME_WIDTH,  self._cfg.frame_width)
         cap.set(cv2.CAP_PROP_FRAME_HEIGHT, self._cfg.frame_height)
         cap.set(cv2.CAP_PROP_FPS,          self._cfg.frame_fps)

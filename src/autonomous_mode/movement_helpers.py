@@ -61,12 +61,16 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
             break
 
         angle = robot.angle_to_point(point)
-        if precise_mode:
-            turn_ms    = TURN_TO_POINT_PRECISE_MS
-            turn_speed = TURN_TO_POINT_PRECISE_SPEED
-        else:
-            turn_ms    = turn_to_point_turn_ms(angle)
-            turn_speed = turn_to_point_turn_speed(angle)
+        # if precise_mode:
+        #     turn_ms    = TURN_TO_POINT_PRECISE_MS
+        #     turn_speed = TURN_TO_POINT_PRECISE_SPEED
+        # else:
+        turn_ms    = turn_to_point_turn_ms(angle)
+        turn_speed = turn_to_point_turn_speed(angle)
+
+        logger = get_logger("turn_to_point")
+        logger.debug(f"turn ms: {turn_ms}, angel: {angle}")
+    
 
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
@@ -102,7 +106,6 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     )
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
-
 
 def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:

@@ -1,3 +1,12 @@
+from src.state.arena_config import ArenaConfig
+
+######################################
+# Arena tracker constants #
+######################################
+
+ARUCO_OFFSET_X = abs(ArenaConfig().aruco_offset_x)
+"""The absolute value of the amount of offset applied to the aruco maker to place it on its turning axis"""
+
 ######################################
 # start_autonomous_session constants #
 ######################################
@@ -5,7 +14,7 @@
 BALLS_PER_DELIVERY = 4
 """How many balls to collect before delivering"""
 
-ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 12
+ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 10 + ARUCO_OFFSET_X
 """The distance within which the robot must be of the robot before bursting forwards to collect the ball"""
 
 BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10
@@ -16,6 +25,9 @@ WIN_MESSAGE = "I did it"
 
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
+
+GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0
+"""Approach radius for go_to for normal balls"""
 
 ################################
 # _start_ball_intake constants #
@@ -74,7 +86,7 @@ BACKWARD_MS = 500
 # burst_into_ball constants #
 #############################
 
-BURST_FORWARD_MS = 250
+BURST_FORWARD_MS = 400
 """The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75
@@ -84,7 +96,7 @@ BURST_FORWARD_SPEED = 75
 # go_to constants #
 ###################
 
-GO_TO_DISTANCE_TOLERANCE = 10.0
+GO_TO_DISTANCE_TOLERANCE = 10.0 + ARUCO_OFFSET_X
 """The tolerance with which go_to determines whether the robot has reached the target point"""
 
 GO_TO_MAX_MOVES = 20
@@ -94,17 +106,17 @@ GO_TO_MAX_MOVES = 20
 # drive_to_center constants #
 #############################
 
-DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10
+DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 """The range of the target point within which the robot must be before beginning driving towards the goal"""
 
 ###########################
 # drive_to_goal constants #
 ###########################
 
-DRIVE_TO_GOAL_AT_GOAL_RANGE = 15
+DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be at the goal when within this distance"""
 
-DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25
+DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
 
 ###################################
