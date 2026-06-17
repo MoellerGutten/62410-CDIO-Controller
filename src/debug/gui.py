@@ -123,41 +123,47 @@ def draw_cross_shape(surf, pos, size, angle_deg, colour, outline, width=14):
 
 def draw_cross_bounding_box(surf, pos, size, angle_deg, colour, width=10):
     """
-    Draw a square consisting of 4 lines rotated according to angle_deg.
+    Draw a cross shape rotated according to angle_deg.
+    size is the overall bounding box size.
+    width is the thickness of the cross arms.
     """
     cx, cy = pos
     rad = math.radians(angle_deg)
-    
-    # Half the side length (distance from center to edge)
-    half_size = size / 2
-    
-    # Calculate the 4 corners of the square relative to center (unrotated)
-    # Order: top-right, top-left, bottom-left, bottom-right
-    corners_unrotated = [
-        (half_size, -half_size),   # top-right
-        (-half_size, -half_size),  # top-left
-        (-half_size, half_size),   # bottom-left
-        (half_size, half_size),    # bottom-right
+
+    half_size = size * 3/4
+    arm_thickness = width / 2
+
+    # Cross is made from 2 rectangles:
+    # 1) horizontal bar
+    # 2) vertical bar
+    rectangles = [
+        # Horizontal bar: long in x, thin in y
+        [
+            (-half_size, -arm_thickness),
+            (half_size, -arm_thickness),
+            (half_size, arm_thickness),
+            (-half_size, arm_thickness),
+        ],
+        # Vertical bar: thin in x, long in y
+        [
+            (-arm_thickness, -half_size),
+            (arm_thickness, -half_size),
+            (arm_thickness, half_size),
+            (-arm_thickness, half_size),
+        ],
     ]
-    
-    # Rotate each corner using rotation matrix and translate to center
-    corners = []
-    for x, y in corners_unrotated:
-        # Rotation matrix: [cos -sin; sin cos]
-        rx = x * math.cos(rad) - y * math.sin(rad)
-        ry = x * math.sin(rad) + y * math.cos(rad)
-        corners.append((cx + rx, cy + ry))
-    
-    # Draw 4 lines connecting corners to form the square
-    for i in range(4):
-        p1 = corners[i]
-        p2 = corners[(i + 1) % 4]  # Connect to next corner (wrap around)
-        pygame.draw.line(
-            surf, colour, 
-            (int(p1[0]), int(p1[1])), 
-            (int(p2[0]), int(p2[1])), 
-            width
-        )
+
+    cos_a = math.cos(rad)
+    sin_a = math.sin(rad)
+
+    def rotate_point(x, y):
+        rx = x * cos_a - y * sin_a
+        ry = x * sin_a + y * cos_a
+        return (cx + rx, cy + ry)
+
+    for rect in rectangles:
+        points = [rotate_point(x, y) for x, y in rect]
+        pygame.draw.polygon(surf, colour, points)
 
 # ---------------------------------------------------------------------------
 # Drawing sub-routines
