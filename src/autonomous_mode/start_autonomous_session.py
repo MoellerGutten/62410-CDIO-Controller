@@ -21,10 +21,10 @@ def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     # if vip is on field and 3 balls (or none other left on field) in robot, select nearest vip ball, otherwise go for nearest ball
 
     if not vips_on_field:
-        next_ball = robot.get_nearest_non_vip_ball
+        next_ball = robot.get_nearest_non_vip_ball()
     else:
         balls_left_before_delivery = BALLS_PER_DELIVERY - balls_in_robot if (state.estimated_ball_count + balls_in_robot) >= BALLS_PER_DELIVERY else state.estimated_ball_count
-        next_ball = robot.get_nearest_vip_ball if balls_left_before_delivery == 1 else robot.get_nearest_non_vip_ball
+        next_ball = robot.get_nearest_vip_ball() if balls_left_before_delivery == 1 else robot.get_nearest_non_vip_ball()
 
     get_logger("_select_next_ball").debug(f"Next ball: {next_ball!r}, balls_in_robot: {balls_in_robot}, has_vip_balls: {vips_on_field}")
     return next_ball
