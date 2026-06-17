@@ -61,12 +61,12 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
             break
 
         angle = robot.angle_to_point(point)
-        if precise_mode:
-            turn_ms    = TURN_TO_POINT_PRECISE_MS
-            turn_speed = TURN_TO_POINT_PRECISE_SPEED
-        else:
-            turn_ms    = turn_to_point_turn_ms(angle)
-            turn_speed = turn_to_point_turn_speed(angle)
+        # if precise_mode:
+        #     turn_ms    = TURN_TO_POINT_PRECISE_MS
+        #     turn_speed = TURN_TO_POINT_PRECISE_SPEED
+        # else:
+        turn_ms    = turn_to_point_turn_ms(angle)
+        turn_speed = turn_to_point_turn_speed(angle)
 
         logger = get_logger("turn_to_point")
         logger.debug(f"turn ms: {turn_ms}, angel: {angle}")
