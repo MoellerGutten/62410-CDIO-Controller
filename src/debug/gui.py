@@ -1,6 +1,7 @@
 import math
 import sys
 import pygame
+from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
 from src.autonomous_mode.start_autonomous_session import _select_next_ball
 from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
@@ -122,41 +123,47 @@ def draw_cross_shape(surf, pos, size, angle_deg, colour, outline, width=14):
 
 def draw_cross_bounding_box(surf, pos, size, angle_deg, colour, width=10):
     """
-    Draw a square consisting of 4 lines rotated according to angle_deg.
+    Draw a cross shape rotated according to angle_deg.
+    size is the overall bounding box size.
+    width is the thickness of the cross arms.
     """
     cx, cy = pos
     rad = math.radians(angle_deg)
-    
-    # Half the side length (distance from center to edge)
-    half_size = size / 2
-    
-    # Calculate the 4 corners of the square relative to center (unrotated)
-    # Order: top-right, top-left, bottom-left, bottom-right
-    corners_unrotated = [
-        (half_size, -half_size),   # top-right
-        (-half_size, -half_size),  # top-left
-        (-half_size, half_size),   # bottom-left
-        (half_size, half_size),    # bottom-right
+
+    half_size = size * 3/4
+    arm_thickness = width / 2
+
+    # Cross is made from 2 rectangles:
+    # 1) horizontal bar
+    # 2) vertical bar
+    rectangles = [
+        # Horizontal bar: long in x, thin in y
+        [
+            (-half_size, -arm_thickness),
+            (half_size, -arm_thickness),
+            (half_size, arm_thickness),
+            (-half_size, arm_thickness),
+        ],
+        # Vertical bar: thin in x, long in y
+        [
+            (-arm_thickness, -half_size),
+            (arm_thickness, -half_size),
+            (arm_thickness, half_size),
+            (-arm_thickness, half_size),
+        ],
     ]
-    
-    # Rotate each corner using rotation matrix and translate to center
-    corners = []
-    for x, y in corners_unrotated:
-        # Rotation matrix: [cos -sin; sin cos]
-        rx = x * math.cos(rad) - y * math.sin(rad)
-        ry = x * math.sin(rad) + y * math.cos(rad)
-        corners.append((cx + rx, cy + ry))
-    
-    # Draw 4 lines connecting corners to form the square
-    for i in range(4):
-        p1 = corners[i]
-        p2 = corners[(i + 1) % 4]  # Connect to next corner (wrap around)
-        pygame.draw.line(
-            surf, colour, 
-            (int(p1[0]), int(p1[1])), 
-            (int(p2[0]), int(p2[1])), 
-            width
-        )
+
+    cos_a = math.cos(rad)
+    sin_a = math.sin(rad)
+
+    def rotate_point(x, y):
+        rx = x * cos_a - y * sin_a
+        ry = x * sin_a + y * cos_a
+        return (cx + rx, cy + ry)
+
+    for rect in rectangles:
+        points = [rotate_point(x, y) for x, y in rect]
+        pygame.draw.polygon(surf, colour, points)
 
 # ---------------------------------------------------------------------------
 # Drawing sub-routines
@@ -233,7 +240,7 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
-    waypoints = cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET)
+    waypoints = get_cross_waypoints(cross)
     for point in waypoints:
         pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
 
@@ -452,7 +459,7 @@ def get_test_field_state():
         Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
         Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
     ]
-    state.cross  = None
+    state.cross  = Cross(position=(500, 500), orientation=0, bounding_box=[(),(),(),()])
     state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
                    orientation=35.0)
     return state
