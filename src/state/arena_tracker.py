@@ -305,12 +305,11 @@ class ArenaTracker:
                 cx = sum(x for x, y in corners_cm) / 4
                 cy = sum(y for x, y in corners_cm) / 4
 
-                print(d["keypoints_cm"])
                 if "keypoints_cm" in d:
                     orientation = self._cross_orientation(d["keypoints_cm"])
                 else:
                     orientation = 0.0 
-                print(orientation)
+
                 state.cross = Cross(position=(cx, cy), orientation=orientation, bounding_box=corners_cm)
 
         return state
