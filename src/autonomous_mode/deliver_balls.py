@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import drive_forward, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import drive_forward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
@@ -22,17 +22,14 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_center")
 
     robot = await_robot(state, connection)
-    center_line_point: tuple[float, float] = (robot.position[0], ArenaConfig.height_cm / 2) # TODO: ændre til go_to fixed point mellem cross of goal.
+    center_line_point: tuple[float, float] = (ArenaConfig.width_cm * 3/4, ArenaConfig.height_cm / 2)
 
     logger.debug("Commence drive to center")
 
     while True:
-
         if robot.distance_to_point(center_line_point) < DRIVE_TO_CENTER_DISTANCE_TOLERANCE:
             break
-
-        turn_to_point(state, connection, center_line_point)
-        drive_forward(state, connection, center_line_point)
+        go_to(state, connection, center_line_point)
         robot = await_robot(state, connection)
 
     logger.debug("At center\n")
@@ -42,6 +39,8 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_goal")
 
     goal: tuple[float, float] = (ArenaConfig.width_cm, ArenaConfig.height_cm / 2)
+    with state.lock:
+        state.target_point = goal
 
     logger.debug("Commence drive to goal")
 

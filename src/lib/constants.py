@@ -121,6 +121,13 @@ BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
 MAX_ROBOT_DETECTION_ATTEMPTS = 5
 """The amount of attempts the controller will make to acquire the robot before attempting a nudge"""
 
+#####################################
+# Bounding box / waypoint constants #
+#####################################
+
+CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
+"""The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
+
 #######################################
 # get_cross_approach_points constants #
 #######################################
@@ -128,4 +135,3 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
-
