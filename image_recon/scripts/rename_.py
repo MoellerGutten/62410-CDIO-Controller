@@ -52,7 +52,7 @@ def main():
     parser.add_argument("folder", nargs="?", default=script_dir,
                          help="Folder containing the images to rename "
                               "(default: the folder this script is in)")
-    parser.add_argument("--start", type=int, default=608,
+    parser.add_argument("--start", type=int, default=661,
                          help="First number in the sequence (default: 608)")
     parser.add_argument("--width", type=int, default=3,
                          help="Zero-padding width for the number (default: 3, e.g. pic_008)")
