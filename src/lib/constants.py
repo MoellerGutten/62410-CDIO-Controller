@@ -128,6 +128,10 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
 
+CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 10
+"""The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
+    zone plus size of cross"""
+
 #######################################
 # get_cross_approach_points constants #
 #######################################
@@ -135,3 +139,4 @@ CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
+

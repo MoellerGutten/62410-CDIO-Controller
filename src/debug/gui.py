@@ -1,6 +1,7 @@
 import math
 import sys
 import pygame
+from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
 from src.autonomous_mode.start_autonomous_session import _select_next_ball
 from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
@@ -233,7 +234,7 @@ def draw_cross(surf, cross: Cross, corners: list[Corner]):
     pygame.draw.circle(surf, C_CROSS,         field_to_screen(cross.position, corners), 4)
 
 def draw_waypoints(surf, cross: Cross, corners: list[Corner]):
-    waypoints = cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET)
+    waypoints = get_cross_waypoints(cross)
     for point in waypoints:
         pygame.draw.circle(surf, C_CROSS_WAYPOINT, field_to_screen(point, corners), 4)
 
@@ -452,7 +453,7 @@ def get_test_field_state():
         Ball((FIELD_X0 + 510, FIELD_Y0 + 120), is_vip=False),
         Ball((FIELD_X0 + 60,  FIELD_Y0 + 480), is_vip=False),
     ]
-    state.cross  = None
+    state.cross  = Cross(position=(500, 500), orientation=0, bounding_box=[(),(),(),()])
     state.robot  = Robot(position=(FIELD_X0 + 100, FIELD_Y0 + FIELD_H // 2),
                    orientation=35.0)
     return state
