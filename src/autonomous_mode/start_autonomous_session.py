@@ -54,11 +54,13 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         burst_into_ball(state, connection, ball.position)
         drive_backward(state, connection)
     else: 
-        go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
+        #go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
 
-        turn_to_point(state, connection, ball.position, precise_mode=True)
-        burst_into_ball(state, connection, ball.position)
-        
+        #turn_to_point(state, connection, ball.position, precise_mode=True)
+        #burst_into_ball(state, connection, ball.position)
+        logger = get_logger("Collect_ball")
+        logger.debug(f"Rob: {state.robot.position}, Ball: {ball.position}, Rob distance to point: {state.robot.distance_to_point(ball.position)}")
+
     update_ball_count_estimate(state)
 
 
