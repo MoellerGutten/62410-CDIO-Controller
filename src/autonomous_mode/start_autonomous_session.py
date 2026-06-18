@@ -4,11 +4,12 @@ from src.model.arena_state import ArenaState
 from src.model.robot import Robot
 from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, turn_to_point, _stop_ball_intake, burst_into_ball, drive_backward, go_to
+from src.autonomous_mode.movement_helpers import _start_ball_intake, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
+from src.autonomous_mode.collection_helpers import collect_waypoint_zone_ball, collect_cross_zone_ball, collect_edge_ball, collect_normal_ball
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, GO_TO_NORMAL_BALL_APPROACH_RADIUS
+from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, GO_TO_NORMAL_BALL_APPROACH_RADIUS
 
 _last_ball_count_update_time = 0
 
@@ -45,21 +46,15 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
 
 def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
-    is_edge_ball, new_ball_point = ball.is_edge_ball()
+    is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
     if is_edge_ball:
-        go_to(state, connection, new_ball_point)
-
-        turn_to_point(state, connection, ball.position)
-        go_to(state, connection, ball.position)
-        burst_into_ball(state, connection, ball.position)
-        drive_backward(state, connection)
+        collect_edge_ball(state, ball, connection, edge_ball_staging_point)
+    elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
+        collect_waypoint_zone_ball(state, ball, connection)
+    elif ball.is_within_cross_zone(state.cross):
+        collect_cross_zone_ball(state, ball, connection)
     else: 
-        go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
-
-        turn_to_point(state, connection, ball.position, precise_mode=True)
-        burst_into_ball(state, connection, ball.position)
-        
-    update_ball_count_estimate(state)
+        collect_normal_ball(state, ball, connection)
 
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:

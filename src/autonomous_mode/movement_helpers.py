@@ -1,4 +1,4 @@
-from math import hypot
+from math import hypot, radians, sin, cos
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
 from src.lib.connection import RobotConnection
@@ -88,6 +88,26 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
 
         # update_state(state)
         robot = await_robot(state, connection)
+
+def turn_to_heading(
+    state: ArenaState,
+    connection: RobotConnection,
+    heading_deg: float,
+    distance_cm: float = 20.0,
+    precise_mode: bool = False
+) -> None:
+    robot = await_robot(state, connection)
+
+    x, y = robot.position
+
+    heading_rad = radians(heading_deg)
+
+    target_x = x + cos(heading_rad) * distance_cm
+    target_y = y + sin(heading_rad) * distance_cm
+
+    target_point = (target_x, target_y)
+
+    turn_to_point(state, connection, target_point, precise_mode=precise_mode)
 
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:

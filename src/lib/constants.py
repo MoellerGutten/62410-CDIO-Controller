@@ -159,6 +159,21 @@ CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
+#############################
+# corner handling constants #
+#############################
+
 CORNER_THRESHOLD = 24
 """If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""
 
+#####################
+# heading constants #
+#####################
+
+EAST_HEADING = 0.0
+
+NORTH_HEADING = 90.0
+
+WEST_HEADING = 180.0
+
+SOUTH_HEADING = 270.0

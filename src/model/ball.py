@@ -1,5 +1,7 @@
 from math import hypot
 from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD
+from src.model.arena_corner import ArenaCorner
+from src.model.arena_edge import ArenaEdge
 
 class Ball:
     """Represents a table tennis ball detected on the field."""
@@ -47,7 +49,58 @@ class Ball:
             return False
 
         return self._distance_to_nearest_corner() <= CORNER_THRESHOLD
+    
+    def nearest_corner(self) -> ArenaCorner:
+        """
+        Returns the corner this ball belongs to.
 
+        Assumes the ball is already classified as a corner ball.
+        """
+        from src.state.arena_config import ArenaConfig
+        x, y = self.position
+
+        width = ArenaConfig.width_cm
+        height = ArenaConfig.height_cm
+
+        # Closer to west than east
+        if x < width / 2:
+            # Closer to south than north
+            if y < height / 2:
+                return ArenaCorner.SOUTH_WEST
+            return ArenaCorner.NORTH_WEST
+
+        # Closer to east than west
+        if y < height / 2:
+            return ArenaCorner.SOUTH_EAST
+
+        return ArenaCorner.NORTH_EAST
+    
+    def nearest_edge(self) -> ArenaEdge:
+        """
+        Returns the nearest arena edge the ball is touching/closest to.
+        Assumes the ball is already classified as an edge ball.
+        """
+        from src.state.arena_config import ArenaConfig
+
+        x, y = self.position
+
+        width = ArenaConfig.width_cm
+        height = ArenaConfig.height_cm
+
+        # Distances to each edge
+        dist_west = x
+        dist_east = width - x
+        dist_south = y
+        dist_north = height - y
+
+        # Return the closest edge
+        if dist_west <= dist_east and dist_west <= dist_south and dist_west <= dist_north:
+            return ArenaEdge.WEST
+        if dist_east <= dist_west and dist_east <= dist_south and dist_east <= dist_north:
+            return ArenaEdge.EAST
+        if dist_south <= dist_west and dist_south <= dist_east and dist_south <= dist_north:
+            return ArenaEdge.SOUTH
+        return ArenaEdge.NORTH
 
     def _distance_to_nearest_corner(self) -> float:
         """
