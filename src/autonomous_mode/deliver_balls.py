@@ -1,10 +1,10 @@
-from src.autonomous_mode.movement_helpers import drive_forward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import drive_backward, drive_forward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
 from src.state.arena_config import ArenaConfig
-from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE, GOAL_DELIVERY_POINT
 
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     logger = get_logger("deliver_balls")    
@@ -14,6 +14,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     drive_to_center(state, connection)
     drive_to_goal(state, connection)
     _start_ejaculation(connection)
+    drive_backward(state, connection)
 
     logger.debug("Delivery done\n")
 
@@ -44,19 +45,9 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
 
     logger.debug("Commence drive to goal")
 
-    # TODO: merge med drive_to_center() med go_to() efterfulgt af drive to goal
-    while True:
-        robot = await_robot(state, connection)
-
-        if robot.distance_to_point(goal) < DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE:
-            # when close, use precise mode for turning
-            turn_to_point(state, connection, goal, precise_mode=True)
-
-            if robot.distance_to_point(goal) < DRIVE_TO_GOAL_AT_GOAL_RANGE:
-                # when within range, we consider the robot to be at the goal
-                break
-
-        turn_to_point(state, connection, goal)
-        drive_forward(state, connection, goal)
+    go_to(state, connection, GOAL_DELIVERY_POINT)
+    turn_to_point(state, connection, goal, precise_mode=True)
+        
 
     logger.debug("At goal\n")
+
