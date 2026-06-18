@@ -28,8 +28,8 @@ PROJECT_ROOT = "."
 
 OUT_LABEL_DIR = os.path.join(PROJECT_ROOT, "image_recon", "YOLO_data", "labels", "train")
 
-BALL_LABEL_DIR  = os.path.join(PROJECT_ROOT, "image_recon", "yolo_data_extra", "balls", "obj_Train_data")
-CROSS_LABEL_DIR = os.path.join(PROJECT_ROOT, "image_recon", "yolo_data_extra", "cross", "labels")
+BALL_LABEL_DIR  = os.path.join(PROJECT_ROOT, "image_recon", "yolo_data_extra", "ball_more_data", "obj_Train_data")
+CROSS_LABEL_DIR = os.path.join(PROJECT_ROOT, "image_recon", "yolo_data_extra", "cross_more_data", "labels")
 
 # Set True if ball dataset has 0=OBall, 1=WBall (check obj.names)
 SWAP_BALL_CLASSES = False
