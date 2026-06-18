@@ -86,7 +86,7 @@ BACKWARD_MS = 500
 # burst_into_ball constants #
 #############################
 
-BURST_FORWARD_MS = 400
+BURST_FORWARD_MS = 450
 """The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75

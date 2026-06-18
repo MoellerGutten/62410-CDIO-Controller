@@ -51,7 +51,6 @@ def nudge_robot(connection: RobotConnection) -> None:
 
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
-    # from src.autonomous_mode.state_helpers import await_robot
     robot = await_robot(state, connection)
     while True:
         if point is None:
@@ -61,22 +60,15 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
             break
 
         angle = robot.angle_to_point(point)
-        # if precise_mode:
-        #     turn_ms    = TURN_TO_POINT_PRECISE_MS
-        #     turn_speed = TURN_TO_POINT_PRECISE_SPEED
-        # else:
         turn_ms    = turn_to_point_turn_ms(angle)
         turn_speed = turn_to_point_turn_speed(angle)
 
-        logger = get_logger("turn_to_point")
-        logger.debug(f"turn ms: {turn_ms}, angel: {angle}")
+        #logger = get_logger("turn_to_point")
+        #logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
     
-
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
-
-        # get_logger().debug(f"Turning: command={command}, l_speed={l_speed}, r_speed={r_speed}")
 
         inst = Instruction(
             name=command,
@@ -86,7 +78,6 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         connection.send_message(Message(instruction=inst))
         sleep(ms_to_seconds(turn_ms) + SLEEP_BUFFER_SECONDS)
 
-        # update_state(state)
         robot = await_robot(state, connection)
 
 
@@ -97,7 +88,8 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
 
-    # get_logger().debug(f"Driving: distance={distance:.2f}, speed={fwd_speed}, duration={fwd_ms}ms")
+    #logger = get_logger("drive_forward")
+    #logger.debug(f"Driving forward. fwd ms: {fwd_ms}, fwd speed: {fwd_speed}, distance: {distance}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -114,7 +106,8 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     bwd_ms = BACKWARD_MS
     bwd_speed =  BACKWARD_SPEED
 
-    get_logger().debug(f"Driving backward: speed={bwd_speed}, duration={bwd_ms}ms")
+    #logger = get_logger("drive_backward")
+    #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
 
     inst = Instruction(
         name=CommandName.BACKWARD,
@@ -132,7 +125,8 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     burst_ms = BURST_FORWARD_MS
     burst_speed = BURST_FORWARD_SPEED
 
-    get_logger().debug(f"Collecting ball: distance={distance:.2f}, speed={burst_speed}, duration={burst_ms}ms")
+    #logger = get_logger("burst_into_ball")
+    #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
