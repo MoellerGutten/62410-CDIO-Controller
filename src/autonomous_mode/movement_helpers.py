@@ -202,3 +202,4 @@ def go_to(state: ArenaState
             _iter += 1
 
         logger.debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
+        logger.debug(f"distance to point {robot.distance_to_point(point)}")
