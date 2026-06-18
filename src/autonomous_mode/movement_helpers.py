@@ -1,6 +1,6 @@
 from math import hypot
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
-from protocol import CommandName, Arguments, Instruction, InstructionType, Message, SequenceName
+from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
@@ -39,16 +39,6 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
     _start_ball_intake(connection) # start intake after ejaculation
-
-def nudge_robot(connection: RobotConnection) -> None:
-    inst = Instruction(
-        name=CommandName.FORWARD,
-        type=InstructionType.COMMAND,
-        args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
-    )
-    connection.send_message(Message(instruction=inst))
-    sleep(NUDGE_SECONDS + SLEEP_BUFFER_SECONDS)
-
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
     robot = await_robot(state, connection)
