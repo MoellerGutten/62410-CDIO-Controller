@@ -152,3 +152,21 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 
+#######################################
+# cross zone collection constants     #
+#######################################
+
+# half-length of a cross arm, used to size the cross zone bounding box
+CROSS_ARM_LENGTH = 10
+# extra padding added around the cross arms when deciding if a ball is "in the cross zone"
+CROSS_ZONE_PADDING = 1.5
+
+# gentle, short retreat after collecting next to the cross
+CROSS_ZONE_BACKWARD_SPEED = 20
+CROSS_ZONE_BACKWARD_MS = 400
+
+# how close a freshly detected ball must be to the target to count as "the same ball still there"
+CROSS_ZONE_VERIFY_RADIUS = 20.0
+# stop retrying after this many attempts (ball may be permanently occluded by a cross arm)
+CROSS_ZONE_MAX_ATTEMPTS = 3
+

@@ -1,4 +1,6 @@
 from math import hypot
+from src.model.cross import Cross
+from src.lib.constants import CROSS_ARM_LENGTH, CROSS_ZONE_PADDING
 
 
 class Ball:
@@ -35,6 +37,45 @@ class Ball:
         if self.position[1] <= 10.0:
             return [True, (self.position[0], 30.0)]
         return [False, self.position]
+
+    def is_within_cross_zone(self, cross: Cross) -> bool:
+        if cross is None:
+            return False
+
+        cx, cy = cross.position
+
+        offset = CROSS_ARM_LENGTH + CROSS_ZONE_PADDING
+
+        cross_zone_corners = [
+            (cx - offset, cy - offset),  # top-left
+            (cx + offset, cy - offset),  # top-right
+            (cx + offset, cy + offset),  # bottom-right
+            (cx - offset, cy + offset),  # bottom-left
+        ]
+
+        return self._is_within_box(cross_zone_corners)
+
+    def _is_within_box(self, box_corners: list[tuple[float, float]]) -> bool:
+        """
+        Check whether `self.position` lies inside the quadrilateral defined by `box_corners`.
+        `box_corners` must be ordered sequentially around the perimeter (CW or CCW).
+        Uses the ray-casting algorithm, so it works for any convex or concave
+        simple polygon, not just axis-aligned rectangles.
+        """
+        x, y = self.position
+        inside = False
+        n = len(box_corners)
+
+        for i in range(n):
+            x1, y1 = box_corners[i]
+            x2, y2 = box_corners[(i + 1) % n]
+
+            if (y1 > y) != (y2 > y):
+                x_intersect = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+                if x < x_intersect:
+                    inside = not inside
+
+        return inside
 
     def __repr__(self) -> str:
         return f"Ball(position={self.position}, is_vip={self.is_vip})"

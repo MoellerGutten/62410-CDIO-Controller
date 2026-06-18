@@ -99,12 +99,12 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
 
-def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
+def drive_backward(state: ArenaState, connection: RobotConnection, speed: int = BACKWARD_SPEED, ms: int = BACKWARD_MS) -> None:
     if state.robot is None:
         return
 
-    bwd_ms = BACKWARD_MS
-    bwd_speed =  BACKWARD_SPEED
+    bwd_ms = ms
+    bwd_speed = speed
 
     #logger = get_logger("drive_backward")
     #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
@@ -135,6 +135,22 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     )
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+
+def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+    logger = get_logger("move_slowly_towards_point")
+    robot = await_robot(state, connection)
+
+    logger.debug(f"Moving slowly towards {point}")
+
+    while robot.distance_to_point(point) > 10:
+        inst = Instruction(
+            name=CommandName.FORWARD,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=ms_to_seconds(200), speed=30),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
+        robot = await_robot(state, connection)
 
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
