@@ -63,10 +63,9 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         turn_ms    = turn_to_point_turn_ms(angle)
         turn_speed = turn_to_point_turn_speed(angle)
 
-        logger = get_logger("turn_to_point")
-        logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
+        #logger = get_logger("turn_to_point")
+        #logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
     
-
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
@@ -89,8 +88,8 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
 
-    logger = get_logger("drive_forward")
-    logger.debug(f"Driving forward. fwd ms: {fwd_ms}, fwd speed: {fwd_speed}, distance: {distance}")
+    #logger = get_logger("drive_forward")
+    #logger.debug(f"Driving forward. fwd ms: {fwd_ms}, fwd speed: {fwd_speed}, distance: {distance}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -107,8 +106,8 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     bwd_ms = BACKWARD_MS
     bwd_speed =  BACKWARD_SPEED
 
-    logger = get_logger("drive_backward")
-    logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
+    #logger = get_logger("drive_backward")
+    #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
 
     inst = Instruction(
         name=CommandName.BACKWARD,
@@ -126,8 +125,8 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     burst_ms = BURST_FORWARD_MS
     burst_speed = BURST_FORWARD_SPEED
 
-    logger = get_logger("burst_into_ball")
-    logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
+    #logger = get_logger("burst_into_ball")
+    #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
