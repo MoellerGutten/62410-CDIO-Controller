@@ -1,0 +1,7 @@
+kpt_shape:
+- 4
+- 3
+names:
+  0: x
+path: .
+train: train.txt
