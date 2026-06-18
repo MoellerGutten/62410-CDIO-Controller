@@ -132,7 +132,7 @@ def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, po
 
     logger.debug(f"Moving slowly towards {point}")
 
-    while robot.distance_to_point(point) > 10:
+    while robot.distance_to_point(point) > 30:
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
