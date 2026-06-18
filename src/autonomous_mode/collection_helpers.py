@@ -27,8 +27,8 @@ def escape_cross_zone(state: ArenaState, connection: RobotConnection):
     nearest = min(waypoints, key=robot.distance_to_point)
     logger.debug(f"Escaping cross zone towards nearest waypoint {nearest}")
     turn_to_point(state, connection, nearest, True)
-    move_slowly_towards_point(state, connection, nearest)
-    "go_to(state, connection, nearest)"
+    # move_slowly_towards_point(state, connection, nearest)
+    # go_to(state, connection, nearest)
 
 
 def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):

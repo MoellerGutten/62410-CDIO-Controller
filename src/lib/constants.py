@@ -165,8 +165,8 @@ CROSS_ARM_LENGTH = 10
 CROSS_ZONE_PADDING = 1.5
 
 # gentle, short retreat after collecting next to the cross
-CROSS_ZONE_BACKWARD_SPEED = 30
-CROSS_ZONE_BACKWARD_MS = 500
+CROSS_ZONE_BACKWARD_SPEED = 50
+CROSS_ZONE_BACKWARD_MS = 1000
 
 # how close a freshly detected ball must be to the target to count as "the same ball still there"
 CROSS_ZONE_VERIFY_RADIUS = 20.0
