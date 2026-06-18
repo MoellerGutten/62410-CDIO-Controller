@@ -7,7 +7,7 @@ from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import _start_ball_intake, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
-from src.autonomous_mode.collection_helpers import collect_waypoint_zone_ball, collect_cross_zone_ball, collect_edge_ball, collect_normal_ball
+from src.autonomous_mode.collection_helpers import collect_waypoint_zone_ball, collect_cross_zone_ball, collect_edge_ball, collect_normal_ball, collect_corner_ball
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
 from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, GO_TO_NORMAL_BALL_APPROACH_RADIUS
 
@@ -47,7 +47,9 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
 def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
-    if is_edge_ball:
+    if ball.is_corner_ball():
+        collect_corner_ball(state, connection, ball)
+    elif is_edge_ball:
         collect_edge_ball(state, ball, connection, edge_ball_staging_point)
     elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
         collect_waypoint_zone_ball(state, ball, connection)

@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import go_to, drive_forward, burst_into_ball, turn_to_heading, turn_to_point, drive_backward, move_slowly_towards_point
+from src.autonomous_mode.movement_helpers import go_to, drive_forward, burst_into_ball, turn_to_heading, turn_to_point, drive_backward
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
@@ -41,5 +41,5 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     go_to(state, connection, staging_point)
     logger.debug("turning")
     turn_to_heading(state, connection, staging_heading, precise_mode=True)
-    approach_ball_while_turning(state, connection)
+    approach_ball_while_turning(state, connection, ball)
     advance_to_corner_ball(state, connection, ball)
