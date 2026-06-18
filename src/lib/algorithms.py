@@ -36,3 +36,13 @@ def drive_forward_ms(distance: float) -> int:
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
     return max(30, min(100, int(distance * 1.0)))
+
+##################################################
+# corner ball backwards staging point algorithms #
+##################################################
+
+def backward_ms(distance: float) -> int:
+    return drive_forward_ms(distance)
+
+def backward_speed(distance: float) -> int:
+    return drive_forward_speed(distance)

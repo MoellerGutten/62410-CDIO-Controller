@@ -5,8 +5,8 @@ from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
-from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, NUDGE_SPEED, \
-TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, SLEEP_BUFFER_SECONDS, \
+from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, \
+TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
 BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
@@ -98,9 +98,6 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
 
-    #logger = get_logger("drive_forward")
-    #logger.debug(f"Driving forward. fwd ms: {fwd_ms}, fwd speed: {fwd_speed}, distance: {distance}")
-
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -109,15 +106,12 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
 
-def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
+def burst_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:
         return
 
     bwd_ms = BACKWARD_MS
     bwd_speed =  BACKWARD_SPEED
-
-    #logger = get_logger("drive_backward")
-    #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
 
     inst = Instruction(
         name=CommandName.BACKWARD,
@@ -126,6 +120,18 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(bwd_ms) + SLEEP_BUFFER_SECONDS)
+
+def drive_backward_speed_ms(state: ArenaState, connection: RobotConnection, speed: float, ms: float) -> None:
+    if state.robot is None:
+        return
+    
+    inst = Instruction(
+        name=CommandName.BACKWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(ms), speed=speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
 
 def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:

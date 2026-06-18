@@ -73,7 +73,7 @@ TURN_TO_POINT_PRECISE_MS = 100
 """Milliseconds to turn robot for in precise mode"""
 
 ############################
-# drive_backward constants #
+# burst_backward constants #
 ############################
 
 BACKWARD_SPEED = 50
@@ -175,8 +175,16 @@ CORNER_THRESHOLD = 24
 
 EAST_HEADING = 0.0
 
+NORTH_EAST_HEADING = 45.0
+
 NORTH_HEADING = 90.0
+
+NORTH_WEST_HEADING = 135.0
 
 WEST_HEADING = 180.0
 
+SOUTH_WEST_HEADING = 225.0
+
 SOUTH_HEADING = 270.0
+
+SOUTH_EAST_HEADING = 315.0

@@ -1,132 +1,89 @@
-from time import sleep
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
+from src.model.robot import Robot
 from src.lib.connection import RobotConnection
-from src.lib.constants import SOUTH_HEADING, SLEEP_BUFFER_SECONDS
+from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
-from protocol import Instruction, Message, Arguments, CommandName, InstructionType
 from src.debug.log import get_logger
-from src.state.arena_config import ArenaConfig
-from src.autonomous_mode.movement_helpers import burst_into_ball, drive_backward
+from src.lib.algorithms import backward_speed, backward_ms
+from src.autonomous_mode.movement_helpers import go_to, turn_to_heading, burst_backward, drive_backward_speed_ms
 
-def get_staging_point_and_heading(ball: Ball) -> tuple[tuple[float, float], float]:
+def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge, float]:
+    """Get staging point, staging heading, edge against which to drive to collection, and collection heading"""
+    from src.state.arena_config import ArenaConfig
     nearest_corner = ball.nearest_corner()
     nearest_edge = ball.nearest_edge()
+
+    a = 51
+    b = 18
+    w = ArenaConfig.width_cm
+    h = ArenaConfig.height_cm
 
     match (nearest_corner, nearest_edge):
 
         # north east corner
         case (ArenaCorner.NORTH_EAST, ArenaEdge.NORTH):
-            return ((0.0, 0.0), 0.0)
+            return ((w - b, h - a), NORTH_WEST_HEADING, ArenaEdge.EAST, NORTH_HEADING)
         case (ArenaCorner.NORTH_EAST, ArenaEdge.EAST):
-            return ((0.0, 0.0), 0.0)
+            return ((w - a, h - b), SOUTH_EAST_HEADING, ArenaEdge.NORTH, EAST_HEADING)
 
         # north west corner
         case (ArenaCorner.NORTH_WEST, ArenaEdge.NORTH):
-            return ((0.0, 0.0), 0.0)
+            return ((b, h - a), NORTH_EAST_HEADING, ArenaEdge.WEST, NORTH_HEADING)
         case (ArenaCorner.NORTH_WEST, ArenaEdge.WEST):
-            return ((0.0, 0.0), 0.0)
+            return ((a, h - b), SOUTH_WEST_HEADING, ArenaEdge.NORTH, WEST_HEADING)
 
         # south east corner
         case (ArenaCorner.SOUTH_EAST, ArenaEdge.SOUTH):
-            return ((0.0, 0.0), 0.0)
+            return ((w - b, a), SOUTH_WEST_HEADING, ArenaEdge.EAST, SOUTH_HEADING)
         case (ArenaCorner.SOUTH_EAST, ArenaEdge.EAST):
-            return ((0.0, 0.0), 0.0)
+            return ((w - a, b), NORTH_EAST_HEADING, ArenaEdge.SOUTH, EAST_HEADING)
 
         # south west corner
         case (ArenaCorner.SOUTH_WEST, ArenaEdge.SOUTH):
-            return ((18, 51), SOUTH_HEADING - 45)
+            return ((b, a), SOUTH_EAST_HEADING, ArenaEdge.WEST, SOUTH_HEADING)
         case (ArenaCorner.SOUTH_WEST, ArenaEdge.WEST):
-            return ((51, 18), SOUTH_HEADING - 45)
+            return ((a, b), NORTH_WEST_HEADING, ArenaEdge.SOUTH, WEST_HEADING)
 
         case _:
             raise ValueError(
                 f"No staging rule for corner={nearest_corner}, edge={nearest_edge}"
             )
 
-def approach_ball_while_turning(state: ArenaState, connection: RobotConnection, ball: Ball):
-    logger = get_logger("approach_ball_while_turning")
-    bx, by = ball.position
+def back_towards_wall_and_turn(state: ArenaState, connection: RobotConnection, along_edge: ArenaEdge, collection_heading: float):
+    logger = get_logger("back_towards_wall_and_turn")
+
+    logger.debug(f"Backing towards edge {along_edge}")
     while True:
         robot = await_robot(state, connection)
 
-        distance = robot.distance_to_point(ball.position)
+        distance_to_wall = robot.distance_to_point(_get_wall_staging_point(robot, along_edge))
 
-        if distance < 20: # approach stop distance
-            logger.debug("reached approach stop distance, stopping")
+        if distance_to_wall < 12:
+            logger.debug(f"Reached edge {along_edge}")
             break
 
-        edge = ball.nearest_edge()
-        corner = ball.nearest_corner()
+        # back to wall
+        drive_backward_speed_ms(state, connection, backward_speed(distance_to_wall), backward_ms(distance_to_wall))
+    
+    logger.debug(f"Turning towards collection heading {collection_heading}")
+    turn_to_heading(state, connection, collection_heading)
 
-        # --------------------------------------------------
-        # 1. Build constrained target (slide along wall axis)
-        # --------------------------------------------------
-
-        m = 8
-
-        if edge in (ArenaEdge.WEST, ArenaEdge.EAST):
-            # west/east edge
-            target = (bx, m if by <= 12 else by) if corner == ArenaCorner.SOUTH_WEST or corner == ArenaCorner.SOUTH_EAST else (bx, ArenaConfig.height_cm - m if by >= ArenaConfig.height_cm - 12 else by)
-            logger.debug(f"west/east {target}")
-        else:
-            # north/south edge
-            target = (m if bx <= 12 else bx, by) if corner == ArenaCorner.SOUTH_WEST or corner == ArenaCorner.NORTH_WEST else (ArenaConfig.width_cm - m if bx >= ArenaConfig.width_cm - 12 else bx, by)
-            logger.debug(f"north/south {target}")
-
-        # south west corner
-        if edge == ArenaEdge.WEST and corner == ArenaCorner.SOUTH_WEST:
-            target = (bx, m if by <= 12 else by)
-        elif edge == ArenaEdge.SOUTH and corner == ArenaCorner.SOUTH_WEST:
-            target = (m if bx <= 12 else bx, by)
-
-        with state.lock:
-            state.target_point = target
-
-        # --------------------------------------------------
-        # 2. Steering toward constrained target
-        # --------------------------------------------------
-
-        angle_error = robot.angle_to_point(target)
-
-        base_speed = 20 # approach base speed
-
-        turn = clamp(angle_error * 3, -10, 10) # some random numbers for now
-
-        left_speed = base_speed + turn
-        right_speed = base_speed - turn
-
-        # --------------------------------------------------
-        # 3. Drive small controlled step
-        # --------------------------------------------------
-
-        logger.debug(f"turning ls {left_speed} rs {right_speed}")
-        inst = Instruction(
-            name=CommandName.TANK_LEFT,
-            type=InstructionType.COMMAND,
-            args=Arguments(
-                seconds=0.25,
-                lspeed=left_speed,
-                rspeed=right_speed,
-            ),
-        )
-
-        connection.send_message(Message(instruction=inst))
-
-        sleep(0.15 + SLEEP_BUFFER_SECONDS)
-
-def clamp(value: float, min_value: float, max_value: float) -> float:
-    return max(min_value, min(value, max_value))
+def _get_wall_staging_point(robot: Robot, along_edge: ArenaEdge):
+    from src.state.arena_config import ArenaConfig
+    match along_edge:
+        case ArenaEdge.NORTH:
+            return (robot.position[0], ArenaConfig.height_cm)
+        case ArenaEdge.SOUTH:
+            return (robot.position[0], 0)
+        case ArenaEdge.EAST:
+            return (ArenaConfig.width_cm, robot.position[1])
+        case ArenaEdge.WEST:
+            return (0, robot.position[1])
 
 def advance_to_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
-    inst = Instruction(
-        name=CommandName.FORWARD,
-        type=InstructionType.COMMAND,
-        args=Arguments(seconds=0.5, speed=40),
-    )
-    connection.send_message(Message(instruction=inst))
-    sleep(0.3 + SLEEP_BUFFER_SECONDS)
-    drive_backward(state, connection)
-    drive_backward(state, connection)
+    go_to(state, connection, ball.position)
+    burst_backward(state, connection)
+    burst_backward(state, connection)

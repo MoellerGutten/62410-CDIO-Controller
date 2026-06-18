@@ -1,4 +1,4 @@
-from src.autonomous_mode.movement_helpers import drive_backward, drive_forward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
@@ -14,7 +14,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     drive_to_center(state, connection)
     drive_to_goal(state, connection)
     _start_ejaculation(connection)
-    drive_backward(state, connection)
+    burst_backward(state, connection)
 
     logger.debug("Delivery done\n")
 

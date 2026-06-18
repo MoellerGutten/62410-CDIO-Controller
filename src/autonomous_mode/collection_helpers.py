@@ -1,11 +1,11 @@
-from src.autonomous_mode.movement_helpers import go_to, drive_forward, burst_into_ball, turn_to_heading, turn_to_point, drive_backward
+from src.autonomous_mode.movement_helpers import go_to, drive_forward, burst_into_ball, turn_to_heading, turn_to_point, burst_backward
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
 from src.lib.constants import ROBOT_TO_POINT_DISTANCE_BEFORE_BURST
-from src.autonomous_mode.corners import approach_ball_while_turning, advance_to_corner_ball, get_staging_point_and_heading
+from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn
 
 def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     pass
@@ -22,7 +22,7 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
         if robot.distance_to_point(ball.position) < ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
             burst_into_ball(state, connection, ball.position)
             update_ball_count_estimate(state)
-            drive_backward(state, connection)
+            burst_backward(state, connection)
             break
         else:
             turn_to_point(state, connection, ball.position, True)
@@ -36,10 +36,17 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
 
 def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
     logger = get_logger("collect_corner_ball")
-    staging_point, staging_heading = get_staging_point_and_heading(ball)
-    logger.debug(f"point {staging_point} head {staging_heading}. going")
+
+    staging_point, staging_heading, along_edge, collection_heading = get_staging_data(ball)
+
+    logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point)
-    logger.debug("turning")
+    
+    logger.debug(f"Turning to staging heading {staging_heading}")
     turn_to_heading(state, connection, staging_heading, precise_mode=True)
-    approach_ball_while_turning(state, connection, ball)
+
+    logger.debug("Backing to wall and adjusting heading")
+    back_towards_wall_and_turn(state, connection, along_edge, collection_heading)
+
+    logger.debug("Going to collect ball")
     advance_to_corner_ball(state, connection, ball)
