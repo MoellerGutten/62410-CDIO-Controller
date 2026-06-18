@@ -86,7 +86,7 @@ BACKWARD_MS = 500
 # burst_into_ball constants #
 #############################
 
-BURST_FORWARD_MS = 400
+BURST_FORWARD_MS = 450
 """The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75
@@ -118,6 +118,9 @@ DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
 
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
+
+GOAL_DELIVERY_POINT = (165, 121.5/2)
+"""The point where the robot is considered at the goal for deliveries"""
 
 ###################################
 # ball count estimation constants #
