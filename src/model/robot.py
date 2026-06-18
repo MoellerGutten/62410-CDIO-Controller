@@ -54,6 +54,10 @@ class Robot:
     def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
+    
+    def is_point_within_turning_hit_radius(self, point: tuple[float, float]) -> float:
+        """Calculates if the given point is going to be hit, when the robot is turning"""
+        return True if self.distance_to_point(point) <= 25 else False
 
     # ------------------------------------------------------------------
     # Orientation helpers
