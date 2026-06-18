@@ -11,12 +11,12 @@ class Cross:
         """
         Args:
             position:    (x, y) pixel coordinates of the cross centre.
-            orientation: Rotation of the cross in degrees, clamped to [0, 90)
+            orientation: Rotation of the cross in degrees, clamped to [0, 90]
                          due to its 4-fold symmetry.
             side_length:        Length of a side of the bounding box
         """
         self.position = position
-        self.orientation = orientation % 90
+        self.orientation = orientation # no need to % 90 here as it is done in arena tracker
         self.side_length = side_length
         self.bounding_box = bounding_box
 
@@ -59,7 +59,7 @@ class Cross:
     def arm_angles(self) -> list[float]:
         """
         Returns the absolute angles (degrees) of all four arms of the cross,
-        derived from the cross's orientation. Results are in [0, 360).
+        derived from the cross's orientation. Results are in [0, 360].
         """
         base = self.orientation
         return [base % 360, (base + 90) % 360, (base + 180) % 360, (base + 270) % 360]
