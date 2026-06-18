@@ -216,22 +216,45 @@ def draw_corners(surf, corners: list[Corner]):
 
 
 def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
+    radius = 8
+
     for ball in balls:
         x, y = field_to_screen(ball.position, corners)
-        r    = 8
+
+        # draw vip ball
         if ball.is_vip:
-            # glow ring
-            for i in range(3, 0, -1):
-                alpha_surf = pygame.Surface((r * 2 + i * 6, r * 2 + i * 6), pygame.SRCALPHA)
-                alpha      = 60 - i * 15
-                pygame.draw.circle(alpha_surf, (*C_VIP_GLOW, alpha),
-                                   (r + i * 3, r + i * 3), r + i * 3)
-                surf.blit(alpha_surf, (x - r - i * 3, y - r - i * 3))
-            pygame.draw.circle(surf, C_BALL_VIP,     (x, y), r)
-            pygame.draw.circle(surf, (255, 230, 120), (x, y), r, 2)
+            for glow_step in range(3, 0, -1):
+                glow_radius = radius + glow_step * 3
+                glow_size = glow_radius * 2
+
+                glow_surface = pygame.Surface(
+                    (glow_size, glow_size),
+                    pygame.SRCALPHA,
+                )
+
+                pygame.draw.circle(
+                    glow_surface,
+                    (*C_VIP_GLOW, 60 - glow_step * 15),
+                    (glow_radius, glow_radius),
+                    glow_radius,
+                )
+
+                surf.blit(glow_surface, (x - glow_radius, y - glow_radius))
+
+            pygame.draw.circle(surf, C_BALL_VIP, (x, y), radius)
+            pygame.draw.circle(surf, (255, 230, 120), (x, y), radius, 2)
+            continue
+
+        # make ball blue if corner, red if edge, white otherwise
+        if ball.is_corner_ball():
+            color = (30, 140, 220)
+        elif ball.is_edge_ball()[0]:
+            color = (200, 55, 55)
         else:
-            pygame.draw.circle(surf, C_BALL,         (x, y), r)
-            pygame.draw.circle(surf, C_BALL_OUTLINE,  (x, y), r, 1)
+            color = C_BALL
+
+        pygame.draw.circle(surf, color, (x, y), radius)
+        pygame.draw.circle(surf, C_BALL_OUTLINE, (x, y), radius, 1)
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
