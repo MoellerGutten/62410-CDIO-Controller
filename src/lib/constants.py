@@ -171,6 +171,11 @@ CROSS_ZONE_BACKWARD_MS = 1000
 # how close a detected ball must be to the target to count as "still the ball we're chasing"
 CROSS_ZONE_VERIFY_RADIUS = 20.0
 
+# tighter go_to tolerance for the waypoint/staging approach near the cross. The default
+# GO_TO_DISTANCE_TOLERANCE lets the robot stop short and cut the corner between the waypoint
+# and the staging point; near the cross we want it to actually reach each point first.
+CROSS_ZONE_WAYPOINT_TOLERANCE = 4.0 + ARUCO_OFFSET_X
+
 # incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
 # No burst is used near the cross (it would shove the easily-moved cross), so we rely on the
 # always-on intake to grab the ball as we arrive and stop the instant it's no longer detected.

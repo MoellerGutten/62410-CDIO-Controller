@@ -128,26 +128,27 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
-def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
-                              burst_speed: int = BURST_FORWARD_SPEED, burst_ms: int = BURST_FORWARD_MS) -> None:
-
-    logger = get_logger("move_slowly_towards_point")
-    robot = await_robot(state, connection)
-
-    logger.debug(f"Moving slowly towards {point}")
-
-    while robot.distance_to_point(point) > ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
-        inst = Instruction(
-            name=CommandName.FORWARD,
-            type=InstructionType.COMMAND,
-            args=Arguments(seconds=ms_to_seconds(200), speed=30),
-        )
-        connection.send_message(Message(instruction=inst))
-        sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
-        robot = await_robot(state, connection)
-
-    logger.debug("Within burst distance — collecting")
-    burst_into_ball(state, connection, point, speed=burst_speed, ms=burst_ms)
+# Unused: replaced by creep_forward_step for cross-zone collection. Kept commented for reference.
+# def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
+#                               burst_speed: int = BURST_FORWARD_SPEED, burst_ms: int = BURST_FORWARD_MS) -> None:
+#
+#     logger = get_logger("move_slowly_towards_point")
+#     robot = await_robot(state, connection)
+#
+#     logger.debug(f"Moving slowly towards {point}")
+#
+#     while robot.distance_to_point(point) > ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
+#         inst = Instruction(
+#             name=CommandName.FORWARD,
+#             type=InstructionType.COMMAND,
+#             args=Arguments(seconds=ms_to_seconds(200), speed=30),
+#         )
+#         connection.send_message(Message(instruction=inst))
+#         sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
+#         robot = await_robot(state, connection)
+#
+#     logger.debug("Within burst distance — collecting")
+#     burst_into_ball(state, connection, point, speed=burst_speed, ms=burst_ms)
 
 
 def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 200, speed: int = 30) -> None:
@@ -168,7 +169,8 @@ def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int =
 def go_to(state: ArenaState
           , connection: RobotConnection
           , point: tuple[float, float]
-          , approach_radius: float= 0.0) -> None:
+          , approach_radius: float= 0.0
+          , distance_tolerance: float = GO_TO_DISTANCE_TOLERANCE) -> None:
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -217,7 +219,7 @@ def go_to(state: ArenaState
 
         logger.debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
 
-        while distance > GO_TO_DISTANCE_TOLERANCE and _iter <= GO_TO_MAX_MOVES:
+        while distance > distance_tolerance and _iter <= GO_TO_MAX_MOVES:
             if _iter == 0: # for debug
                 logger.debug(f"Starting to move towards waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             turn_to_point(state, connection, current_target)
