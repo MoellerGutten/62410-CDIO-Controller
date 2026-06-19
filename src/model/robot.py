@@ -116,7 +116,7 @@ class Robot:
 
         return [p1, p2, p3, p4]
     
-    def is_point_in_behind_area(self, point: tuple[float, float]):
+    def is_point_in_area_behind(self, point: tuple[float, float]):
         box = self._get_area_behind()
         polygon = Polygon(box)
         if polygon.contains(Point(point)):
