@@ -155,3 +155,20 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 
+######################################
+# Robot constants #
+######################################
+ROBOT_LENGTH = 24
+"""The length of the robot"""
+
+ROBOT_WIDTH = 15
+"""The width of the robot"""
+
+DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS = 19
+"""The distance to point to be considered within turning hit radius of the robot"""
+
+DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS = 23
+"""The angle to point to be considered within turning hit radius of the robot"""
+
+LENGTH_OF_BOX_BEHIND_ROBOT = 18
+"""The length of the box behind the robot"""

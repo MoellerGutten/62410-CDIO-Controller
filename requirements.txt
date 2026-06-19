@@ -5,3 +5,4 @@ watchdog
 pygame
 ultralytics
 pygrabber
+sharply
