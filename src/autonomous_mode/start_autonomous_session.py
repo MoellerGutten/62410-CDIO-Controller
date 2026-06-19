@@ -54,7 +54,9 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         burst_into_ball(state, connection, ball.position)
         drive_backward(state, connection)
     else: 
-        if state.robot.is_point_within_turning_hit_radius(ball.position): 
+        if state.robot.is_point_in_behind_area(ball.position):
+            drive_forward(state, connection, ball.position)
+        elif state.robot.is_point_within_turning_hit_radius(ball.position): 
             drive_backward(state, connection)
         go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
 
