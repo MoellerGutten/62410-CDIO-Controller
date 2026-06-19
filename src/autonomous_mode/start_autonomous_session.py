@@ -55,9 +55,14 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         drive_backward(state, connection)
     else: 
         if state.robot.is_point_in_area_behind(ball.position):
-            drive_forward(state, connection, ball.position)
+            while (state.robot.distance_to_point(ball.position) < 24):
+                drive_forward(state, connection, ball.position)
+                await_robot(state, connection)
         elif state.robot.is_point_within_turning_hit_radius(ball.position): 
-            drive_backward(state, connection)
+            while (state.robot.distance_to_point(ball.position) < 24):
+                drive_backward(state, connection)
+                await_robot(state, connection)
+
         go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
 
         turn_to_point(state, connection, ball.position, precise_mode=True)
