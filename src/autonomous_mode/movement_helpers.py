@@ -76,7 +76,7 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    fwd_ms = drive_forward_ms(distance)
+    fwd_ms = drive_forward_ms(distance) + 200
     fwd_speed =  drive_forward_speed(distance)
 
     #logger = get_logger("drive_forward")
