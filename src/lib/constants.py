@@ -168,8 +168,14 @@ CROSS_ZONE_PADDING = 1.5
 CROSS_ZONE_BACKWARD_SPEED = 50
 CROSS_ZONE_BACKWARD_MS = 1000
 
-# how close a freshly detected ball must be to the target to count as "the same ball still there"
+# how close a detected ball must be to the target to count as "still the ball we're chasing"
 CROSS_ZONE_VERIFY_RADIUS = 20.0
-# stop retrying after this many attempts (ball may be permanently occluded by a cross arm)
-CROSS_ZONE_MAX_ATTEMPTS = 3
+
+# incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
+# No burst is used near the cross (it would shove the easily-moved cross), so we rely on the
+# always-on intake to grab the ball as we arrive and stop the instant it's no longer detected.
+CROSS_ZONE_CREEP_STEP_SPEED = 30
+CROSS_ZONE_CREEP_STEP_MS = 200
+# safety bound so the creep can't drive forward forever (e.g. on phantom detections)
+CROSS_ZONE_MAX_CREEP_STEPS = 40
 

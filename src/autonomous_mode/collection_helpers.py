@@ -1,11 +1,11 @@
-from src.autonomous_mode.movement_helpers import go_to, drive_forward, turn_to_point, drive_backward, move_slowly_towards_point
+from src.autonomous_mode.movement_helpers import go_to, turn_to_point, drive_backward, creep_forward_step
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
 from src.state.state_manager import update_state
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.lib.connection import RobotConnection
-from src.lib.constants import (CROSS_ZONE_BACKWARD_SPEED, CROSS_ZONE_BACKWARD_MS,
-                               CROSS_ZONE_VERIFY_RADIUS, CROSS_ZONE_MAX_ATTEMPTS)
+from src.lib.constants import (CROSS_ZONE_BACKWARD_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_VERIFY_RADIUS,
+                               CROSS_ZONE_CREEP_STEP_SPEED, CROSS_ZONE_CREEP_STEP_MS, CROSS_ZONE_MAX_CREEP_STEPS)
 from src.lib.cross_approach_points import get_cross_approach_points
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.debug.log import get_logger
@@ -48,27 +48,19 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     go_to(state, connection, staging_point)
 
     target = ball.position
-    for attempt in range(CROSS_ZONE_MAX_ATTEMPTS):
-        logger.debug(f"Attempt {attempt + 1}/{CROSS_ZONE_MAX_ATTEMPTS}: turning to {target}")
-        turn_to_point(state, connection, target, True)
-        if attempt == 0:
-            logger.debug("Driving to ball")
-            drive_forward(state, connection, target)
-        else:
-            logger.debug("Creeping slowly to ball")
-            move_slowly_towards_point(state, connection, target)
-        logger.debug("Backing away slowly")
-        drive_backward(state, connection, speed=CROSS_ZONE_BACKWARD_SPEED, ms=CROSS_ZONE_BACKWARD_MS)
+    turn_to_point(state, connection, target, True)
+    for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
+        creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
 
         update_state(state)
         remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
         if remaining is None:
-            logger.debug("Ball collected")
+            logger.debug("Ball no longer detected near target — collected")
             break
-        logger.debug(f"Ball still present at {remaining.position}, retrying")
         target = remaining.position
+        turn_to_point(state, connection, target, True)
     else:
-        logger.warning("Gave up collecting cross-zone ball after max attempts")
+        logger.warning("Reached max creep steps without confirming collection")
 
     escape_cross_zone(state, connection)
     update_ball_count_estimate(state)

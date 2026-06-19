@@ -7,7 +7,8 @@ from src.debug.log import get_logger
 from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, NUDGE_SPEED, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, SLEEP_BUFFER_SECONDS, \
-BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE
+BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
+ROBOT_TO_POINT_DISTANCE_BEFORE_BURST
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
@@ -108,12 +109,13 @@ def drive_backward(state: ArenaState, connection: RobotConnection, speed: int = 
     sleep(ms_to_seconds(bwd_ms) + SLEEP_BUFFER_SECONDS)
 
 
-def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
+                    speed: int = BURST_FORWARD_SPEED, ms: int = BURST_FORWARD_MS) -> None:
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    burst_ms = BURST_FORWARD_MS
-    burst_speed = BURST_FORWARD_SPEED
+    burst_ms = ms
+    burst_speed = speed
 
     #logger = get_logger("burst_into_ball")
     #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
@@ -126,13 +128,15 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
-def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
+                              burst_speed: int = BURST_FORWARD_SPEED, burst_ms: int = BURST_FORWARD_MS) -> None:
+
     logger = get_logger("move_slowly_towards_point")
     robot = await_robot(state, connection)
 
     logger.debug(f"Moving slowly towards {point}")
 
-    while robot.distance_to_point(point) > 10:
+    while robot.distance_to_point(point) > ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
@@ -141,6 +145,22 @@ def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, po
         connection.send_message(Message(instruction=inst))
         sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
         robot = await_robot(state, connection)
+
+    logger.debug("Within burst distance — collecting")
+    burst_into_ball(state, connection, point, speed=burst_speed, ms=burst_ms)
+
+
+def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 200, speed: int = 30) -> None:
+
+    if state.robot is None:
+        return
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(ms), speed=speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
