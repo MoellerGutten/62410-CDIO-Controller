@@ -1,5 +1,5 @@
 from src.autonomous_mode.movement_helpers import go_to, turn_to_point, drive_backward, creep_forward_step, \
-    escape_cross_zone
+    escape_cross_zone, drive_forward
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
 
 from src.model.arena_state import ArenaState
@@ -49,7 +49,9 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     target = ball.position
     turn_to_point(state, connection, target, True)
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
-        creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
+        drive_forward(state, connection, step)
+
+        "creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)"
 
         await_robot(state, connection)
         remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
