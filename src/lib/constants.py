@@ -26,7 +26,7 @@ WIN_MESSAGE = "I did it"
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
 
-GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0
+GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0 + ARUCO_OFFSET_X
 """Approach radius for go_to for normal balls"""
 
 ################################
@@ -96,7 +96,7 @@ BURST_FORWARD_SPEED = 75
 # go_to constants #
 ###################
 
-GO_TO_DISTANCE_TOLERANCE = 10.0 + ARUCO_OFFSET_X
+GO_TO_DISTANCE_TOLERANCE = 10.0
 """The tolerance with which go_to determines whether the robot has reached the target point"""
 
 GO_TO_MAX_MOVES = 20
