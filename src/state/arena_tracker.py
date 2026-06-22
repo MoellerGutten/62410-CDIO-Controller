@@ -179,7 +179,9 @@ class ArenaTracker:
 
         win = "Live Preview"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+        h, w = self._frame_shape
+        cv2.resizeWindow(win, w, h)
+        #cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
 
         show_visuals = False
         continuous   = False
@@ -204,7 +206,9 @@ class ArenaTracker:
                 if self._setup_arena(cap):
                     self._compute_perspective()
                     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-                    cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+                    h, w = self._frame_shape
+                    cv2.resizeWindow(win, w, h)
+                    # cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
                 else:
                     break
 
@@ -573,14 +577,16 @@ class ArenaTracker:
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+        h, w = self._frame_shape
+        cv2.resizeWindow(win, w, h)
+        # cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
         cv2.setMouseCallback(win, self._handle_mouse)
 
         _STEPS = {
-            "CORNERS": lambda: (f"1. Klik 4 hjørner (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
-            "GOAL_A":  lambda: (f"2. Mål A — TL så BR: {len(self._goal_a_pts)}/2",           (255, 150, 0)),
-            "GOAL_B":  lambda: (f"3. Mål B — TL så BR: {len(self._goal_b_pts)}/2",           (0, 0, 255)),
-            "DONE":    lambda: ("Færdig! ENTER for at gemme | R for at nulstille",             (0, 255, 0)),
+            "CORNERS": lambda: (f"1. Click 4 corners (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
+            "GOAL_A":  lambda: (f"2. Goal A — TL then BR: {len(self._goal_a_pts)}/2",           (255, 150, 0)),
+            "GOAL_B":  lambda: (f"3. Goal B — TL then BR: {len(self._goal_b_pts)}/2",           (0, 0, 255)),
+            "DONE":    lambda: ("Done! ENTER to save | R to restart",             (0, 255, 0)),
         }
 
         while True:
