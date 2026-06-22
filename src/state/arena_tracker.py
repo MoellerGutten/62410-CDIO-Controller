@@ -601,6 +601,7 @@ class ArenaTracker:
         self._setup_step = "CORNERS"
 
         self._frame_shape = self._warm_up_camera(cap)
+        cam_mtx, cam_dist = self._load_camera_calibration()
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
@@ -620,6 +621,8 @@ class ArenaTracker:
             ret, frame = cap.read()
             if not ret:
                 continue
+            if cam_mtx is not None:                                          # <-- add this
+                frame = cv2.undistort(frame, cam_mtx, cam_dist, None, cam_mtx)
             disp = frame.copy()
             msg, color = _STEPS[self._setup_step]()
             self._draw_text_with_outline(disp, msg, (20, 40), 0.7, color, 2)
