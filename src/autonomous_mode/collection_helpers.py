@@ -41,7 +41,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         # out diagonally (away from the cross center) so the robot stages with more clearance.
         nearest_waypoint = _push_outward(state.cross.position, nearest_waypoint, CROSS_WAYPOINT_DIAGONAL_EXTENSION)
         logger.debug(f"Going to nearest waypoint {nearest_waypoint} before staging")
-        go_to(state, connection, nearest_waypoint, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
+        go_to(state, connection, nearest_waypoint)
 
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)

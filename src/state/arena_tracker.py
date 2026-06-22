@@ -425,14 +425,23 @@ class ArenaTracker:
 
     @staticmethod
     def _cross_orientation(keypoints_cm: list[tuple[float, float]]) -> float:
-        tl, tr, bl, br = keypoints_cm
+        """
+        Estimate cross orientation from its 4 bounding-box corner keypoints.
+        Uses the diagonal vectors to find the box tilt.
+        Returns angle in degrees relative to upright.
+        """
+        tl, tr, bl, br = keypoints_cm  # order from your output
 
-        dx = tr[0] - tl[0]
-        dy = tr[1] - tl[1]
+        # Two diagonals of the bounding box
+        dx1 = br[0] - tl[0]
+        dy1 = br[1] - tl[1]
+        dx2 = bl[0] - tr[0]
+        dy2 = bl[1] - tr[1]
 
-        angle = math.degrees(math.atan2(dy, dx))
-
-        return -angle
+        angle1 = math.degrees(math.atan2(dy1, dx1)) + 45 % 90
+        angle2 = math.degrees(math.atan2(dy2, dx2)) + 45 % 90
+ 
+        return -((angle1 + angle2) / 2)
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)

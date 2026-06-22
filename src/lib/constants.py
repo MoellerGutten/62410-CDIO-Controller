@@ -189,7 +189,7 @@ CROSS_WAYPOINT_DIAGONAL_EXTENSION = 20.0
 CROSS_ZONE_CREEP_STEP_SPEED = 30
 CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
-CROSS_ZONE_MAX_CREEP_STEPS = 40
+CROSS_ZONE_MAX_CREEP_STEPS = 10
 
 ######################################
 # Robot constants #
