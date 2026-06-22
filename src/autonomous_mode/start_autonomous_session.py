@@ -4,7 +4,6 @@ from src.model.arena_state import ArenaState
 from src.model.robot import Robot
 from src.model.ball import Ball
 from src.debug.log import get_logger
-from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, turn_to_point, _stop_ball_intake, burst_into_ball, drive_backward, go_to
 from src.autonomous_mode.collection_helpers import collect_cross_zone_ball
 from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_intake, turn_to_point, _stop_ball_intake, burst_into_ball, drive_backward, go_to, handle_balls_in_radius
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
@@ -55,10 +54,12 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
         burst_into_ball(state, connection, ball.position)
         drive_backward(state, connection)
+    elif ball.is_within_cross_zone(state.cross):
+        collect_cross_zone_ball(state, ball, connection)
     else:
         handle_balls_in_radius(state, connection, ball)
 
-        go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
+        go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
 
         turn_to_point(state, connection, ball.position, precise_mode=True)
         burst_into_ball(state, connection, ball.position)

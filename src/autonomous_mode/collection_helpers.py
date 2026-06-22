@@ -5,9 +5,8 @@ from src.state.state_manager import update_state
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.lib.connection import RobotConnection
-from src.lib.constants import (CROSS_ZONE_BACKWARD_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_VERIFY_RADIUS,
-                               CROSS_ZONE_CREEP_STEP_SPEED, CROSS_ZONE_CREEP_STEP_MS, CROSS_ZONE_MAX_CREEP_STEPS,
-                               CROSS_ZONE_WAYPOINT_TOLERANCE)
+from src.lib.constants import (CROSS_ZONE_VERIFY_RADIUS,CROSS_ZONE_CREEP_STEP_SPEED, CROSS_ZONE_CREEP_STEP_MS,
+                               CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_WAYPOINT_TOLERANCE)
 from src.lib.cross_approach_points import get_cross_approach_points
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.debug.log import get_logger
@@ -19,9 +18,6 @@ def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: f
     if not candidates:
         return None
     return min(candidates, key=lambda b: b.distance_to_point(point))
-
-
-
 
 def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_cross_zone_ball")

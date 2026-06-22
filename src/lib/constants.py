@@ -179,7 +179,7 @@ CROSS_ZONE_WAYPOINT_TOLERANCE = 4.0 + ARUCO_OFFSET_X
 
 # incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
 CROSS_ZONE_CREEP_STEP_SPEED = 30
-CROSS_ZONE_CREEP_STEP_MS = 200
+CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 40
 
