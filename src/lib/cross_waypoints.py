@@ -28,7 +28,8 @@ def get_cross_waypoints(cross: Cross) -> list[tuple[float, float]]:
     wp3 = tuple(wp3)
     wp4 = tuple(wp4)
 
-    return [wp1, wp2, wp3, wp4]
+    return  [(float(wp[0]), float(wp[1])) for wp in [wp1, wp2, wp3, wp4]]
+
 
     # return [_get_tl_cross_approach_point(cross), _get_tr_cross_approach_point(cross), _get_br_cross_approach_point(cross), _get_bl_cross_approach_point(cross)]
 #
