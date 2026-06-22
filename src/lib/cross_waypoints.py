@@ -25,11 +25,8 @@ def get_cross_waypoints(cross: Cross) -> list[tuple[float, float]]:
     wp4 = p0 - d * h + d * h_hat
     wps = [(float(wp[0]), float(wp[1])) for wp in [wp1, wp2, wp3, wp4]]
 
-    spam_avoid = True
     logger = get_logger("get_cross_waypoints")
-    if spam_avoid:
-        spam_avoid = False
-        for i, wp in enumerate(wps):
-            logger.debug(f"Waypoint_{i + 1}: {wp}")
+    for i, wp in enumerate(wps):
+        logger.debug(f"Waypoint_{i + 1}: {wp}")
 
     return  [(float(wp[0]), float(wp[1])) for wp in [wp1, wp2, wp3, wp4]]
