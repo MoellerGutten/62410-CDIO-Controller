@@ -167,7 +167,7 @@ ROBOT_LENGTH = 24
 ROBOT_WIDTH = 15
 """The width of the robot"""
 
-DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS = 19
+DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS = 22
 """The distance to point to be considered within turning hit radius of the robot"""
 
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS = 23
