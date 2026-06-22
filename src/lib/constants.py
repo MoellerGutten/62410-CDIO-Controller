@@ -143,7 +143,7 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
 
-CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 12
+CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 15
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 
@@ -177,10 +177,8 @@ CROSS_ZONE_VERIFY_RADIUS = 20.0
 CROSS_ZONE_WAYPOINT_TOLERANCE = 4.0 + ARUCO_OFFSET_X
 
 # incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
-# No burst is used near the cross (it would shove the easily-moved cross), so we rely on the
-# always-on intake to grab the ball as we arrive and stop the instant it's no longer detected.
 CROSS_ZONE_CREEP_STEP_SPEED = 30
 CROSS_ZONE_CREEP_STEP_MS = 200
-# safety bound so the creep can't drive forward forever (e.g. on phantom detections)
+# safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 40
 
