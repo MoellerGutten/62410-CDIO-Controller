@@ -55,6 +55,8 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         turn_ms    = turn_to_point_turn_ms(angle)
         turn_speed = turn_to_point_turn_speed(angle)
 
+        turn_ms = turn_ms/(1 + precise_mode)
+
         #logger = get_logger("turn_to_point")
         #logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
     
@@ -152,10 +154,18 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
 
     distance = robot.distance_to_point(point)
     burst_ms = BURST_FORWARD_MS
+    if distance < 12:
+        burst_ms = 100
+    elif distance < 14:
+        burst_ms = 250
+    elif distance < 16:
+        burst_ms = 350
+    else:
+        burst_ms = 450
     burst_speed = BURST_FORWARD_SPEED
 
-    #logger = get_logger("burst_into_ball")
-    #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
+    logger = get_logger("burst_into_ball")
+    logger.debug(f"Busting. burst ms: {burst_ms}, burst distance: {distance} cm")
 
     inst = Instruction(
         name=CommandName.FORWARD,
