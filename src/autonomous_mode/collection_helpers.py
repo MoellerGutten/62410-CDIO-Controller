@@ -38,7 +38,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     staging_point = min(approach_points, key=ball.distance_to_point)
 
     logger.debug(f"Going to staging point at {staging_point}")
-    go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
+    go_to(state, connection, staging_point)
     final_points = get_cross_approach_points(state.cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET)
     target = min(final_points, key=ball.distance_to_point)
     with state.lock:
