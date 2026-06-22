@@ -56,7 +56,7 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
     else: 
         handle_balls_in_radius(state, connection, ball)
 
-        go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
+        go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
 
         turn_to_point(state, connection, ball.position, precise_mode=True)
         burst_into_ball(state, connection, ball.position)
