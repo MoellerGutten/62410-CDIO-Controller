@@ -176,6 +176,9 @@ BACK_TOWARDS_EDGE_MAX_ITERATIONS = 7
 WALL_THRESHOLD = 14
 """The range of the edge wherein the robot is considered to be at the edge"""
 
+CORNER_BALL_COLLECTION_APPROACH_RADIUS = 10
+"""Approach radius used in go_to when collecting corner ball"""
+
 #####################
 # heading constants #
 #####################

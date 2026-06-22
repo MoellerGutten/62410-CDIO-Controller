@@ -4,7 +4,7 @@ from src.model.robot import Robot
 from src.lib.connection import RobotConnection
 from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
 SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, \
-BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD
+BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD, CORNER_BALL_COLLECTION_APPROACH_RADIUS
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
@@ -97,6 +97,6 @@ def _get_wall_staging_point(robot: Robot, along_edge: ArenaEdge):
             return (0, robot.position[1])
 
 def advance_to_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
-    go_to(state, connection, ball.position)
+    go_to(state, connection, ball.position, approach_radius=CORNER_BALL_COLLECTION_APPROACH_RADIUS)
     burst_backward(state, connection)
     burst_backward(state, connection)
