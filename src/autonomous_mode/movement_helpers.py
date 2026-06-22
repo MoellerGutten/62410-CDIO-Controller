@@ -54,6 +54,8 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         turn_ms    = turn_to_point_turn_ms(angle)
         turn_speed = turn_to_point_turn_speed(angle)
 
+        turn_ms = turn_ms/(1 + precise_mode)
+
         #logger = get_logger("turn_to_point")
         #logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
     

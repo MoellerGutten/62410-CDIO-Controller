@@ -51,6 +51,7 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
 
         turn_to_point(state, connection, ball.position)
         go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
+        turn_to_point(state, connection, ball.position, precise_mode=True)
         burst_into_ball(state, connection, ball.position)
         drive_backward(state, connection)
     else: 
@@ -58,7 +59,7 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
 
         go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
         robot = await_robot(state, connection)
-        if robot.distance_to_point(ball.position) > 20.0: # TODO: adjust and make constant
+        if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
             # return early if ball is in a galaxy far far away.
             update_ball_count_estimate(state)
             return
