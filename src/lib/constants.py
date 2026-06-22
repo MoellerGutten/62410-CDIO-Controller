@@ -170,6 +170,9 @@ CORNER_THRESHOLD = 24
 BACK_TOWARDS_EDGE_MAX_ITERATIONS = 7
 """The maximum amount of times the controller can attempt backing towards a wall before giving up on the corner ball"""
 
+WALL_THRESHOLD = 14
+"""The range of the edge wherein the robot is considered to be at the edge"""
+
 #####################
 # heading constants #
 #####################

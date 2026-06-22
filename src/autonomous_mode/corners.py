@@ -3,7 +3,8 @@ from src.model.ball import Ball
 from src.model.robot import Robot
 from src.lib.connection import RobotConnection
 from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
-SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, BACK_TOWARDS_EDGE_MAX_ITERATIONS
+SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, \
+BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
@@ -70,7 +71,7 @@ def back_towards_wall_and_turn(state: ArenaState, connection: RobotConnection, a
             logger.error(msg)
             raise RuntimeError(msg)
 
-        if distance_to_wall < 12:
+        if distance_to_wall < WALL_THRESHOLD:
             logger.debug(f"Reached edge {along_edge}")
             break
 
