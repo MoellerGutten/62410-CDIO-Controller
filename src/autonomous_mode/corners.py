@@ -4,7 +4,7 @@ from src.model.robot import Robot
 from src.lib.connection import RobotConnection
 from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
 SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, \
-BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD, CORNER_BALL_COLLECTION_APPROACH_RADIUS
+BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD, CORNER_BALL_COLLECTION_APPROACH_RADIUS, CORNER_COLLECTION_STAGING_POINT
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
@@ -19,8 +19,7 @@ def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge,
     nearest_corner = ball.nearest_corner()
     nearest_edge = ball.nearest_edge()
 
-    a = 51
-    b = 18
+    a, b = CORNER_COLLECTION_STAGING_POINT
     w = ARENA_WIDTH_CM
     h = ARENA_HEIGHT_CM
 

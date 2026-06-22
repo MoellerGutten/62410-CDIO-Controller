@@ -179,6 +179,9 @@ WALL_THRESHOLD = 14
 CORNER_BALL_COLLECTION_APPROACH_RADIUS = 10
 """Approach radius used in go_to when collecting corner ball"""
 
+CORNER_COLLECTION_STAGING_POINT = (51, 18)
+"""Stating point for south-west corner balls adjacent to the west wall"""
+
 #####################
 # heading constants #
 #####################
