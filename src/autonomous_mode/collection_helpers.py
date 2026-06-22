@@ -34,15 +34,6 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     approach_points = get_cross_approach_points(state.cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET)
     staging_point = min(approach_points, key=ball.distance_to_point)
 
-    waypoints = get_cross_waypoints(state.cross)
-    if waypoints:
-        nearest_waypoint = min(waypoints, key=lambda w: hypot(w[0] - staging_point[0], w[1] - staging_point[1]))
-        # The default waypoint sits tight against the cross and the staging point; push it further
-        # out diagonally (away from the cross center) so the robot stages with more clearance.
-        nearest_waypoint = _push_outward(state.cross.position, nearest_waypoint, CROSS_WAYPOINT_DIAGONAL_EXTENSION)
-        logger.debug(f"Going to nearest waypoint {nearest_waypoint} before staging")
-        go_to(state, connection, nearest_waypoint)
-
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
     final_points = get_cross_approach_points(state.cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET)
@@ -51,18 +42,19 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         state.target_point = target
 
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
-        logger.debug("Inching towards ball, iteration: " + str(step))
+        if state.robot.distance_to_point(target) > 10:
+            logger.debug("Inching towards ball, iteration: " + str(step))
 
-        turn_to_point(state, connection, target, precise_mode=True)
-        drive_forward(state, connection, target)
+            turn_to_point(state, connection, target, precise_mode=True)
+            drive_forward(state, connection, target)
 
-        #creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
+            #creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
 
-        await_robot(state, connection)
-        remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
-        if remaining is None:
-            logger.debug("Ball no longer detected near target — collected")
-            break
+            await_robot(state, connection)
+            remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
+            if remaining is None:
+                logger.debug("Ball no longer detected near target — collected")
+                break
     else:
         logger.warning("Reached max creep steps without confirming collection")
 
