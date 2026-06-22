@@ -26,7 +26,7 @@ WIN_MESSAGE = "I did it"
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
 
-GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0 + ARUCO_OFFSET_X
+GO_TO_BALL_APPROACH_RADIUS = 5.0 + ARUCO_OFFSET_X
 """Approach radius for go_to for normal balls"""
 
 ################################
@@ -119,7 +119,7 @@ DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
 
-GOAL_DELIVERY_POINT = (165, 121.5/2)
+GOAL_DELIVERY_POINT = (160, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
@@ -143,7 +143,7 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
 
-CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 7
+CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 9
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 

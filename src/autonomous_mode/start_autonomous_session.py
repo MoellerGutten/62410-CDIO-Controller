@@ -8,7 +8,7 @@ from src.autonomous_mode.movement_helpers import drive_forward, _start_ball_inta
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, GO_TO_NORMAL_BALL_APPROACH_RADIUS, ARUCO_OFFSET_X
+from src.lib.constants import BALLS_PER_DELIVERY, ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, GO_TO_BALL_APPROACH_RADIUS
 
 _last_ball_count_update_time = 0
 
@@ -50,11 +50,11 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         go_to(state, connection, new_ball_point)
 
         turn_to_point(state, connection, ball.position)
-        go_to(state, connection, ball.position, ARUCO_OFFSET_X)
+        go_to(state, connection, ball.position, GO_TO_BALL_APPROACH_RADIUS)
         burst_into_ball(state, connection, ball.position)
         drive_backward(state, connection)
     else: 
-        go_to(state, connection, ball.position, approach_radius=GO_TO_NORMAL_BALL_APPROACH_RADIUS)
+        go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
 
         turn_to_point(state, connection, ball.position, precise_mode=True)
         burst_into_ball(state, connection, ball.position)

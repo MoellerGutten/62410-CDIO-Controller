@@ -45,7 +45,7 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
 
     logger.debug("Commence drive to goal")
 
-    go_to(state, connection, GOAL_DELIVERY_POINT, approach_radius=ARUCO_OFFSET_X)
+    go_to(state, connection, GOAL_DELIVERY_POINT)
     turn_to_point(state, connection, goal, precise_mode=True)
         
 
