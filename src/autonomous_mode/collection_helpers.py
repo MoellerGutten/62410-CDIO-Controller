@@ -46,7 +46,12 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     turn_to_heading(state, connection, staging_heading, precise_mode=True)
 
     logger.debug("Backing to wall and adjusting heading")
-    back_towards_wall_and_turn(state, connection, along_edge, collection_heading)
+    try:
+        # backing towards wall can throw if heading is incorrect and max attempts is reached
+        back_towards_wall_and_turn(state, connection, along_edge, collection_heading)
+    except:
+        logger.error("Failed to collect corner ball, unable to drive backwards to edge. Giving up:(")
+        return
 
     logger.debug("Going to collect ball")
     advance_to_corner_ball(state, connection, ball)

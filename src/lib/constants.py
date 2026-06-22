@@ -167,6 +167,9 @@ EDGE_THRESHOLD = 13
 CORNER_THRESHOLD = 24
 """If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""
 
+BACK_TOWARDS_EDGE_MAX_ITERATIONS = 7
+"""The maximum amount of times the controller can attempt backing towards a wall before giving up on the corner ball"""
+
 #####################
 # heading constants #
 #####################

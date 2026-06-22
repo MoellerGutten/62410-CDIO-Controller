@@ -3,12 +3,14 @@ from src.model.ball import Ball
 from src.model.robot import Robot
 from src.lib.connection import RobotConnection
 from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
-SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
+SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, BACK_TOWARDS_EDGE_MAX_ITERATIONS
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
 from src.debug.log import get_logger
 from src.lib.algorithms import backward_speed, backward_ms
+from time import sleep
+from src.lib.time import ms_to_seconds
 from src.autonomous_mode.movement_helpers import go_to, turn_to_heading, burst_backward, drive_backward_speed_ms
 
 def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge, float]:
@@ -56,17 +58,28 @@ def back_towards_wall_and_turn(state: ArenaState, connection: RobotConnection, a
     logger = get_logger("back_towards_wall_and_turn")
 
     logger.debug(f"Backing towards edge {along_edge}")
+
+    _iter = 0
     while True:
         robot = await_robot(state, connection)
 
         distance_to_wall = robot.distance_to_point(_get_wall_staging_point(robot, along_edge))
+
+        if _iter >= BACK_TOWARDS_EDGE_MAX_ITERATIONS:
+            msg = "Reached max attempts for backing towards wall"
+            logger.error(msg)
+            raise RuntimeError(msg)
 
         if distance_to_wall < 12:
             logger.debug(f"Reached edge {along_edge}")
             break
 
         # back to wall
-        drive_backward_speed_ms(state, connection, backward_speed(distance_to_wall), backward_ms(distance_to_wall))
+        ms = backward_ms(distance_to_wall)
+        speed = backward_speed(distance_to_wall)
+        drive_backward_speed_ms(state, connection, speed, ms)
+        sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
+        _iter += 1
     
     logger.debug(f"Turning towards collection heading {collection_heading}")
     turn_to_heading(state, connection, collection_heading)
