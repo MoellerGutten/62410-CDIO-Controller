@@ -29,6 +29,9 @@ def _push_outward(center: tuple[float, float], point: tuple[float, float], dista
     scale = (length + distance) / length
     return (center[0] + dx * scale, center[1] + dy * scale)
 
+def distance_between_points(p1, p2):
+    return hypot(p1[0] - p2[0], p1[1] - p2[1])
+
 def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_cross_zone_ball")
     approach_points = get_cross_approach_points(state.cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET)
@@ -37,7 +40,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
     final_points = get_cross_approach_points(state.cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET)
-    target = min(final_points, key=state.robot.distance_to_point)
+    target = min(final_points, key=lambda p: distance_between_points(staging_point, p))
     with state.lock:
         state.target_point = target
 
