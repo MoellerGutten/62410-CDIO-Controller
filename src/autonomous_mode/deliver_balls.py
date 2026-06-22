@@ -4,7 +4,7 @@ from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
 from src.state.arena_config import ArenaConfig
-from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE, GOAL_DELIVERY_POINT
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE, DRIVE_TO_GOAL_AT_GOAL_RANGE, GOAL_DELIVERY_POINT, ARUCO_OFFSET_X
 
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     logger = get_logger("deliver_balls")    
@@ -45,7 +45,7 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
 
     logger.debug("Commence drive to goal")
 
-    go_to(state, connection, GOAL_DELIVERY_POINT)
+    go_to(state, connection, GOAL_DELIVERY_POINT, approach_radius=ARUCO_OFFSET_X)
     turn_to_point(state, connection, goal, precise_mode=True)
         
 
