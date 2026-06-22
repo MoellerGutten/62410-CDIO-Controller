@@ -53,7 +53,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
         creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
 
-        update_state(state)
+        await_robot(state, connection)
         remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
         if remaining is None:
             logger.debug("Ball no longer detected near target — collected")
