@@ -32,6 +32,12 @@ def nudge_robot(connection: RobotConnection) -> None:
         args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
+    inst = Instruction(
+        name=CommandName.BACKWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
+    )
+    connection.send_message(Message(instruction=inst))
     sleep(NUDGE_SECONDS + SLEEP_BUFFER_SECONDS)
 
 def update_ball_count_estimate(state: ArenaState) -> int:
