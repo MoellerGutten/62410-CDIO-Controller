@@ -52,10 +52,10 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         collect_corner_ball(state, connection, ball)
     elif is_edge_ball:
         collect_edge_ball(state, ball, connection, edge_ball_staging_point)
-    elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
-        collect_waypoint_zone_ball(state, ball, connection)
-    elif ball.is_within_cross_zone(state.cross):
-        collect_cross_zone_ball(state, ball, connection)
+    #elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
+    #    collect_waypoint_zone_ball(state, ball, connection)
+    #elif ball.is_within_cross_zone(state.cross):
+    #    collect_cross_zone_ball(state, ball, connection)
     else: 
         collect_normal_ball(state, ball, connection)
 
