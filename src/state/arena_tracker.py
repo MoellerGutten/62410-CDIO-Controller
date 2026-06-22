@@ -538,8 +538,8 @@ class ArenaTracker:
         expected = self._cfg.width_cm / self._cfg.height_cm
         if abs(measured - expected) > 0.15:
             self.logger.warning(
-                f"Hjørner ser skæve ud! "
-                f"Målt ratio: {measured:.2f}, forventet: {expected:.2f}"
+                f"The corners look crooked!"
+                f"Measured ratio: {measured:.2f}, expected: {expected:.2f}"
             )
             return False
         return True
@@ -631,8 +631,8 @@ class ArenaTracker:
                     disp, [np.array(self._corners, dtype=np.int32)],
                     isClosed=(len(self._corners) == 4), color=(0, 255, 0), thickness=2,
                 )
-            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Mål A")
-            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Mål B")
+            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Goal A")
+            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Goal B")
 
             cv2.imshow(win, disp)
             key = cv2.waitKey(20) & 0xFF
@@ -710,8 +710,8 @@ class ArenaTracker:
                 frame, [np.array(self._corners, dtype=np.int32)],
                 isClosed=True, color=(0, 200, 255), thickness=3,
             )
-        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Mål A")
-        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Mål B")
+        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Goal A")
+        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Goal B")
         return frame
 
     def _draw_goal_on_frame(
