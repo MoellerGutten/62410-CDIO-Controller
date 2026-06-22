@@ -1,4 +1,5 @@
-from src.autonomous_mode.movement_helpers import go_to, turn_to_point, drive_backward, creep_forward_step
+from src.autonomous_mode.movement_helpers import go_to, turn_to_point, drive_backward, creep_forward_step, \
+    escape_cross_zone
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
 from src.state.state_manager import update_state
 from src.model.arena_state import ArenaState
@@ -20,18 +21,6 @@ def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: f
     return min(candidates, key=lambda b: b.distance_to_point(point))
 
 
-def escape_cross_zone(state: ArenaState, connection: RobotConnection):
-    logger = get_logger("escape_cross_zone")
-    waypoints = get_cross_waypoints(state.cross)
-    if not waypoints:
-        return
-    logger.debug("Reversing out of the cross zone")
-    drive_backward(state, connection, speed=CROSS_ZONE_BACKWARD_SPEED, ms=CROSS_ZONE_BACKWARD_MS)
-
-    robot = await_robot(state, connection)
-    nearest = min(waypoints, key=robot.distance_to_point)
-    logger.debug(f"Going to nearest waypoint {nearest}")
-    go_to(state, connection, nearest)
 
 
 def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):

@@ -2,13 +2,16 @@ from math import hypot
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
+from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
-from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, NUDGE_SPEED, \
-TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, SLEEP_BUFFER_SECONDS, \
-BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
-ROBOT_TO_POINT_DISTANCE_BEFORE_BURST
+from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, \
+    NUDGE_SPEED, \
+    TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, \
+    SLEEP_BUFFER_SECONDS, \
+    BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
+    ROBOT_TO_POINT_DISTANCE_BEFORE_BURST, CROSS_ZONE_BACKWARD_SPEED, CROSS_ZONE_BACKWARD_MS
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
@@ -128,7 +131,7 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
-# Unused: replaced by creep_forward_step for cross-zone collection. Kept commented for reference.
+# replaced by creep_forward_step for cross-zone collection.
 # def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
 #                               burst_speed: int = BURST_FORWARD_SPEED, burst_ms: int = BURST_FORWARD_MS) -> None:
 #
@@ -163,6 +166,18 @@ def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int =
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
+def escape_cross_zone(state: ArenaState, connection: RobotConnection):
+    logger = get_logger("escape_cross_zone")
+    waypoints = get_cross_waypoints(state.cross)
+    if not waypoints:
+        return
+    logger.debug("Reversing out of the cross zone")
+    drive_backward(state, connection, speed=CROSS_ZONE_BACKWARD_SPEED, ms=CROSS_ZONE_BACKWARD_MS)
+
+    robot = await_robot(state, connection)
+    nearest = min(waypoints, key=robot.distance_to_point)
+    logger.debug(f"Going to nearest waypoint {nearest}")
+    go_to(state, connection, nearest)
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
