@@ -33,9 +33,9 @@ def nudge_robot(connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
     inst = Instruction(
-        name=CommandName.BACKWARD,
+        name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
-        args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
+        args=Arguments(seconds=NUDGE_SECONDS, speed=-NUDGE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
     sleep(NUDGE_SECONDS + SLEEP_BUFFER_SECONDS)
