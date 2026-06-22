@@ -61,7 +61,6 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         if remaining is None:
             logger.debug("Ball no longer detected near target — collected")
             break
-        target = remaining.position
     else:
         logger.warning("Reached max creep steps without confirming collection")
 
