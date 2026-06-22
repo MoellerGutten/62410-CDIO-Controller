@@ -13,8 +13,8 @@ def get_cross_waypoints(cross: Cross) -> list[tuple[float, float]]:
         return []
 
     p0 = np.array([cross.position[0], cross.position[1]])
-    heading = radians(cross.orientation)
-    h = np.array([cos(heading), sin(heading)])
+    heading = np.radians(cross.orientation)
+    h = np.array([np.cos(heading), np.sin(heading)])
     h_hat = np.array([-h[1], h[0]])
     d = 20  # fix denne til at være en konstant og juster så den passer med ('kryds arm længde') + (robot bredde + buffer).
 
