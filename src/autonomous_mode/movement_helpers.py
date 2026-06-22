@@ -114,10 +114,18 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
 
     distance = robot.distance_to_point(point)
     burst_ms = BURST_FORWARD_MS
+    if distance < 12:
+        burst_ms = 100
+    elif distance < 14:
+        burst_ms = 250
+    elif distance < 16:
+        burst_ms = 350
+    else:
+        burst_ms = 450
     burst_speed = BURST_FORWARD_SPEED
 
-    #logger = get_logger("burst_into_ball")
-    #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
+    logger = get_logger("burst_into_ball")
+    logger.debug(f"Busting. burst ms: {burst_ms}, burst distance: {distance} cm")
 
     inst = Instruction(
         name=CommandName.FORWARD,
