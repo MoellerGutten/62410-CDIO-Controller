@@ -158,6 +158,10 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 8
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 15
 
+CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 5
+
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 5
+
 #######################################
 # cross zone collection constants     #
 #######################################
