@@ -1,7 +1,7 @@
 from src.autonomous_mode.movement_helpers import go_to, turn_to_point, drive_backward, creep_forward_step, \
     escape_cross_zone
 from src.autonomous_mode.state_helpers import update_ball_count_estimate, await_robot
-from src.state.state_manager import update_state
+
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.lib.connection import RobotConnection

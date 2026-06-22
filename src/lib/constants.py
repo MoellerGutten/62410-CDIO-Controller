@@ -179,7 +179,7 @@ CROSS_ZONE_WAYPOINT_TOLERANCE = 4.0 + ARUCO_OFFSET_X
 
 # when collecting a cross-zone ball, push the chosen waypoint this many cm further out along its diagonal
 
-CROSS_WAYPOINT_DIAGONAL_EXTENSION = 10.0
+CROSS_WAYPOINT_DIAGONAL_EXTENSION = 20.0
 
 # incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
 CROSS_ZONE_CREEP_STEP_SPEED = 30
