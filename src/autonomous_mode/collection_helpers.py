@@ -45,7 +45,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         state.target_point = target
 
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
-        if state.robot.distance_to_point(target) > 10:
+        if state.robot.distance_to_point(target) > 8:
             logger.debug("Inching towards ball, iteration: " + str(step))
 
             turn_to_point(state, connection, target, precise_mode=True)
