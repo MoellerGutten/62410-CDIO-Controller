@@ -163,6 +163,8 @@ class ArenaTracker:
         if not cap.isOpened():
             self.logger.error(f"Cannot open camera (index {self._resolved_index}).")
             return
+        
+        self._frame_shape = self._warm_up_camera(cap)
 
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
@@ -539,6 +541,23 @@ class ArenaTracker:
         cap.set(cv2.CAP_PROP_FPS,          self._cfg.frame_fps)
         cap.set(cv2.CAP_PROP_FOURCC,       cv2.VideoWriter_fourcc(*"MJPG"))
         return cap
+    
+    @staticmethod
+    def _warm_up_camera(cap: cv2.VideoCapture, max_frames: int = 30) -> tuple[int, int]:
+        """Reads frames until the camera's actual resolution stabilizes."""
+        last_shape = None
+        shape = None
+        for _ in range(max_frames):
+            ret, frame = cap.read()
+            if not ret:
+                continue
+            shape = frame.shape[:2]
+            if shape == last_shape:
+                break
+            last_shape = shape
+        if shape is None:
+            raise RuntimeError("Camera never produced a frame during warm-up.")
+        return shape
 
     # ------------------------------------------------------------------ #
     #  Interactive arena setup                                             #
@@ -550,8 +569,7 @@ class ArenaTracker:
         self._goal_b_pts.clear()
         self._setup_step = "CORNERS"
 
-        for _ in range(5):
-            cap.read()
+        self._frame_shape = self._warm_up_camera(cap)
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
