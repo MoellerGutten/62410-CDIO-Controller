@@ -6,4 +6,4 @@ pygame
 ultralytics
 pygrabber
 numpy
-sharply
+shapely
