@@ -1,5 +1,9 @@
 from math import hypot, degrees, atan2, radians, cos, sin
+import numpy as np
+from src.lib.constants import ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT
+from src.debug.log import get_logger
 from src.model.ball import Ball
+from shapely.geometry import Point, Polygon
 
 class Robot:
     """Represents the robot on the field."""
@@ -13,8 +17,8 @@ class Robot:
         """
         self.position = position
         self.orientation = orientation % 360
-        self.robot_width_cm = 14
-        self.robot_length_cm = 24
+        self.robot_width_cm = ROBOT_WIDTH
+        self.robot_length_cm = ROBOT_LENGTH
 
     # ------------------------------------------------------------------
     # Distance helpers
@@ -54,6 +58,11 @@ class Robot:
     def distance_to_point(self, point: tuple[float, float]) -> float:
         """Euclidean distance from the robot to an arbitrary (x, y) point."""
         return hypot(self.position[0] - point[0], self.position[1] - point[1])
+    
+    def is_point_within_turning_hit_radius(self, point: tuple[float, float]) -> float:
+        """Calculates if the given point is going to be hit, when the robot is turning"""
+        return True if self.distance_to_point(point) <= DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS and abs(self.angle_to_point(point)) >= DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS else False
+    
 
     # ------------------------------------------------------------------
     # Orientation helpers
@@ -89,3 +98,27 @@ class Robot:
 
     def __repr__(self) -> str:
         return f"Robot(position={self.position}, orientation={self.orientation:.1f}°)"
+    
+    # ------------------------------------------------------------------
+    # area helpers
+    # ------------------------------------------------------------------
+
+    def _get_area_behind(self):
+        heading = (self.orientation + 180) % 360
+        heading_rad = np.radians(heading)
+        r = LENGTH_OF_BOX_BEHIND_ROBOT * np.array([cos(heading_rad), sin(heading_rad)])
+        p0 = self.position
+        perp = self.robot_width_cm/2 * np.array([-sin(heading_rad), cos(heading_rad)])
+        p1 = p0 + r + perp
+        p2 = p0 + perp
+        p3 = p0 - perp
+        p4 = p0 + r - perp
+
+        return [p1, p2, p3, p4]
+    
+    def is_point_in_area_behind(self, point: tuple[float, float]):
+        box = self._get_area_behind()
+        polygon = Polygon(box)
+        if polygon.contains(Point(point)):
+            return True
+        return False

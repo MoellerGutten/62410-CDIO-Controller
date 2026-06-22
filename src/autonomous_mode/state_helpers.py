@@ -24,12 +24,22 @@ def await_robot(state: ArenaState, connection: RobotConnection):
         if attempt % MAX_ROBOT_DETECTION_ATTEMPTS == 0:
             logger.warning("Robot still not detected — nudging robot")
             nudge_robot(connection)
+            nudge_robot_backwards(connection)
 
 def nudge_robot(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
         args=Arguments(seconds=NUDGE_SECONDS, speed=NUDGE_SPEED),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(NUDGE_SECONDS + SLEEP_BUFFER_SECONDS)
+
+def nudge_robot_backwards(connection: RobotConnection) -> None:
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=NUDGE_SECONDS, speed=-NUDGE_SPEED),
     )
     connection.send_message(Message(instruction=inst))
     sleep(NUDGE_SECONDS + SLEEP_BUFFER_SECONDS)
