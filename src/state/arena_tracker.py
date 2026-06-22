@@ -469,35 +469,12 @@ class ArenaTracker:
         try:
             with open(self._cfg.arena_config_file) as f:
                 data = json.load(f)
-            corners     = [tuple(p) for p in data.get("corners",    [])]
-            goal_a_pts  = [tuple(p) for p in data.get("goal_a_pts", [])]
-            goal_b_pts  = [tuple(p) for p in data.get("goal_b_pts", [])]
-            saved_shape = tuple(data.get("frame_shape", []))  # (h, w)
-
-            if len(corners) != 4:
-                return False
-
-            current_shape = getattr(self, "_frame_shape", None)
-            if saved_shape and current_shape and tuple(saved_shape) != tuple(current_shape):
-                sh, sw = saved_shape
-                ch, cw = current_shape
-                scale_x = cw / sw
-                scale_y = ch / sh
-                self.logger.warning(
-                    f"Calibration was saved at {sw}x{sh} but camera now delivers "
-                    f"{cw}x{ch}. Rescaling stored points (scale {scale_x:.3f}x / {scale_y:.3f}x)."
-                )
-                def _rescale(pts):
-                    return [(round(px * scale_x), round(py * scale_y)) for px, py in pts]
-                corners    = _rescale(corners)
-                goal_a_pts = _rescale(goal_a_pts)
-                goal_b_pts = _rescale(goal_b_pts)
-
-            self._corners    = corners
-            self._goal_a_pts = goal_a_pts
-            self._goal_b_pts = goal_b_pts
-            self.logger.debug("Arena calibration loaded.")
-            return True
+            self._corners    = [tuple(p) for p in data.get("corners",    [])]
+            self._goal_a_pts = [tuple(p) for p in data.get("goal_a_pts", [])]
+            self._goal_b_pts = [tuple(p) for p in data.get("goal_b_pts", [])]
+            if len(self._corners) == 4:
+                self.logger.debug("Arena calibration loaded.")
+                return True
         except Exception as exc:
             self.logger.warning(f"Could not load calibration: {exc}")
         return False
@@ -508,9 +485,7 @@ class ArenaTracker:
                 {
                     "corners":    self._corners,
                     "goal_a_pts": self._goal_a_pts,
-                    "goal_b_pts": self._goal_b_pts,
-                    "frame_shape": list(getattr(self, "_frame_shape", [])),
-                    
+                    "goal_b_pts": self._goal_b_pts,                    
                 },
                 f, indent=4,
             )
