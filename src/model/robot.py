@@ -90,6 +90,19 @@ class Robot:
     def is_facing_point(self, point: tuple[float, float], tolerance_deg: float = 5.0) -> bool:
         """Return True if the robot is facing the point within *tolerance_deg*."""
         return abs(self.angle_to_point(point)) <= tolerance_deg
+    
+    def angle_to_heading(self, heading: float) -> float:
+        """
+        Signed angle (degrees) the robot must rotate to face *heading*.
+        Positive = counter-clockwise, negative = clockwise.
+        Result is in (-180, 180].
+        """
+        diff = (heading - self.orientation + 180) % 360 - 180
+        return diff
+
+    def is_facing_heading(self, heading: float, tolerance_deg: float = 5.0) -> bool:
+        """Return True if the robot's orientation is within *tolerance_deg* of *heading*."""
+        return abs(self.angle_to_heading(heading)) <= tolerance_deg
 
     def heading_vector(self) -> tuple[float, float]:
         """Unit vector in the direction the robot is currently facing."""

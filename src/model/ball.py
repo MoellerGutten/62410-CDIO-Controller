@@ -47,7 +47,7 @@ class Ball:
         if not is_edge:
             return False
 
-        return self._distance_to_nearest_corner() <= CORNER_THRESHOLD
+        return self.distance_to_nearest_corner() <= CORNER_THRESHOLD
     
     def nearest_corner(self) -> ArenaCorner:
         """
@@ -98,7 +98,7 @@ class Ball:
             return ArenaEdge.SOUTH
         return ArenaEdge.NORTH
 
-    def _distance_to_nearest_corner(self) -> float:
+    def distance_to_nearest_corner(self) -> float:
         """
         Returns the distance to the nearest corner measured along the
         relevant wall. Balls adjacent to two walls are treated as corner balls.
