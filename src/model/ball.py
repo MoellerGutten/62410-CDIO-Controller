@@ -1,5 +1,5 @@
 from math import hypot
-from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD
+from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 
@@ -28,9 +28,8 @@ class Ball:
 
     def is_edge_ball(self) -> bool:
         """Returns a boolean based on if the ball is next to an edge"""
-        from src.state.arena_config import ArenaConfig
-        width = ArenaConfig.width_cm
-        height = ArenaConfig.height_cm
+        width = ARENA_WIDTH_CM
+        height = ARENA_HEIGHT_CM
         if self.position[0] >= width - EDGE_THRESHOLD:
             return [True, (130.0, self.position[1])]
         if self.position[0] <= EDGE_THRESHOLD:
@@ -56,11 +55,10 @@ class Ball:
 
         Assumes the ball is already classified as a corner ball.
         """
-        from src.state.arena_config import ArenaConfig
         x, y = self.position
 
-        width = ArenaConfig.width_cm
-        height = ArenaConfig.height_cm
+        width = ARENA_WIDTH_CM
+        height = ARENA_HEIGHT_CM
 
         # Closer to west than east
         if x < width / 2:
@@ -80,12 +78,10 @@ class Ball:
         Returns the nearest arena edge the ball is touching/closest to.
         Assumes the ball is already classified as an edge ball.
         """
-        from src.state.arena_config import ArenaConfig
-
         x, y = self.position
 
-        width = ArenaConfig.width_cm
-        height = ArenaConfig.height_cm
+        width = ARENA_WIDTH_CM
+        height = ARENA_HEIGHT_CM
 
         # Distances to each edge
         dist_west = x
@@ -107,10 +103,9 @@ class Ball:
         Returns the distance to the nearest corner measured along the
         relevant wall. Balls adjacent to two walls are treated as corner balls.
         """
-        from src.state.arena_config import ArenaConfig
         x, y = self.position
-        width = ArenaConfig.width_cm
-        height = ArenaConfig.height_cm
+        width = ARENA_WIDTH_CM
+        height = ARENA_HEIGHT_CM
 
         near_west = x <= EDGE_THRESHOLD
         near_east = x >= width - EDGE_THRESHOLD

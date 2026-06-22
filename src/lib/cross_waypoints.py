@@ -1,7 +1,6 @@
 from math import sin, cos, radians
 from src.model.cross import Cross
 from pygame.math import Vector2
-from src.state.arena_config import ArenaConfig
 from src.lib.constants import CROSS_WAYPOINT_OFFSET
 
 # look here to understand this math https://github.com/MoellerGutten/62410-CDIO-Controller/wiki/cross-approach-points

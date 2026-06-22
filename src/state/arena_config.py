@@ -1,13 +1,13 @@
 from dataclasses import dataclass
-
+from src.lib.constants import ARUCO_OFFSET_X, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 
 @dataclass(frozen=True)
 class ArenaConfig:
     # ------------------------------------------------------------------ #
     #  Fysiske mål på banen                                              #
     # ------------------------------------------------------------------ #
-    width_cm:  float = 167.0
-    height_cm: float = 121.5
+    width_cm:  float = ARENA_WIDTH_CM
+    height_cm: float = ARENA_HEIGHT_CM
 
     # ------------------------------------------------------------------ #
     #  YOLO-model                                                        #
@@ -41,5 +41,5 @@ class ArenaConfig:
     #  ArUco + ArUco offset                                              #
     # ------------------------------------------------------------------ #
     aruco_target_id: int = 0
-    aruco_offset_x: float = -12
+    aruco_offset_x: float = ARUCO_OFFSET_X
     aruco_offset_y: float = 0

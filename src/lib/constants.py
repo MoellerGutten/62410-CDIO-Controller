@@ -1,10 +1,8 @@
-from src.state.arena_config import ArenaConfig
-
-######################################
+###########################
 # Arena tracker constants #
-######################################
+###########################
 
-ARUCO_OFFSET_X = abs(ArenaConfig().aruco_offset_x)
+ARUCO_OFFSET_X = -12
 """The absolute value of the amount of offset applied to the aruco maker to place it on its turning axis"""
 
 ######################################
@@ -188,3 +186,13 @@ SOUTH_WEST_HEADING = 225.0
 SOUTH_HEADING = 270.0
 
 SOUTH_EAST_HEADING = 315.0
+
+########################
+# arena size constants #
+########################
+
+ARENA_WIDTH_CM = 167.0
+"""Width of the arena in cm"""
+
+ARENA_HEIGHT_CM = 121.5
+"""Height of the arena in cm"""

@@ -3,15 +3,13 @@ import sys
 import pygame
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
-from src.autonomous_mode.start_autonomous_session import _select_next_ball
-from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
+from src.lib.constants import ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
-from src.state.arena_config import ArenaConfig
 from time import time
 from src.lib.cross_approach_points import get_cross_approach_points
 # ---------------------------------------------------------------------------
@@ -321,8 +319,8 @@ def draw_robot(surf, robot: Robot, corners):
 
 def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
-    x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
-    y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom
+    x = int(lerp(tl[0], tr[0], pos[0] / ARENA_WIDTH_CM))
+    y = int(lerp(bl[1], tl[1], pos[1] / ARENA_HEIGHT_CM))  # y flipped: 0 = bottom
     return (x, y)
 
 # ---------------------------------------------------------------------------

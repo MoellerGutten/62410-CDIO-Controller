@@ -2,7 +2,8 @@ from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.model.robot import Robot
 from src.lib.connection import RobotConnection
-from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING
+from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
+SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
@@ -12,14 +13,13 @@ from src.autonomous_mode.movement_helpers import go_to, turn_to_heading, burst_b
 
 def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge, float]:
     """Get staging point, staging heading, edge against which to drive to collection, and collection heading"""
-    from src.state.arena_config import ArenaConfig
     nearest_corner = ball.nearest_corner()
     nearest_edge = ball.nearest_edge()
 
     a = 51
     b = 18
-    w = ArenaConfig.width_cm
-    h = ArenaConfig.height_cm
+    w = ARENA_WIDTH_CM
+    h = ARENA_HEIGHT_CM
 
     match (nearest_corner, nearest_edge):
 
@@ -72,14 +72,13 @@ def back_towards_wall_and_turn(state: ArenaState, connection: RobotConnection, a
     turn_to_heading(state, connection, collection_heading)
 
 def _get_wall_staging_point(robot: Robot, along_edge: ArenaEdge):
-    from src.state.arena_config import ArenaConfig
     match along_edge:
         case ArenaEdge.NORTH:
-            return (robot.position[0], ArenaConfig.height_cm)
+            return (robot.position[0], ARENA_HEIGHT_CM)
         case ArenaEdge.SOUTH:
             return (robot.position[0], 0)
         case ArenaEdge.EAST:
-            return (ArenaConfig.width_cm, robot.position[1])
+            return (ARENA_WIDTH_CM, robot.position[1])
         case ArenaEdge.WEST:
             return (0, robot.position[1])
 
