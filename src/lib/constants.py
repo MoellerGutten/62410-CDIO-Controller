@@ -29,6 +29,9 @@ SLEEP_BUFFER_SECONDS = 0.05
 GO_TO_BALL_APPROACH_RADIUS = 5.0 + ARUCO_OFFSET_X
 """Approach radius for go_to for normal balls"""
 
+GO_TO_BALL_EDGE_APPROACH_RADIUS = 12 + ARUCO_OFFSET_X
+"""Approach radius for go_to for edge balls"""
+
 ################################
 # _start_ball_intake constants #
 ################################
@@ -119,7 +122,7 @@ DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
 
-GOAL_DELIVERY_POINT = (160, 121.5/2)
+GOAL_DELIVERY_POINT = (152.5, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
