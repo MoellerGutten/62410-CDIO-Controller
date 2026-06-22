@@ -12,7 +12,7 @@ from src.debug.log import get_logger
 from src.lib.algorithms import backward_speed, backward_ms
 from time import sleep
 from src.lib.time import ms_to_seconds
-from src.autonomous_mode.movement_helpers import go_to, turn_to_heading, burst_backward, drive_backward_speed_ms, burst_into_ball
+from src.autonomous_mode.movement_helpers import go_to, turn_to_heading, burst_backward, drive_backward_speed_ms, gentle_burst
 
 def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge, float, tuple[float, float]]:
     """Get staging point, staging heading, edge against which to drive to collection, collection heading, and target point for go_to in true corner cases"""
@@ -23,7 +23,7 @@ def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge,
     w = ARENA_WIDTH_CM
     h = ARENA_HEIGHT_CM
 
-    assbitch = 7
+    assbitch = 12
 
     match (nearest_corner, nearest_edge):
 
@@ -101,12 +101,12 @@ def advance_to_corner_ball(state: ArenaState, connection: RobotConnection, ball:
     if ball.distance_to_nearest_corner() < 3: # magic value
         # true corner ball
         go_to(state, connection, true_corner_target_point, approach_radius=CORNER_BALL_COLLECTION_APPROACH_RADIUS)
-        burst_into_ball(state, connection, true_corner_target_point)
+        gentle_burst(state, connection, true_corner_target_point, 21) # magic value
         burst_backward(state, connection)
         burst_backward(state, connection)
     else:
         # not close to both edges
         go_to(state, connection, ball.position, approach_radius=CORNER_BALL_COLLECTION_APPROACH_RADIUS)
-        burst_into_ball(state, connection, ball.position)
+        gentle_burst(state, connection, ball.position, 21) # magic value
         burst_backward(state, connection)
         burst_backward(state, connection)

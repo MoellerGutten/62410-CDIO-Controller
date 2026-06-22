@@ -170,13 +170,13 @@ EDGE_THRESHOLD = 13
 CORNER_THRESHOLD = 24
 """If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""
 
-BACK_TOWARDS_EDGE_MAX_ITERATIONS = 7
+BACK_TOWARDS_EDGE_MAX_ITERATIONS = 10
 """The maximum amount of times the controller can attempt backing towards a wall before giving up on the corner ball"""
 
 WALL_THRESHOLD = 14
-"""The range of the edge wherein the robot is considered to be at the edge"""
+"""The range of the edge wherein the robot is considered to be at the edge when backing towards edges"""
 
-CORNER_BALL_COLLECTION_APPROACH_RADIUS = 15
+CORNER_BALL_COLLECTION_APPROACH_RADIUS = 17
 """Approach radius used in go_to when collecting corner ball"""
 
 CORNER_COLLECTION_STAGING_POINT = (51, 18)

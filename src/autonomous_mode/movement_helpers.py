@@ -243,3 +243,29 @@ def handle_balls_in_radius(state, connection, ball):
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
             await_robot(state, connection)
+
+def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float], target_range: float):
+    logger = get_logger("gentle_burst")
+    max_iter = 10
+    _iter = 0
+    while True:
+        distance_to_target = await_robot(state, connection).distance_to_point(target_point)
+
+        if _iter >= max_iter:
+            logger.debug("Reached max iterations, stopping")
+            break
+
+        if distance_to_target <= target_range:
+            logger.debug("Distance within limit, stopping")
+            break
+
+        burst_ms = 100
+        burst_speed = 30
+        inst = Instruction(
+            name=CommandName.FORWARD,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+        _iter += 1
