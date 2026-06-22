@@ -24,8 +24,11 @@ WIN_MESSAGE = "I did it"
 SLEEP_BUFFER_SECONDS = 0.05
 """When sleeping after sending an instruction, sleep for the instruction's duration plus this buffer."""
 
-GO_TO_NORMAL_BALL_APPROACH_RADIUS = 5.0
+GO_TO_BALL_APPROACH_RADIUS = 5.0 + ARUCO_OFFSET_X
 """Approach radius for go_to for normal balls"""
+
+GO_TO_BALL_EDGE_APPROACH_RADIUS = 12 + ARUCO_OFFSET_X
+"""Approach radius for go_to for edge balls"""
 
 ################################
 # _start_ball_intake constants #
@@ -94,7 +97,7 @@ BURST_FORWARD_SPEED = 75
 # go_to constants #
 ###################
 
-GO_TO_DISTANCE_TOLERANCE = 10.0 + ARUCO_OFFSET_X
+GO_TO_DISTANCE_TOLERANCE = 10.0
 """The tolerance with which go_to determines whether the robot has reached the target point"""
 
 GO_TO_MAX_MOVES = 20
@@ -117,7 +120,7 @@ DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be close to the goal when within this distance"""
 
-GOAL_DELIVERY_POINT = (165, 121.5/2)
+GOAL_DELIVERY_POINT = (152.5, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
@@ -141,7 +144,7 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
 
-CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 7
+CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 9
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 
@@ -202,3 +205,26 @@ ARENA_WIDTH_CM = 167.0
 
 ARENA_HEIGHT_CM = 121.5
 """Height of the arena in cm"""
+
+######################################
+# Robot constants #
+######################################
+
+ROBOT_LENGTH = 24
+"""The length of the robot"""
+
+ROBOT_WIDTH = 15
+"""The width of the robot"""
+
+DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS = 19
+"""The distance to point to be considered within turning hit radius of the robot"""
+
+DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS = 23
+"""The angle to point to be considered within turning hit radius of the robot"""
+
+LENGTH_OF_BOX_BEHIND_ROBOT = 18
+"""The length of the box behind the robot"""
+
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK = ROBOT_TO_POINT_DISTANCE_BEFORE_BURST + 2.5
+
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT = ROBOT_TO_POINT_DISTANCE_BEFORE_BURST - 5
