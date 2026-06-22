@@ -47,7 +47,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
 
     target = ball.position
-    turn_to_point(state, connection, target, True)
+    turn_to_point(state, connection, target, precise_mode=True)
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
         drive_forward(state, connection, step)
 
@@ -59,7 +59,6 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
             logger.debug("Ball no longer detected near target — collected")
             break
         target = remaining.position
-        turn_to_point(state, connection, target, True)
     else:
         logger.warning("Reached max creep steps without confirming collection")
 
