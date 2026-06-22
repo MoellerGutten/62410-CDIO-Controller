@@ -8,7 +8,11 @@ import numpy as np
 # look here to understand this math https://github.com/MoellerGutten/62410-CDIO-Controller/wiki/cross-approach-points
 
 def get_cross_waypoints(cross: Cross) -> list[tuple[float, float]]:
-    """Get a list of approach points for the cross."""
+    """
+    Calculate and return waypoints to get around the cross
+    :param cross: cross
+    :return: list[tuple[float, float]] of waypoints
+    """
     if cross is None:
         return []
 
