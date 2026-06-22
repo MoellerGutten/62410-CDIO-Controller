@@ -6,6 +6,10 @@ from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
+from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, \
+TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
+BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, NUDGE_SECONDS, \
     NUDGE_SPEED, \
     TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, TURN_TO_POINT_PRECISE_SPEED, TURN_TO_POINT_PRECISE_MS, \
@@ -79,7 +83,7 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    fwd_ms = drive_forward_ms(distance) + 200
+    fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
 
     #logger = get_logger("drive_forward")
@@ -93,12 +97,12 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
 
-def drive_backward(state: ArenaState, connection: RobotConnection, speed: int = BACKWARD_SPEED, ms: int = BACKWARD_MS) -> None:
+def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:
         return
 
-    bwd_ms = ms
-    bwd_speed = speed
+    bwd_ms = BACKWARD_MS
+    bwd_speed =  BACKWARD_SPEED
 
     #logger = get_logger("drive_backward")
     #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
@@ -112,13 +116,12 @@ def drive_backward(state: ArenaState, connection: RobotConnection, speed: int = 
     sleep(ms_to_seconds(bwd_ms) + SLEEP_BUFFER_SECONDS)
 
 
-def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
-                    speed: int = BURST_FORWARD_SPEED, ms: int = BURST_FORWARD_MS) -> None:
+def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    burst_ms = ms
-    burst_speed = speed
+    burst_ms = BURST_FORWARD_MS
+    burst_speed = BURST_FORWARD_SPEED
 
     #logger = get_logger("burst_into_ball")
     #logger.debug(f"Busting. burst ms: {burst_ms}, burst speed: {burst_speed}")
@@ -131,61 +134,13 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
-# replaced by creep_forward_step for cross-zone collection.
-# def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float],
-#                               burst_speed: int = BURST_FORWARD_SPEED, burst_ms: int = BURST_FORWARD_MS) -> None:
-#
-#     logger = get_logger("move_slowly_towards_point")
-#     robot = await_robot(state, connection)
-#
-#     logger.debug(f"Moving slowly towards {point}")
-#
-#     while robot.distance_to_point(point) > ROBOT_TO_POINT_DISTANCE_BEFORE_BURST:
-#         inst = Instruction(
-#             name=CommandName.FORWARD,
-#             type=InstructionType.COMMAND,
-#             args=Arguments(seconds=ms_to_seconds(200), speed=30),
-#         )
-#         connection.send_message(Message(instruction=inst))
-#         sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
-#         robot = await_robot(state, connection)
-#
-#     logger.debug("Within burst distance — collecting")
-#     burst_into_ball(state, connection, point, speed=burst_speed, ms=burst_ms)
-
-
-def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 200, speed: int = 30) -> None:
-
-    if state.robot is None:
-        return
-    inst = Instruction(
-        name=CommandName.FORWARD,
-        type=InstructionType.COMMAND,
-        args=Arguments(seconds=ms_to_seconds(ms), speed=speed),
-    )
-    connection.send_message(Message(instruction=inst))
-    sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
-
-def escape_cross_zone(state: ArenaState, connection: RobotConnection):
-    logger = get_logger("escape_cross_zone")
-    waypoints = get_cross_waypoints(state.cross)
-    if not waypoints:
-        return
-    logger.debug("Reversing out of the cross zone")
-    drive_backward(state, connection, speed=CROSS_ZONE_BACKWARD_SPEED, ms=CROSS_ZONE_BACKWARD_MS)
-
-    robot = await_robot(state, connection)
-    nearest = min(waypoints, key=robot.distance_to_point)
-    logger.debug(f"Going to nearest waypoint {nearest}")
-    go_to(state, connection, nearest)
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 
 def go_to(state: ArenaState
           , connection: RobotConnection
           , point: tuple[float, float]
-          , approach_radius: float= 0.0
-          , distance_tolerance: float = GO_TO_DISTANCE_TOLERANCE) -> None:
+          , approach_radius: float= 0.0) -> None:
     """
     1. Tag robot pos og tjek om den intercepter inflated bounding box
     2. Redirect robot og brug nærmeste* waypoint til at køre uden om\n
@@ -234,7 +189,7 @@ def go_to(state: ArenaState
 
         logger.debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
 
-        while distance > distance_tolerance and _iter <= GO_TO_MAX_MOVES:
+        while distance > GO_TO_DISTANCE_TOLERANCE and _iter <= GO_TO_MAX_MOVES:
             if _iter == 0: # for debug
                 logger.debug(f"Starting to move towards waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             turn_to_point(state, connection, current_target)
@@ -245,3 +200,15 @@ def go_to(state: ArenaState
             _iter += 1
 
         logger.debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
+    logger.debug(f"distance to point {robot.distance_to_point(point)}")
+
+
+def handle_balls_in_radius(state, connection, ball):
+    if state.robot.is_point_in_area_behind(ball.position):
+        while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
+            drive_forward(state, connection, ball.position)
+            await_robot(state, connection)
+    elif state.robot.is_point_within_turning_hit_radius(ball.position):
+        while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
+            drive_backward(state, connection)
+            await_robot(state, connection)
