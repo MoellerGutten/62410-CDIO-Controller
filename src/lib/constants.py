@@ -2,7 +2,7 @@
 # Arena tracker constants #
 ###########################
 
-ARUCO_OFFSET_X = -12
+ARUCO_OFFSET_X = 12
 """The absolute value of the amount of offset applied to the aruco maker to place it on its turning axis"""
 
 ######################################
