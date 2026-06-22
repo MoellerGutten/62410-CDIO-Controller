@@ -113,7 +113,7 @@ class ArenaTracker:
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
         cap = self._open_camera()
-        self._frame_shape = self._warm_up_camera(cap)
+        self._warm_up_camera(cap)
 
         if not self._load_calibration():
             raise RuntimeError(
@@ -166,7 +166,7 @@ class ArenaTracker:
             self.logger.error(f"Cannot open camera (index {self._resolved_index}).")
             return
         
-        self._frame_shape = self._warm_up_camera(cap)
+        self._warm_up_camera(cap)
 
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
@@ -181,9 +181,7 @@ class ArenaTracker:
 
         win = "Live Preview"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        h, w = self._frame_shape
-        cv2.resizeWindow(win, w, h)
-        #cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
 
         show_visuals = False
         continuous   = False
@@ -208,9 +206,7 @@ class ArenaTracker:
                 if self._setup_arena(cap):
                     self._compute_perspective()
                     cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-                    h, w = self._frame_shape
-                    cv2.resizeWindow(win, w, h)
-                    # cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+                    cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
                 else:
                     break
 
@@ -588,7 +584,6 @@ class ArenaTracker:
             last_shape = shape
         if shape is None:
             raise RuntimeError("Camera never produced a frame during warm-up.")
-        return shape
 
     # ------------------------------------------------------------------ #
     #  Interactive arena setup                                             #
@@ -600,14 +595,12 @@ class ArenaTracker:
         self._goal_b_pts.clear()
         self._setup_step = "CORNERS"
 
-        self._frame_shape = self._warm_up_camera(cap)
+        self._warm_up_camera(cap)
         cam_mtx, cam_dist = self._load_camera_calibration()
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
-        h, w = self._frame_shape
-        cv2.resizeWindow(win, w, h)
-        # cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
+        cv2.resizeWindow(win, self._cfg.frame_width, self._cfg.frame_height)
         cv2.setMouseCallback(win, self._handle_mouse)
 
         _STEPS = {
