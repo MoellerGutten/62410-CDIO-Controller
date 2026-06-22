@@ -37,7 +37,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point, approach_radius=CROSS_ZONE_WAYPOINT_TOLERANCE)
     final_points = get_cross_approach_points(state.cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET)
-    target = min(final_points, key=state.robot.distance_to_point)
+    target = min(final_points, key=ball.distance_to_point)
     with state.lock:
         state.target_point = target
 
@@ -55,6 +55,9 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
             if remaining is None:
                 logger.debug("Ball no longer detected near target — collected")
                 break
+        else:
+            logger.debug("Reached target — stopping")
+            break
     else:
         logger.warning("Reached max creep steps without confirming collection")
 
