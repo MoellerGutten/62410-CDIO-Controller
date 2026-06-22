@@ -112,6 +112,9 @@ class ArenaTracker:
 
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
+        cap = self._open_camera()
+        self._warm_up_camera(cap)
+
         if not self._load_calibration():
             raise RuntimeError(
                 "No arena calibration found. "
@@ -122,7 +125,6 @@ class ArenaTracker:
         self._M, self._M_inv          = self._compute_perspective()
         self._model                   = YOLO(self._cfg.model_path)
         self._cam_mtx, self._cam_dist = self._load_camera_calibration()
-        cap = self._open_camera()
         self._camera_reader = CameraReader(cap)
 
         self._running = True
@@ -163,6 +165,8 @@ class ArenaTracker:
         if not cap.isOpened():
             self.logger.error(f"Cannot open camera (index {self._resolved_index}).")
             return
+        
+        self._warm_up_camera(cap)
 
         os.makedirs(os.path.dirname(self._cfg.arena_config_file) or ".", exist_ok=True)
 
@@ -481,7 +485,7 @@ class ArenaTracker:
                 {
                     "corners":    self._corners,
                     "goal_a_pts": self._goal_a_pts,
-                    "goal_b_pts": self._goal_b_pts,
+                    "goal_b_pts": self._goal_b_pts,                    
                 },
                 f, indent=4,
             )
@@ -505,8 +509,8 @@ class ArenaTracker:
         expected = self._cfg.width_cm / self._cfg.height_cm
         if abs(measured - expected) > 0.15:
             self.logger.warning(
-                f"Hjørner ser skæve ud! "
-                f"Målt ratio: {measured:.2f}, forventet: {expected:.2f}"
+                f"The corners look crooked!"
+                f"Measured ratio: {measured:.2f}, expected: {expected:.2f}"
             )
             return False
         return True
@@ -539,6 +543,22 @@ class ArenaTracker:
         cap.set(cv2.CAP_PROP_FPS,          self._cfg.frame_fps)
         cap.set(cv2.CAP_PROP_FOURCC,       cv2.VideoWriter_fourcc(*"MJPG"))
         return cap
+    
+    @staticmethod
+    def _warm_up_camera(cap: cv2.VideoCapture, max_frames: int = 30) -> tuple[int, int]:
+        """Reads frames until the camera's actual resolution stabilizes."""
+        last_shape = None
+        shape = None
+        for _ in range(max_frames):
+            ret, frame = cap.read()
+            if not ret:
+                continue
+            shape = frame.shape[:2]
+            if shape == last_shape:
+                break
+            last_shape = shape
+        if shape is None:
+            raise RuntimeError("Camera never produced a frame during warm-up.")
 
     # ------------------------------------------------------------------ #
     #  Interactive arena setup                                             #
@@ -550,8 +570,8 @@ class ArenaTracker:
         self._goal_b_pts.clear()
         self._setup_step = "CORNERS"
 
-        for _ in range(5):
-            cap.read()
+        self._warm_up_camera(cap)
+        cam_mtx, cam_dist = self._load_camera_calibration()
 
         win = "Arena Setup"
         cv2.namedWindow(win, cv2.WINDOW_NORMAL)
@@ -559,16 +579,18 @@ class ArenaTracker:
         cv2.setMouseCallback(win, self._handle_mouse)
 
         _STEPS = {
-            "CORNERS": lambda: (f"1. Klik 4 hjørner (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
-            "GOAL_A":  lambda: (f"2. Mål A — TL så BR: {len(self._goal_a_pts)}/2",           (255, 150, 0)),
-            "GOAL_B":  lambda: (f"3. Mål B — TL så BR: {len(self._goal_b_pts)}/2",           (0, 0, 255)),
-            "DONE":    lambda: ("Færdig! ENTER for at gemme | R for at nulstille",             (0, 255, 0)),
+            "CORNERS": lambda: (f"1. Click 4 corners (BL BR TR TL): {len(self._corners)}/4", (0, 255, 255)),
+            "GOAL_A":  lambda: (f"2. Goal A — TL then BR: {len(self._goal_a_pts)}/2",           (255, 150, 0)),
+            "GOAL_B":  lambda: (f"3. Goal B — TL then BR: {len(self._goal_b_pts)}/2",           (0, 0, 255)),
+            "DONE":    lambda: ("Done! ENTER to save | R to restart",             (0, 255, 0)),
         }
 
         while True:
             ret, frame = cap.read()
             if not ret:
                 continue
+            if cam_mtx is not None:                                          # <-- add this
+                frame = cv2.undistort(frame, cam_mtx, cam_dist, None, cam_mtx)
             disp = frame.copy()
             msg, color = _STEPS[self._setup_step]()
             self._draw_text_with_outline(disp, msg, (20, 40), 0.7, color, 2)
@@ -580,8 +602,8 @@ class ArenaTracker:
                     disp, [np.array(self._corners, dtype=np.int32)],
                     isClosed=(len(self._corners) == 4), color=(0, 255, 0), thickness=2,
                 )
-            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Mål A")
-            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Mål B")
+            self._draw_goal_on_frame(disp, self._goal_a_pts, (255, 150, 0), "Goal A")
+            self._draw_goal_on_frame(disp, self._goal_b_pts, (0, 0, 255),   "Goal B")
 
             cv2.imshow(win, disp)
             key = cv2.waitKey(20) & 0xFF
@@ -659,8 +681,8 @@ class ArenaTracker:
                 frame, [np.array(self._corners, dtype=np.int32)],
                 isClosed=True, color=(0, 200, 255), thickness=3,
             )
-        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Mål A")
-        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Mål B")
+        self._draw_goal_on_frame(frame, self._goal_a_pts, (255, 150, 0), "Goal A")
+        self._draw_goal_on_frame(frame, self._goal_b_pts, (0, 0, 255),   "Goal B")
         return frame
 
     def _draw_goal_on_frame(
