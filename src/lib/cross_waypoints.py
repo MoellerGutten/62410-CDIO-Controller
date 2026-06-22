@@ -1,4 +1,4 @@
-from debug.log import get_logger
+from src.debug.log import get_logger
 from src.model.cross import Cross
 from numpy import sin, cos, radians, array
 from src.lib.constants import CROSS_WAYPOINT_OFFSET
@@ -25,7 +25,7 @@ def get_cross_waypoints(cross: Cross) -> list[tuple[float, float]]:
     wp4 = p0 - d * h + d * h_hat
     wps = [(float(wp[0]), float(wp[1])) for wp in [wp1, wp2, wp3, wp4]]
     logger = get_logger("get_cross_waypoints")
-    for wp in wps:
+    for i, wp in enumerate(wps):
         logger.debug(f"Waypoint_{i + 1}: {wp}")
 
     return  [(float(wp[0]), float(wp[1])) for wp in [wp1, wp2, wp3, wp4]]
