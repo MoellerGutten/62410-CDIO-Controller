@@ -28,13 +28,13 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
 def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
     logger = get_logger("collect_corner_ball")
 
-    staging_point, staging_heading, along_edge, collection_heading = get_staging_data(ball)
+    staging_point, staging_heading, along_edge, collection_heading, true_corner_target_point = get_staging_data(ball)
 
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point)
     
     logger.debug(f"Turning to staging heading {staging_heading}")
-    turn_to_heading(state, connection, staging_heading, precise_mode=True)
+    turn_to_heading(state, connection, staging_heading)
 
     logger.debug("Backing to wall and adjusting heading")
     try:
@@ -45,4 +45,4 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
         return
 
     logger.debug("Going to collect ball")
-    advance_to_corner_ball(state, connection, ball)
+    advance_to_corner_ball(state, connection, ball, true_corner_target_point)

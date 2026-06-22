@@ -47,7 +47,8 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         if point is None:
             break
 
-        if robot.is_facing_point(point, TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE):
+        tol_deg = TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE
+        if robot.is_facing_point(point, tol_deg):
             break
 
         angle = robot.angle_to_point(point)
@@ -75,21 +76,32 @@ def turn_to_heading(
     state: ArenaState,
     connection: RobotConnection,
     heading_deg: float,
-    distance_cm: float = 20.0,
     precise_mode: bool = False
 ) -> None:
+    logger = get_logger("turn_to_point")
     robot = await_robot(state, connection)
+    tol_deg = TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE
 
-    x, y = robot.position
+    while not robot.is_facing_heading(heading_deg, tol_deg):
+        angle = robot.angle_to_heading(heading_deg)
+        turn_ms    = turn_to_point_turn_ms(angle)
+        turn_speed = turn_to_point_turn_speed(angle)
+    
+        command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
+        l_speed = turn_speed if angle > 0 else -turn_speed
+        r_speed = -turn_speed if angle > 0 else turn_speed
 
-    heading_rad = radians(heading_deg)
+        inst = Instruction(
+            name=command,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=ms_to_seconds(turn_ms), lspeed=l_speed, rspeed=r_speed),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(turn_ms) + SLEEP_BUFFER_SECONDS)
 
-    target_x = x + cos(heading_rad) * distance_cm
-    target_y = y + sin(heading_rad) * distance_cm
-
-    target_point = (target_x, target_y)
-
-    turn_to_point(state, connection, target_point, precise_mode=precise_mode)
+        robot = await_robot(state, connection)
+    
+    logger.debug(f"Now facing heading {heading_deg} with tolerance {tol_deg}, current heading {robot.orientation}")
 
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
