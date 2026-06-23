@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import time
 import platform
 import threading as _threading
 from typing import Optional
@@ -87,6 +88,7 @@ class ArenaTracker:
         self._M_inv:          Optional[np.ndarray]       = None
         self._cam_mtx:        Optional[np.ndarray]       = None
         self._cam_dist:       Optional[np.ndarray]       = None
+        self.dumped_image:    Optional[np.ndarray]       = None
         self._running:        bool                       = False
         self._resolved_index: int                        = 0
         self._scan_lock:      _threading.Lock            = _threading.Lock()
@@ -138,7 +140,20 @@ class ArenaTracker:
             raise RuntimeError("Call start() before scan().")
         with self._scan_lock:
             frame = self._grab_frame()
+            self.dumped_image = frame
             return self._process_frame(frame)
+        
+    def dump_frame(self, path: Optional[str] = None) -> str:
+        if getattr(self, "dumped_image", None) is None:
+            raise RuntimeError("No frame has been captured yet.")
+        if path is None:
+            os.makedirs("logs/images", exist_ok=True)
+            path = f"logs/images/frame_{int(time.time()*1000)}.png"
+        ok = cv2.imwrite(path, self.dumped_image)
+        if not ok:
+            raise IOError(f"Failed to write {path}")
+        self.logger.info(f"Dumped frame to {path}")
+        return path
 
     def stop(self) -> None:
         if hasattr(self, "_camera_reader"):
