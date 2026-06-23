@@ -7,9 +7,10 @@ from src.debug.log import get_logger
 from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
-BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
+BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
 DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, GENTLE_BURST_DEFAULT_MAX_ITER
-from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
+from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed, \
+    burst_forward_ms
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 
@@ -153,12 +154,7 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    if distance < 12:
-        burst_ms = 100
-    elif distance < 14:
-        burst_ms = 350
-    else:
-        burst_ms = 450
+    burst_ms = burst_forward_ms(distance)
     burst_speed = BURST_FORWARD_SPEED
 
     logger = get_logger("burst_into_ball")

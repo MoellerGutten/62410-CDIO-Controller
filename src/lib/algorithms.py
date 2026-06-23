@@ -43,3 +43,16 @@ def backward_ms(distance: float) -> int:
 
 def backward_speed(distance: float) -> int:
     return drive_forward_speed(distance)
+
+###
+# burst ms
+##
+def burst_forward_ms(distance: float) -> int:
+    if distance < 12:
+        burst_ms = 100
+    elif distance < 14:
+        burst_ms = 350
+    else:
+        burst_ms = 450
+
+    return burst_ms
