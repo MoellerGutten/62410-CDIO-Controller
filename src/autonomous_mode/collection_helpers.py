@@ -62,7 +62,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
 
 def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_waypoint_zone_ball")
-    inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET)
+    inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET+10)
     target = min(inflated_waypoint_points, key=ball.distance_to_point)
     logger.debug(f"Going to staging point at {target}")
     handle_balls_in_radius(state, connection, ball)
@@ -77,6 +77,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
     burst_into_ball(state, connection, ball.position)
+    escape_cross_zone(state, connection)
 
 
 def _get_waypoint_zone_staging_point(
