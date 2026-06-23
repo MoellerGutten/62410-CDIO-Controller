@@ -175,6 +175,22 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
+def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+    logger = get_logger("move_slowly_towards_point")
+    robot = await_robot(state, connection)
+
+    logger.debug(f"Moving slowly towards {point}")
+
+    while robot.distance_to_point(point) > 10:
+        inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(200), speed=30),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(200) + SLEEP_BUFFER_SECONDS)
+        robot = await_robot(state, connection)
+
 
 # ── Abstracted Movement Helpers (1 layer up) ───────────────────────────────────────────────────────────────────
 

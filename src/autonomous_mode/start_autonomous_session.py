@@ -7,7 +7,7 @@ from src.debug.log import get_logger
 from src.autonomous_mode.movement_helpers import _start_ball_intake, _stop_ball_intake
 from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update_ball_count_estimate
 from time import time
-from src.autonomous_mode.collection_helpers import collect_edge_ball, collect_normal_ball, collect_corner_ball
+from src.autonomous_mode.collection_helpers import collect_edge_ball, collect_normal_ball, collect_corner_ball, collect_waypoint_zone_ball
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
 from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
 
@@ -52,6 +52,8 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         collect_corner_ball(state, connection, ball)
     elif is_edge_ball:
         collect_edge_ball(state, ball, connection, edge_ball_staging_point)
+    elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
+        collect_waypoint_zone_ball(state, ball, connection)
     else: 
         collect_normal_ball(state, ball, connection)
 

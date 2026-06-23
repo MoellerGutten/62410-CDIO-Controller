@@ -148,6 +148,15 @@ CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 9
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 
+CROSS_ARM_LENGTH = 10
+"""The length from the center of the cross to the end of a cross arm"""
+
+CROSS_ZONE_PADDING = 1.5
+"""The cross zone is extended with this padding from the bounding box that is tight around the cross"""
+
+WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET = 20
+"""The distance from a waypoint zone collection staging point to the closts waypoint zone edge"""
+
 #######################################
 # get_cross_approach_points constants #
 #######################################
