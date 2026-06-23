@@ -67,12 +67,6 @@ TURN_TO_POINT_PRECISE_TOLERANCE = 2.0
 TURN_TO_POINT_TOLERANCE = 6.0
 """Tolerance used to determine if robot is facing point when not in precise mode"""
 
-TURN_TO_POINT_PRECISE_SPEED = 10
-"""Speed used when turning robot in precise mode"""
-
-TURN_TO_POINT_PRECISE_MS = 100
-"""Milliseconds to turn robot for in precise mode"""
-
 ############################
 # burst_backward constants #
 ############################
@@ -86,9 +80,6 @@ BACKWARD_MS = 500
 #############################
 # burst_into_ball constants #
 #############################
-
-BURST_FORWARD_MS = 450
-"""The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75
 """The speed at which to burst forward when collecting a ball"""
@@ -114,13 +105,7 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 # drive_to_goal constants #
 ###########################
 
-DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
-"""When driving to goal, the robot is considered to be at the goal when within this distance"""
-
-DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
-"""When driving to goal, the robot is considered to be close to the goal when within this distance"""
-
-GOAL_DELIVERY_POINT = (152.5, 121.5/2)
+GOAL_DELIVERY_POINT = (148, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
@@ -208,7 +193,7 @@ EDGE_THRESHOLD = 13
 EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
 """The target range used for gentle bursting towards an edge ball"""
 
-EDGE_BALL_STAGING_POINT_OFFSET = 24
+EDGE_BALL_STAGING_POINT_OFFSET = 31
 """The staging point's distance from the edge"""
 
 #############################
