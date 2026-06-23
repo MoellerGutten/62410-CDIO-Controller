@@ -1,7 +1,7 @@
 from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.model.cross import Cross
@@ -74,7 +74,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         logger.debug(f"Going to staging point at {target}")
         go_to(state, connection, target)
 
-    turn_to_point(state, connection, ball.position, precise_mode=True)
+    turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
     robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
@@ -82,7 +82,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
-    gentle_burst(state, connection, ball.position, WAYPOINT_ZONE_COLLECTION_RANGE)
+    burst_into_ball_slightly_smaller(state, connection, ball.position)
     escape_cross_zone(state, connection)
 
 

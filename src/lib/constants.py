@@ -84,6 +84,8 @@ BACKWARD_MS = 500
 BURST_FORWARD_SPEED = 75
 """The speed at which to burst forward when collecting a ball"""
 
+
+
 ###################
 # go_to constants #
 ###################
@@ -183,7 +185,7 @@ CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 5
 
-WAYPOINT_ZONE_COLLECTION_RANGE = 20
+WAYPOINT_ZONE_COLLECTION_RANGE = 15
 
 ###########################
 # edge handling constants #

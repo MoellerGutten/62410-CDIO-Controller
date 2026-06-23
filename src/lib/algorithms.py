@@ -45,6 +45,17 @@ def burst_forward_ms(distance: float) -> int:
 
     return burst_ms
 
+def small_burst_forward_ms(distance: float) -> int:
+    """returns the time as a function of the distance to the target"""
+    if distance < 12:
+        burst_ms = 80
+    elif distance < 14:
+        burst_ms = 300
+    else:
+        burst_ms = 375
+
+    return burst_ms
+
 ##################################################
 # corner ball backwards staging point algorithms #
 ##################################################
