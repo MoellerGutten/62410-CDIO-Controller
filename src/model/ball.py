@@ -31,13 +31,13 @@ class Ball:
         width = ARENA_WIDTH_CM
         height = ARENA_HEIGHT_CM
         if self.position[0] >= width - EDGE_THRESHOLD:
-            return [True, (width - 22, self.position[1])]
+            return [True, (width - 18, self.position[1])]
         if self.position[0] <= EDGE_THRESHOLD:
-            return [True, (22, self.position[1])]
+            return [True, (18, self.position[1])]
         if self.position[1] >= height - EDGE_THRESHOLD:
-            return [True, (self.position[0], height - 22)]
+            return [True, (self.position[0], height - 18)]
         if self.position[1] <= EDGE_THRESHOLD:
-            return [True, (self.position[0], 22)]
+            return [True, (self.position[0], 18)]
         return [False, self.position]
     
     def is_corner_ball(self) -> bool:

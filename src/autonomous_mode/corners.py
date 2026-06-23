@@ -35,9 +35,9 @@ def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge,
 
         # north west corner
         case (ArenaCorner.NORTH_WEST, ArenaEdge.NORTH):
-            return ((b, h - a), NORTH_EAST_HEADING, ArenaEdge.WEST, NORTH_HEADING, (0, h - assbitch))
+            return ((b, h - a), NORTH_EAST_HEADING, ArenaEdge.WEST, NORTH_HEADING, (assbitch, h))
         case (ArenaCorner.NORTH_WEST, ArenaEdge.WEST):
-            return ((a, h - b), SOUTH_WEST_HEADING, ArenaEdge.NORTH, WEST_HEADING, (assbitch, h))
+            return ((a, h - b), SOUTH_WEST_HEADING, ArenaEdge.NORTH, WEST_HEADING, (0, h - assbitch))
 
         # south east corner
         case (ArenaCorner.SOUTH_EAST, ArenaEdge.SOUTH):
