@@ -111,7 +111,7 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 # drive_to_goal constants #
 ###########################
 
-DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
+DRIVE_TO_GOAL_AT_GOAL_RANGE = 18 + ARUCO_OFFSET_X
 """When driving to goal, the robot is considered to be at the goal when within this distance"""
 
 DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
