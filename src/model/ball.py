@@ -1,4 +1,5 @@
 from math import hypot
+from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.cross import Cross
 from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, EDGE_BALL_STAGING_POINT_OFFSET, CROSS_ARM_LENGTH, CROSS_ZONE_PADDING
 from src.model.arena_corner import ArenaCorner
@@ -150,7 +151,7 @@ class Ball:
         if state.cross is None:
             return False
 
-        waypoint_zone_corners = state.cross.inflate_bounding_box()
+        waypoint_zone_corners = get_cross_waypoints(state.cross)
         return self._is_within_box(waypoint_zone_corners)
 
     def _is_within_box(self, box_corners: list[tuple[float, float]]):

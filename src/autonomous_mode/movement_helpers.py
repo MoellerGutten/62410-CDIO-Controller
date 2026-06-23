@@ -182,10 +182,6 @@ def escape_cross_zone(state: ArenaState, connection: RobotConnection):
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(CROSS_ZONE_BACKWARD_MS) + SLEEP_BUFFER_SECONDS)
 
-    robot = await_robot(state, connection)
-    nearest = min(waypoints, key=robot.distance_to_point)
-    logger.debug(f"Going to nearest waypoint {nearest}")
-    go_to(state, connection, nearest)
 
 
 def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:

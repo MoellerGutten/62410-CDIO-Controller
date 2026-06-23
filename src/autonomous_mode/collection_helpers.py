@@ -6,7 +6,7 @@ from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
+from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
@@ -28,6 +28,9 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
     burst_into_ball(state, connection, ball.position)
+
+    if ball.is_within_waypoint_zone(state):
+        escape_cross_zone(state, connection)
 
 def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
     logger = get_logger("collect_corner_ball")
@@ -59,17 +62,21 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
 
 def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_waypoint_zone_ball")
-    waypoints = get_cross_approach_points(state.cross, CROSS_WAYPOINT_OFFSET, CROSS_WAYPOINT_OFFSET)
-    staging_point = _get_waypoint_zone_staging_point(waypoints, ball)
-    logger.debug(f"Going to staging point at {staging_point}")
-    go_to(state, connection, staging_point)
-    logger.debug(f"Turning to ball position {ball.position}")
-    turn_to_point(state, connection, ball.position)
-    logger.debug("Bursting")
-    move_slowly_towards_point(state, connection, ball.position)
-    logger.debug("Backing away")
-    drive_backward_speed_ms(state, connection, BACKWARD_SPEED, BACKWARD_MS)
-    logger.debug("Ball collected")
+    inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET)
+    target = min(inflated_waypoint_points, key=ball.distance_to_point)
+    logger.debug(f"Going to staging point at {target}")
+    handle_balls_in_radius(state, connection, ball)
+    go_to(state, connection, target)
+
+    turn_to_point(state, connection, ball.position, precise_mode=True)
+    go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
+    robot = await_robot(state, connection)
+    if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
+        # return early if ball is in a galaxy far far away.
+        update_ball_count_estimate(state)
+        return
+    turn_to_point(state, connection, ball.position, precise_mode=True)
+    burst_into_ball(state, connection, ball.position)
 
 
 def _get_waypoint_zone_staging_point(

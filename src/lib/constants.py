@@ -180,7 +180,7 @@ CROSS_ZONE_PADDING = 1.5
 
 # gentle, short retreat after collecting next to the cross
 CROSS_ZONE_BACKWARD_SPEED = 30
-CROSS_ZONE_BACKWARD_MS = 1000
+CROSS_ZONE_BACKWARD_MS = 1500
 
 # how close a detected ball must be to the target to count as "still the ball we're chasing"
 CROSS_ZONE_VERIFY_RADIUS = 20.0

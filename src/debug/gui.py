@@ -215,7 +215,7 @@ def draw_corners(surf, corners: list[Corner]):
         pygame.draw.circle(surf, C_CORNER, (x, y), 5)
 
 
-def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
+def draw_balls(surf, balls: list[Ball], corners: list[Corner], state: ArenaState):
     radius = 8
 
     for ball in balls:
@@ -250,9 +250,9 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
             color = (30, 140, 220)
         elif ball.is_edge_ball()[0]:
             color = (200, 55, 55)
-        elif ball.is_within_cross_zone():
+        elif ball.is_within_cross_zone(state.cross):
             color = (50, 168, 56)
-        elif not ball.is_within_cross_zone and ball.is_within_waypoint_zone:
+        elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
             color = (125, 67, 26)
         else:
             color = C_BALL
@@ -458,7 +458,7 @@ def run_gui(state: ArenaState):
             draw_cross(screen, cross, corners)
             draw_waypoints(screen, cross, corners)
         draw_route_lines(screen, state, corners)
-        draw_balls(screen, balls, corners)
+        draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
