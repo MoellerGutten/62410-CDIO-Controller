@@ -13,10 +13,12 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     drive_to_center(state, connection)
     drive_to_goal(state, connection)
     _start_ejaculation(connection)
-    if state.estimated_ball_count <= BALLS_PER_DELIVERY:
+
+    if getattr(state, "is_final_delivery", False):
         with state.lock:
             if state.finish_time is None:
                 state.finish_time = time()
+                
     burst_backward(state, connection)
 
     logger.debug("Delivery done\n")

@@ -68,13 +68,14 @@ def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_b
     Deliver balls, recount estimated ball count, and return updated balls_delivered_so_far.
     """
     balls_in_arena_before = total_balls - balls_delivered_so_far
+
+    state.is_final_delivery = (
+    balls_in_arena_before <= BALLS_PER_DELIVERY
+)
    
 
-    if balls_in_arena_before <= BALLS_PER_DELIVERY:
-        with state.lock:
-            if state.finish_time is None:
-                state.finish_time = time()
-                
+    
+
     deliver_balls(state, connection)            
     balls_in_arena_after = update_ball_count_estimate(state)
     newly_delivered = balls_in_arena_before - balls_in_arena_after
