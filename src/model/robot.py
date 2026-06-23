@@ -1,7 +1,8 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 import numpy as np
-from src.lib.constants import ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT
-from src.debug.log import get_logger
+from src.lib.constants import ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
+DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
+from src.model.arena_edge import ArenaEdge
 from src.model.ball import Ball
 from shapely.geometry import Point, Polygon
 
@@ -90,6 +91,36 @@ class Robot:
     def is_facing_point(self, point: tuple[float, float], tolerance_deg: float = 5.0) -> bool:
         """Return True if the robot is facing the point within *tolerance_deg*."""
         return abs(self.angle_to_point(point)) <= tolerance_deg
+    
+    def angle_to_heading(self, heading: float) -> float:
+        """
+        Signed angle (degrees) the robot must rotate to face *heading*.
+        Positive = counter-clockwise, negative = clockwise.
+        Result is in (-180, 180].
+        """
+        diff = (heading - self.orientation + 180) % 360 - 180
+        return diff
+
+    def is_facing_heading(self, heading: float, tolerance_deg: float = 5.0) -> bool:
+        """Return True if the robot's orientation is within *tolerance_deg* of *heading*."""
+        return abs(self.angle_to_heading(heading)) <= tolerance_deg
+    
+    def is_facing_edge(self, edge: ArenaEdge, tolerance_deg: float = 45.0) -> bool:
+        """
+        Return True if the robot's heading points toward *edge*.
+
+        Each edge owns the 90° wedge of headings centered on its outward
+        normal (e.g. EAST owns (-45°, 45°]), so the default tolerance of
+        45° partitions the full circle with no gaps or overlaps.
+        """
+        _edge_headings = {
+            ArenaEdge.NORTH: NORTH_HEADING,
+            ArenaEdge.SOUTH: SOUTH_HEADING,
+            ArenaEdge.WEST: WEST_HEADING,
+            ArenaEdge.EAST: EAST_HEADING,
+        }
+        edge_heading = _edge_headings[edge]
+        return abs(self.angle_to_heading(edge_heading)) <= tolerance_deg
 
     def heading_vector(self) -> tuple[float, float]:
         """Unit vector in the direction the robot is currently facing."""

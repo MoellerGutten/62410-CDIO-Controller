@@ -1,10 +1,8 @@
-from src.state.arena_config import ArenaConfig
-
-######################################
+###########################
 # Arena tracker constants #
-######################################
+###########################
 
-ARUCO_OFFSET_X = abs(ArenaConfig().aruco_offset_x)
+ARUCO_OFFSET_X = 12
 """The absolute value of the amount of offset applied to the aruco maker to place it on its turning axis"""
 
 ######################################
@@ -76,7 +74,7 @@ TURN_TO_POINT_PRECISE_MS = 100
 """Milliseconds to turn robot for in precise mode"""
 
 ############################
-# drive_backward constants #
+# burst_backward constants #
 ############################
 
 BACKWARD_SPEED = 50
@@ -158,9 +156,84 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 
+###########################
+# edge handling constants #
+###########################
+
+EDGE_THRESHOLD = 13
+"""If a ball is within this distance of an edge, it is considered an edge ball"""
+
+EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
+"""The target range used for gentle bursting towards an edge ball"""
+
+EDGE_BALL_STAGING_POINT_OFFSET = 24
+"""The staging point's distance from the edge"""
+
+#############################
+# corner handling constants #
+#############################
+
+CORNER_THRESHOLD = 24
+"""If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""
+
+BACK_TOWARDS_EDGE_MAX_ITERATIONS = 10
+"""The maximum amount of times the controller can attempt backing towards a wall before giving up on the corner ball"""
+
+WALL_THRESHOLD = 14
+"""The range of the edge wherein the robot is considered to be at the edge when backing towards edges"""
+
+CORNER_BALL_COLLECTION_APPROACH_RADIUS = 17
+"""Approach radius used in go_to when collecting corner ball"""
+
+CORNER_COLLECTION_STAGING_POINT = (51, 18)
+"""Stating point for south-west corner balls adjacent to the west wall"""
+
+CORNER_BALL_TARGET_POINT_OFFSET = 12
+"""Amount to offset true corner ball target points from the corner"""
+
+CORNER_BALL_GENTLE_BURST_TARGET_RANGE = 23
+"""The target range used for gentle bursting towards a corner ball"""
+
+TRUE_CORNER_BALL_THRESHOLD = 3
+"""The distance from the corner within which balls are considered true corner balls"""
+
+GENTLE_BURST_DEFAULT_MAX_ITER = 10
+"""The default max attempts used in gentle_burst"""
+
+#####################
+# heading constants #
+#####################
+
+EAST_HEADING = 0.0
+
+NORTH_EAST_HEADING = 45.0
+
+NORTH_HEADING = 90.0
+
+NORTH_WEST_HEADING = 135.0
+
+WEST_HEADING = 180.0
+
+SOUTH_WEST_HEADING = 225.0
+
+SOUTH_HEADING = 270.0
+
+SOUTH_EAST_HEADING = 315.0
+
+########################
+# arena size constants #
+########################
+
+ARENA_WIDTH_CM = 167.0
+"""Width of the arena in cm"""
+
+ARENA_HEIGHT_CM = 121.5
+"""Height of the arena in cm"""
+
 ######################################
 # Robot constants #
 ######################################
+
 ROBOT_LENGTH = 24
 """The length of the robot"""
 
