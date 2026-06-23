@@ -245,11 +245,15 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
             pygame.draw.circle(surf, (255, 230, 120), (x, y), radius, 2)
             continue
 
-        # make ball blue if corner, red if edge, white otherwise
+        # make ball blue if corner, red if edge, green if cross, brown if waypoint, white otherwise
         if ball.is_corner_ball():
             color = (30, 140, 220)
         elif ball.is_edge_ball()[0]:
             color = (200, 55, 55)
+        elif ball.is_within_cross_zone():
+            color = (50, 168, 56)
+        elif not ball.is_within_cross_zone and ball.is_within_waypoint_zone:
+            color = (125, 67, 26)
         else:
             color = C_BALL
 
