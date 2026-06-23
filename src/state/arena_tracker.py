@@ -444,8 +444,8 @@ class ArenaTracker:
 
         angle1 = math.degrees(math.atan2(dy1, dx1)) + 45 % 90
         angle2 = math.degrees(math.atan2(dy2, dx2)) + 45 % 90
-
-        return (angle1 + angle2) / 2
+ 
+        return -((angle1 + angle2) / 2)
 
     def _compute_perspective(self) -> tuple[np.ndarray, np.ndarray]:
         src = np.array(self._corners, dtype=np.float32)

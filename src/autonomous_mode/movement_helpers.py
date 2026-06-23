@@ -2,6 +2,7 @@ from math import hypot, radians, sin, cos
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
+from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
@@ -9,6 +10,10 @@ from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJA
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
 BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
 DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, GENTLE_BURST_DEFAULT_MAX_ITER
+TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
+BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
+CROSS_ZONE_BACKWARD_SPEED, CROSS_ZONE_BACKWARD_MS, \
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
@@ -149,6 +154,40 @@ def drive_backward_speed_ms(state: ArenaState, connection: RobotConnection, spee
     sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
 
+def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 200, speed: int = 30) -> None:
+    if state.robot is None:
+        return
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(ms), speed=speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
+
+
+def escape_cross_zone(state: ArenaState, connection: RobotConnection):
+    logger = get_logger("escape_cross_zone")
+    waypoints = get_cross_waypoints(state.cross)
+    if not waypoints:
+        return
+    logger.debug("Reversing out of the cross zone")
+    # gentle, longer retreat tuned for the cross zone (see CROSS_ZONE_BACKWARD_* constants),
+    # not the general drive_backward speed/duration
+    inst = Instruction(
+        name=CommandName.BACKWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(CROSS_ZONE_BACKWARD_MS), speed=CROSS_ZONE_BACKWARD_SPEED),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(CROSS_ZONE_BACKWARD_MS) + SLEEP_BUFFER_SECONDS)
+
+    robot = await_robot(state, connection)
+    nearest = min(waypoints, key=robot.distance_to_point)
+    logger.debug(f"Going to nearest waypoint {nearest}")
+    go_to(state, connection, nearest)
+
+
 def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
 
@@ -265,7 +304,7 @@ def handle_balls_in_radius(state, connection, ball):
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
-    elif state.robot.is_point_within_turning_hit_radius(ball.position): 
+    elif state.robot.is_point_within_turning_hit_radius(ball.position):
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
             await_robot(state, connection)
