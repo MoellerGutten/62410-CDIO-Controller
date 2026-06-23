@@ -3,8 +3,8 @@ from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
-from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
-
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, BALLS_PER_DELIVERY
+from time import time
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     logger = get_logger("deliver_balls")    
     logger.debug("Commence delivery")
@@ -13,6 +13,10 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     drive_to_center(state, connection)
     drive_to_goal(state, connection)
     _start_ejaculation(connection)
+    if state.estimated_ball_count <= BALLS_PER_DELIVERY:
+        with state.lock:
+            if state.finish_time is None:
+                state.finish_time = time()
     burst_backward(state, connection)
 
     logger.debug("Delivery done\n")
