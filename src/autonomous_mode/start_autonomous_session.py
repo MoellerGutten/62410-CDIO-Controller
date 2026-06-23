@@ -79,8 +79,7 @@ def start_autonomous_session(state: ArenaState) -> None:
     logger = get_logger("start_autonomous_session")
     global _last_ball_count_update_time
 
-    with state.lock:
-        state.start_time = time()
+   
  
     connection = RobotConnection()
     _start_ball_intake(connection)
