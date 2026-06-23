@@ -1,9 +1,10 @@
-from math import hypot
+from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
 from src.autonomous_mode.movement_helpers import drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
+from src.model.cross import Cross
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
 from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
@@ -64,9 +65,14 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     logger = get_logger("collect_waypoint_zone_ball")
     inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET+10)
     target = min(inflated_waypoint_points, key=ball.distance_to_point)
-    logger.debug(f"Going to staging point at {target}")
+
     handle_balls_in_radius(state, connection, ball)
-    go_to(state, connection, target)
+
+    if state.cross is not None and _is_on_same_cross_side(state.robot.position, ball.position, state.cross):
+        logger.debug("Robot and ball are on the same side of the cross; skipping waypoint staging.")
+    else:
+        logger.debug(f"Going to staging point at {target}")
+        go_to(state, connection, target)
 
     turn_to_point(state, connection, ball.position, precise_mode=True)
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
@@ -78,6 +84,33 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     turn_to_point(state, connection, ball.position, precise_mode=True)
     gentle_burst(state, connection, ball.position, WAYPOINT_ZONE_COLLECTION_RANGE)
     escape_cross_zone(state, connection)
+
+
+def _is_on_same_cross_side(robot_position: tuple[float, float], ball_position: tuple[float, float], cross: Cross) -> bool:
+    if cross is None:
+        return False
+
+    cx, cy = cross.position
+    heading = radians(cross.orientation - 90)
+    axis_x = (cos(heading), sin(heading))
+    axis_y = (-axis_x[1], axis_x[0])
+
+    def quadrant_signs(point: tuple[float, float]) -> tuple[int, int] | None:
+        dx = point[0] - cx
+        dy = point[1] - cy
+        proj_x = dx * axis_x[0] + dy * axis_x[1]
+        proj_y = dx * axis_y[0] + dy * axis_y[1]
+        epsilon = 1e-6
+        if abs(proj_x) < epsilon or abs(proj_y) < epsilon:
+            return None
+        return (1 if proj_x > 0 else -1, 1 if proj_y > 0 else -1)
+
+    robot_quad = quadrant_signs(robot_position)
+    ball_quad = quadrant_signs(ball_position)
+    if robot_quad is None or ball_quad is None:
+        return False
+
+    return robot_quad == ball_quad
 
 
 def _get_waypoint_zone_staging_point(
