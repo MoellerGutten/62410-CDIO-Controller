@@ -108,11 +108,11 @@ def turn_to_heading(
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
-
+    logger = get_logger("drive_forward")
     distance = robot.distance_to_point(point)
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
-
+    logger.debug(f"forward speed {fwd_ms} m/s forward time: {fwd_ms}")
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
@@ -233,7 +233,6 @@ def go_to(state: ArenaState
     with state.lock:
         state.target_point = point
     logger = get_logger("go_to")
-    logger.debug(f"Go_to point: ({point[0]:.1f}, {point[1]:.1f})  with approach radius: {approach_radius}")
 
     waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
     waypoints.append(point)
@@ -245,10 +244,7 @@ def go_to(state: ArenaState
         robot = await_robot(state, connection)
         current_target = waypoint
 
-        logger.debug(f"target Waypoint: ({current_target[0]:.1f}, {current_target[1]:.2f})  current wp number: {i}")
-
         if approach_radius > 0.0 and i == len(waypoints) - 1:
-            logger.debug(f"Approaching final waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             # TODO: flyt det her ud til helper
             dx = waypoint[0] - robot.position[0]
             dy = waypoint[1] - robot.position[1]
@@ -265,21 +261,18 @@ def go_to(state: ArenaState
                 return
 
         distance = dist_to_point(robot.position, current_target)
-
-        logger.debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
-
+        logger.debug(f"rob's pos: {robot.position[0]:.1f}, {robot.position[1]:.1f} target: {current_target} distance to target: {distance:.1f}")
         while distance > GO_TO_DISTANCE_TOLERANCE and _iter <= GO_TO_MAX_MOVES:
-            if _iter == 0: # for debug
-                logger.debug(f"Starting to move towards waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             turn_to_point(state, connection, current_target)
             drive_forward(state, connection, current_target)
 
             robot = await_robot(state, connection)
             distance = dist_to_point(robot.position, current_target)
+            logger.debug(f"rob's pos: {robot.position[0]:.1f}, {robot.position[1]:.1f} target: {current_target} distance to target: {distance:.1f}")
+
             _iter += 1
 
         logger.debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
-    logger.debug(f"distance to point {robot.distance_to_point(point)}")
 
 
 def handle_balls_in_radius(state, connection, ball):
