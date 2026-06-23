@@ -11,7 +11,7 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
     go_to(state, connection, staging_point)
     turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
-    gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, 15)
+    gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, 20)
     burst_backward(state, connection)
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
