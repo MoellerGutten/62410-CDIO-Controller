@@ -6,7 +6,7 @@ from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
+from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
@@ -76,7 +76,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
-    burst_into_ball(state, connection, ball.position)
+    gentle_burst(state, connection, ball.position, WAYPOINT_ZONE_COLLECTION_RANGE)
     escape_cross_zone(state, connection)
 
 
@@ -140,15 +140,6 @@ def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: f
     if not candidates:
         return None
     return min(candidates, key=lambda b: b.distance_to_point(point))
-
-def _push_outward(center: tuple[float, float], point: tuple[float, float], distance: float) -> tuple[float, float]:
-    """Move `point` `distance` cm further from `center`, along the center->point direction."""
-    dx, dy = point[0] - center[0], point[1] - center[1]
-    length = hypot(dx, dy)
-    if length == 0:
-        return point
-    scale = (length + distance) / length
-    return (center[0] + dx * scale, center[1] + dy * scale)
 
 def distance_between_points(p1, p2):
     return hypot(p1[0] - p2[0], p1[1] - p2[1])

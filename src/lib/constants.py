@@ -112,7 +112,7 @@ GOAL_DELIVERY_POINT = (148, 121.5/2)
 # ball count estimation constants #
 ###################################
 
-BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
+BALL_COUNT_ESTIMATION_SNAPSHOTS = 10
 """The amount of images to capture and analyze when estimating ball count"""
 
 #########################
@@ -182,6 +182,8 @@ CROSS_ZONE_CREEP_STEP_SPEED = 30
 CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 5
+
+WAYPOINT_ZONE_COLLECTION_RANGE = 20
 
 ###########################
 # edge handling constants #
