@@ -14,6 +14,7 @@ from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATI
 _last_ball_count_update_time = 0
 
 
+
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
     Return the next ball to collect, or None if nothing is reachable.
@@ -73,10 +74,14 @@ def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_b
     return balls_delivered_so_far + newly_delivered
 
 
+
 def start_autonomous_session(state: ArenaState) -> None:
     logger = get_logger("start_autonomous_session")
     global _last_ball_count_update_time
 
+    with state.lock:
+        state.start_time = time()
+ 
     connection = RobotConnection()
     _start_ball_intake(connection)
 

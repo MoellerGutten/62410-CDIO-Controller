@@ -338,7 +338,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
                corners: list[Corner], estimated_ball_count: int, 
                estimated_balls_in_robot: int, estimated_balls_delivered: int,
-               all_balls_delivered: bool):
+               all_balls_delivered: bool, state):
     global _start_time
 
     px = WINDOW_W - PANEL_W + 15
@@ -401,7 +401,10 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     # time passed
     heading("Time")
-    elapsed = int(time() - _start_time)
+    if state.start_time is not None:
+        elapsed = int(time() - state.start_time)
+    else:
+        elapsed = 0
     if all_balls_delivered:
         elapsed = draw_panel._frozen_elapsed if hasattr(draw_panel, '_frozen_elapsed') else elapsed
     else:
@@ -454,6 +457,7 @@ def run_gui(state: ArenaState):
             estimated_ball_count = state.estimated_ball_count
             estimated_balls_in_robot = state.estimated_balls_in_robot
             estimated_balls_delivered = state.estimated_balls_delivered
+            
 
         # ------------------------------------------------------------------
         # Draw
@@ -470,7 +474,7 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered, state)
         for point in get_cross_approach_points(cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
         for point in get_cross_approach_points(cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET):
