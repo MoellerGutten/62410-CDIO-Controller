@@ -18,6 +18,12 @@ ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 10 + ARUCO_OFFSET_X
 BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10
 """The amount of seconds after which an estimate of ball count is invalid and must be re-estimated"""
 
+MATCH_DURATION_SECONDS = 480
+"""The total length of a match in seconds"""
+
+HAIL_MARY_TIME_LEFT_SECONDS = 30
+"""When this many seconds (or fewer) remain in the match, abandon strategy and deliver whatever balls we have"""
+
 WIN_MESSAGE = "I did it"
 """Message said aloud by the robot when finishing"""
 

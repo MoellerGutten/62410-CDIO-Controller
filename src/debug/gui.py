@@ -63,8 +63,6 @@ SMALL_GOAL_RATIO = 0.07
 
 FPS = 60
 
-_start_time = 0
-
 # ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
@@ -338,9 +336,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
                corners: list[Corner], estimated_ball_count: int, 
                estimated_balls_in_robot: int, estimated_balls_delivered: int,
-               all_balls_delivered: bool):
-    global _start_time
-
+               all_balls_delivered: bool, start_time: float):
     px = WINDOW_W - PANEL_W + 15
     pw = PANEL_W - FIELD_MARGIN // 2
     panel_rect = pygame.Rect(WINDOW_W - PANEL_W, 0, PANEL_W, WINDOW_H)
@@ -401,7 +397,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     # time passed
     heading("Time")
-    elapsed = int(time() - _start_time)
+    elapsed = int(time() - start_time)
     if all_balls_delivered:
         elapsed = draw_panel._frozen_elapsed if hasattr(draw_panel, '_frozen_elapsed') else elapsed
     else:
@@ -414,13 +410,12 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 # ---------------------------------------------------------------------------
 
 def run_gui(state: ArenaState):
-    global _start_time
-
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
     pygame.display.set_caption("")
     clock  = pygame.time.Clock()
-    _start_time = time()
+    with state.lock:
+        state.start_time = time()
 
     tracker = ArenaTracker()
 
@@ -470,7 +465,7 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
+        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered, state.start_time)
         for point in get_cross_approach_points(cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
         for point in get_cross_approach_points(cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET):
