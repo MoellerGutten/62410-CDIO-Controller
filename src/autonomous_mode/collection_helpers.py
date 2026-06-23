@@ -113,61 +113,6 @@ def _is_on_same_cross_side(robot_position: tuple[float, float], ball_position: t
     return robot_quad == ball_quad
 
 
-def _get_waypoint_zone_staging_point(
-    corners: list[tuple[float, float]],
-    ball: Ball,
-) -> tuple[float, float]:
-    """
-    Find the bbox edge closest to `ball`'s position, then return a staging point at
-    the midpoint of that edge, pushed outward along the edge's
-    normal (away from the box center).
-    """
-    n = len(corners)
-    cx = sum(c[0] for c in corners) / n
-    cy = sum(c[1] for c in corners) / n
-
-    best_dist_sq = None
-    best_mid = None
-    best_normal = None
-
-    for i in range(n):
-        a = corners[i]
-        b = corners[(i + 1) % n]
-
-        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
-
-        # distance from point to this edge's line (closest point on segment)
-        ax, ay = a
-        bx, by = b
-        abx, aby = bx - ax, by - ay
-        ab_len_sq = abx * abx + aby * aby
-        if ab_len_sq == 0:
-            continue  # degenerate edge, skip
-
-        t = ((ball.position[0] - ax) * abx + (ball.position[1] - ay) * aby) / ab_len_sq
-        t = max(0.0, min(1.0, t))
-        closest = (ax + t * abx, ay + t * aby)
-        dist_sq = (closest[0] - ball.position[0]) ** 2 + (closest[1] - ball.position[1]) ** 2
-
-        if best_dist_sq is None or dist_sq < best_dist_sq:
-            # outward normal: perpendicular to edge, pointing away from centroid
-            nx, ny = -aby, abx
-            norm_len = hypot(nx, ny)
-            nx, ny = nx / norm_len, ny / norm_len
-
-            if (mid[0] - cx) * nx + (mid[1] - cy) * ny < 0:
-                nx, ny = -nx, -ny
-
-            best_dist_sq = dist_sq
-            best_mid = mid
-            best_normal = (nx, ny)
-
-    return (
-        best_mid[0] + best_normal[0] * WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET,
-        best_mid[1] + best_normal[1] * WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET,
-    )
-
-
 def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: float) -> Ball | None:
     candidates = [b for b in state.balls if b.distance_to_point(point) <= radius]
     if not candidates:
