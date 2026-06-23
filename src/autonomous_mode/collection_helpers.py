@@ -3,7 +3,7 @@ from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS
+from src.lib.constants import GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
@@ -11,7 +11,7 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
     go_to(state, connection, staging_point)
     turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
-    gentle_burst(state, connection, ball.position, 18) # magic value
+    gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE)
     burst_backward(state, connection)
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):

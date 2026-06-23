@@ -163,6 +163,9 @@ CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
+EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
+"""The target range used for gentle bursting towards an edge ball"""
+
 #############################
 # corner handling constants #
 #############################
