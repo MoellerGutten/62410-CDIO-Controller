@@ -47,7 +47,8 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
 def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
-    if (ball.is_vip): _stop_ball_intake(connection)
+    if ball.is_vip:
+        _stop_ball_intake(connection)
 
     if ball.is_corner_ball():
         collect_corner_ball(state, connection, ball)
