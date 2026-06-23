@@ -63,7 +63,7 @@ SMALL_GOAL_RATIO = 0.07
 
 FPS = 60
 
-_start_time = 0
+#_start_time = 0 #
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -338,8 +338,8 @@ def draw_panel(surf, font_sm, font_md, font_lg,
                robot: Robot, balls: list[Ball], cross: Cross,
                corners: list[Corner], estimated_ball_count: int, 
                estimated_balls_in_robot: int, estimated_balls_delivered: int,
-               all_balls_delivered: bool):
-    global _start_time
+               all_balls_delivered: bool, state: ArenaState):
+    #global _start_time#
 
     px = WINDOW_W - PANEL_W + 15
     pw = PANEL_W - FIELD_MARGIN // 2
@@ -401,11 +401,12 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     # time passed
     heading("Time")
-    elapsed = int(time() - _start_time)
-    if all_balls_delivered:
-        elapsed = draw_panel._frozen_elapsed if hasattr(draw_panel, '_frozen_elapsed') else elapsed
+    if state.start_time is None:
+        elapsed = 0
+    elif state.finish_time is not None:
+        elapsed = int(state.finish_time - state.start_time)
     else:
-        draw_panel._frozen_elapsed = elapsed
+        elapsed = int(time() - state.start_time)
 
     row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
 
@@ -414,13 +415,13 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 # ---------------------------------------------------------------------------
 
 def run_gui(state: ArenaState):
-    global _start_time
+    #global _start_time
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
     pygame.display.set_caption("")
     clock  = pygame.time.Clock()
-    _start_time = time()
+    #_start_time = time()
 
     tracker = ArenaTracker()
 
