@@ -4,7 +4,8 @@ from src.model.robot import Robot
 from src.lib.connection import RobotConnection
 from src.lib.constants import EAST_HEADING, NORTH_EAST_HEADING, NORTH_HEADING, NORTH_WEST_HEADING, WEST_HEADING, \
 SOUTH_WEST_HEADING, SOUTH_HEADING, SOUTH_EAST_HEADING, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, SLEEP_BUFFER_SECONDS, \
-BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD, CORNER_BALL_COLLECTION_APPROACH_RADIUS, CORNER_COLLECTION_STAGING_POINT
+BACK_TOWARDS_EDGE_MAX_ITERATIONS, WALL_THRESHOLD, CORNER_BALL_COLLECTION_APPROACH_RADIUS, CORNER_COLLECTION_STAGING_POINT, \
+CORNER_BALL_TARGET_POINT_OFFSET, CORNER_BALL_GENTLE_BURST_TARGET_RANGE, TRUE_CORNER_BALL_THRESHOLD
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 from src.autonomous_mode.state_helpers import await_robot
@@ -23,33 +24,33 @@ def get_staging_data(ball: Ball) -> tuple[tuple[float, float], float, ArenaEdge,
     w = ARENA_WIDTH_CM
     h = ARENA_HEIGHT_CM
 
-    assbitch = 12
+    offset = CORNER_BALL_TARGET_POINT_OFFSET
 
     match (nearest_corner, nearest_edge):
 
         # north east corner
         case (ArenaCorner.NORTH_EAST, ArenaEdge.NORTH):
-            return ((w - b, h - a), NORTH_WEST_HEADING, ArenaEdge.EAST, NORTH_HEADING, (w - assbitch, h))
+            return ((w - b, h - a), NORTH_WEST_HEADING, ArenaEdge.EAST, NORTH_HEADING, (w - offset, h))
         case (ArenaCorner.NORTH_EAST, ArenaEdge.EAST):
-            return ((w - a, h - b), SOUTH_EAST_HEADING, ArenaEdge.NORTH, EAST_HEADING, (w, h - assbitch))
+            return ((w - a, h - b), SOUTH_EAST_HEADING, ArenaEdge.NORTH, EAST_HEADING, (w, h - offset))
 
         # north west corner
         case (ArenaCorner.NORTH_WEST, ArenaEdge.NORTH):
-            return ((b, h - a), NORTH_EAST_HEADING, ArenaEdge.WEST, NORTH_HEADING, (0, h - assbitch))
+            return ((b, h - a), NORTH_EAST_HEADING, ArenaEdge.WEST, NORTH_HEADING, (offset, h))
         case (ArenaCorner.NORTH_WEST, ArenaEdge.WEST):
-            return ((a, h - b), SOUTH_WEST_HEADING, ArenaEdge.NORTH, WEST_HEADING, (assbitch, h))
+            return ((a, h - b), SOUTH_WEST_HEADING, ArenaEdge.NORTH, WEST_HEADING, (0, h - offset))
 
         # south east corner
         case (ArenaCorner.SOUTH_EAST, ArenaEdge.SOUTH):
-            return ((w - b, a), SOUTH_WEST_HEADING, ArenaEdge.EAST, SOUTH_HEADING, (w - assbitch, 0))
+            return ((w - b, a), SOUTH_WEST_HEADING, ArenaEdge.EAST, SOUTH_HEADING, (w - offset, 0))
         case (ArenaCorner.SOUTH_EAST, ArenaEdge.EAST):
-            return ((w - a, b), NORTH_EAST_HEADING, ArenaEdge.SOUTH, EAST_HEADING, (w, assbitch))
+            return ((w - a, b), NORTH_EAST_HEADING, ArenaEdge.SOUTH, EAST_HEADING, (w, offset))
 
         # south west corner
         case (ArenaCorner.SOUTH_WEST, ArenaEdge.SOUTH):
-            return ((b, a), SOUTH_EAST_HEADING, ArenaEdge.WEST, SOUTH_HEADING, (assbitch, 0))
+            return ((b, a), SOUTH_EAST_HEADING, ArenaEdge.WEST, SOUTH_HEADING, (offset, 0))
         case (ArenaCorner.SOUTH_WEST, ArenaEdge.WEST):
-            return ((a, b), NORTH_WEST_HEADING, ArenaEdge.SOUTH, WEST_HEADING, (0, assbitch))
+            return ((a, b), NORTH_WEST_HEADING, ArenaEdge.SOUTH, WEST_HEADING, (0, offset))
 
         case _:
             raise ValueError(
@@ -98,15 +99,15 @@ def _get_wall_staging_point(robot: Robot, along_edge: ArenaEdge):
             return (0, robot.position[1])
 
 def advance_to_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball, true_corner_target_point: tuple[float, float]) -> None:
-    if ball.distance_to_nearest_corner() < 3: # magic value
+    if ball.distance_to_nearest_corner() < TRUE_CORNER_BALL_THRESHOLD:
         # true corner ball
         go_to(state, connection, true_corner_target_point, approach_radius=CORNER_BALL_COLLECTION_APPROACH_RADIUS)
-        gentle_burst(state, connection, true_corner_target_point, 21) # magic value
+        gentle_burst(state, connection, true_corner_target_point, CORNER_BALL_GENTLE_BURST_TARGET_RANGE)
         burst_backward(state, connection)
         burst_backward(state, connection)
     else:
         # not close to both edges
         go_to(state, connection, ball.position, approach_radius=CORNER_BALL_COLLECTION_APPROACH_RADIUS)
-        gentle_burst(state, connection, ball.position, 21) # magic value
+        gentle_burst(state, connection, ball.position, CORNER_BALL_GENTLE_BURST_TARGET_RANGE)
         burst_backward(state, connection)
         burst_backward(state, connection)

@@ -163,6 +163,9 @@ CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
+EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
+"""The target range used for gentle bursting towards an edge ball"""
+
 #############################
 # corner handling constants #
 #############################
@@ -181,6 +184,15 @@ CORNER_BALL_COLLECTION_APPROACH_RADIUS = 17
 
 CORNER_COLLECTION_STAGING_POINT = (51, 18)
 """Stating point for south-west corner balls adjacent to the west wall"""
+
+CORNER_BALL_TARGET_POINT_OFFSET = 12
+"""Amount to offset true corner ball target points from the corner"""
+
+CORNER_BALL_GENTLE_BURST_TARGET_RANGE = 21
+"""The target range used for gentle bursting towards a corner ball"""
+
+TRUE_CORNER_BALL_THRESHOLD = 3
+"""The distance from the corner within which balls are considered true corner balls"""
 
 #####################
 # heading constants #
