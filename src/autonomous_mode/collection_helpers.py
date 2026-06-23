@@ -1,6 +1,6 @@
 from math import hypot
 
-from lib.cross_approach_points import get_cross_approach_points
+from src.lib.cross_approach_points import get_cross_approach_points
 from src.autonomous_mode.movement_helpers import drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
