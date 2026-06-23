@@ -3,15 +3,13 @@ import sys
 import pygame
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
-from src.autonomous_mode.start_autonomous_session import _select_next_ball
-from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
+from src.lib.constants import ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
 from src.model.robot import Robot
 from src.model.arena_state import ArenaState
 from math import floor
-from src.state.arena_config import ArenaConfig
 from time import time
 from src.lib.cross_approach_points import get_cross_approach_points
 from src.state.arena_tracker import ArenaTracker
@@ -217,22 +215,45 @@ def draw_corners(surf, corners: list[Corner]):
 
 
 def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
+    radius = 8
+
     for ball in balls:
         x, y = field_to_screen(ball.position, corners)
-        r    = 8
+
+        # draw vip ball
         if ball.is_vip:
-            # glow ring
-            for i in range(3, 0, -1):
-                alpha_surf = pygame.Surface((r * 2 + i * 6, r * 2 + i * 6), pygame.SRCALPHA)
-                alpha      = 60 - i * 15
-                pygame.draw.circle(alpha_surf, (*C_VIP_GLOW, alpha),
-                                   (r + i * 3, r + i * 3), r + i * 3)
-                surf.blit(alpha_surf, (x - r - i * 3, y - r - i * 3))
-            pygame.draw.circle(surf, C_BALL_VIP,     (x, y), r)
-            pygame.draw.circle(surf, (255, 230, 120), (x, y), r, 2)
+            for glow_step in range(3, 0, -1):
+                glow_radius = radius + glow_step * 3
+                glow_size = glow_radius * 2
+
+                glow_surface = pygame.Surface(
+                    (glow_size, glow_size),
+                    pygame.SRCALPHA,
+                )
+
+                pygame.draw.circle(
+                    glow_surface,
+                    (*C_VIP_GLOW, 60 - glow_step * 15),
+                    (glow_radius, glow_radius),
+                    glow_radius,
+                )
+
+                surf.blit(glow_surface, (x - glow_radius, y - glow_radius))
+
+            pygame.draw.circle(surf, C_BALL_VIP, (x, y), radius)
+            pygame.draw.circle(surf, (255, 230, 120), (x, y), radius, 2)
+            continue
+
+        # make ball blue if corner, red if edge, white otherwise
+        if ball.is_corner_ball():
+            color = (30, 140, 220)
+        elif ball.is_edge_ball()[0]:
+            color = (200, 55, 55)
         else:
-            pygame.draw.circle(surf, C_BALL,         (x, y), r)
-            pygame.draw.circle(surf, C_BALL_OUTLINE,  (x, y), r, 1)
+            color = C_BALL
+
+        pygame.draw.circle(surf, color, (x, y), radius)
+        pygame.draw.circle(surf, C_BALL_OUTLINE, (x, y), radius, 1)
 
 
 def draw_cross(surf, cross: Cross, corners: list[Corner]):
@@ -299,8 +320,8 @@ def draw_robot(surf, robot: Robot, corners):
 
 def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[int, int]:
     tl, tr, br, bl = [c.position for c in corners]
-    x = int(lerp(tl[0], tr[0], pos[0] / ArenaConfig.width_cm))
-    y = int(lerp(bl[1], tl[1], pos[1] / ArenaConfig.height_cm))  # y flipped: 0 = bottom
+    x = int(lerp(tl[0], tr[0], pos[0] / ARENA_WIDTH_CM))
+    y = int(lerp(bl[1], tl[1], pos[1] / ARENA_HEIGHT_CM))  # y flipped: 0 = bottom
     return (x, y)
 
 # ---------------------------------------------------------------------------

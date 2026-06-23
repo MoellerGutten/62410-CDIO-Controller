@@ -1,4 +1,4 @@
-from math import hypot
+from math import hypot, radians, sin, cos
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
@@ -8,7 +8,7 @@ from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
 BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
-DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, GENTLE_BURST_DEFAULT_MAX_ITER
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
@@ -47,7 +47,8 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         if point is None:
             break
 
-        if robot.is_facing_point(point, TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE):
+        tol_deg = TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE
+        if robot.is_facing_point(point, tol_deg):
             break
 
         angle = robot.angle_to_point(point)
@@ -73,6 +74,37 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
 
         robot = await_robot(state, connection)
 
+def turn_to_heading(
+    state: ArenaState,
+    connection: RobotConnection,
+    heading_deg: float,
+    precise_mode: bool = False
+) -> None:
+    logger = get_logger("turn_to_point")
+    robot = await_robot(state, connection)
+    tol_deg = TURN_TO_POINT_PRECISE_TOLERANCE if precise_mode else TURN_TO_POINT_TOLERANCE
+
+    while not robot.is_facing_heading(heading_deg, tol_deg):
+        angle = robot.angle_to_heading(heading_deg)
+        turn_ms    = turn_to_point_turn_ms(angle)
+        turn_speed = turn_to_point_turn_speed(angle)
+    
+        command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
+        l_speed = turn_speed if angle > 0 else -turn_speed
+        r_speed = -turn_speed if angle > 0 else turn_speed
+
+        inst = Instruction(
+            name=command,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=ms_to_seconds(turn_ms), lspeed=l_speed, rspeed=r_speed),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(turn_ms) + SLEEP_BUFFER_SECONDS)
+
+        robot = await_robot(state, connection)
+    
+    logger.debug(f"Now facing heading {heading_deg} with tolerance {tol_deg}, current heading {robot.orientation}")
+
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
@@ -80,9 +112,6 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     distance = robot.distance_to_point(point)
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
-
-    #logger = get_logger("drive_forward")
-    #logger.debug(f"Driving forward. fwd ms: {fwd_ms}, fwd speed: {fwd_speed}, distance: {distance}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -92,15 +121,12 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
 
-def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
+def burst_backward(state: ArenaState, connection: RobotConnection) -> None:
     if state.robot is None:
         return
 
     bwd_ms = BACKWARD_MS
     bwd_speed =  BACKWARD_SPEED
-
-    #logger = get_logger("drive_backward")
-    #logger.debug(f"Driving backward. bwd ms: {bwd_ms}, bwd speed: {bwd_speed}")
 
     inst = Instruction(
         name=CommandName.BACKWARD,
@@ -109,6 +135,18 @@ def drive_backward(state: ArenaState, connection: RobotConnection) -> None:
     )
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(bwd_ms) + SLEEP_BUFFER_SECONDS)
+
+def drive_backward_speed_ms(state: ArenaState, connection: RobotConnection, speed: float, ms: float) -> None:
+    if state.robot is None:
+        return
+    
+    inst = Instruction(
+        name=CommandName.BACKWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(ms), speed=speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
 
 def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
@@ -213,5 +251,30 @@ def handle_balls_in_radius(state, connection, ball):
             await_robot(state, connection)
     elif state.robot.is_point_within_turning_hit_radius(ball.position): 
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
-            drive_backward(state, connection)
+            burst_backward(state, connection)
             await_robot(state, connection)
+
+def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float], target_range: float, max_iter: float = GENTLE_BURST_DEFAULT_MAX_ITER):
+    logger = get_logger("gentle_burst")
+    _iter = 0
+    while True:
+        distance_to_target = await_robot(state, connection).distance_to_point(target_point)
+
+        if _iter >= max_iter:
+            logger.debug("Reached max iterations, stopping")
+            break
+
+        if distance_to_target <= target_range:
+            logger.debug("Distance within limit, stopping")
+            break
+
+        burst_ms = 100
+        burst_speed = 30
+        inst = Instruction(
+            name=CommandName.FORWARD,
+            type=InstructionType.COMMAND,
+            args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed),
+        )
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+        _iter += 1
