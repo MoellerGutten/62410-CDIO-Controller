@@ -105,7 +105,7 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 # drive_to_goal constants #
 ###########################
 
-GOAL_DELIVERY_POINT = (151.5, 121.5/2)
+GOAL_DELIVERY_POINT = (148, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
