@@ -3,7 +3,8 @@ import sys
 import pygame
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
-from src.lib.constants import ARENA_WIDTH_CM, ARENA_HEIGHT_CM
+from src.autonomous_mode.start_autonomous_session import _select_next_ball
+from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
 from src.model.ball import Ball
 from src.model.corner import Corner
 from src.model.cross import Cross
@@ -36,6 +37,7 @@ C_GOAL_SMALL    = (200, 180,  40)      # small goal highlight (right)
 C_LABEL         = (200, 210, 200)
 C_PANEL_BG      = ( 22,  30,  38)
 C_CROSS_WAYPOINT= ( 222, 32, 29 )
+C_FINAL_POINTS  = (245, 66, 176)
 
 # ---------------------------------------------------------------------------
 # Layout constants
@@ -214,7 +216,7 @@ def draw_corners(surf, corners: list[Corner]):
         pygame.draw.circle(surf, C_CORNER, (x, y), 5)
 
 
-def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
+def draw_balls(surf, balls: list[Ball], corners: list[Corner], state: ArenaState):
     radius = 8
 
     for ball in balls:
@@ -244,11 +246,15 @@ def draw_balls(surf, balls: list[Ball], corners: list[Corner]):
             pygame.draw.circle(surf, (255, 230, 120), (x, y), radius, 2)
             continue
 
-        # make ball blue if corner, red if edge, white otherwise
+        # make ball blue if corner, red if edge, green if cross, brown if waypoint, white otherwise
         if ball.is_corner_ball():
             color = (30, 140, 220)
         elif ball.is_edge_ball()[0]:
             color = (200, 55, 55)
+        elif ball.is_within_cross_zone(state.cross):
+            color = (50, 168, 56)
+        elif not ball.is_within_cross_zone(state.cross) and ball.is_within_waypoint_zone(state):
+            color = (125, 67, 26)
         else:
             color = C_BALL
 
@@ -461,13 +467,14 @@ def run_gui(state: ArenaState):
             draw_cross(screen, cross, corners)
             draw_waypoints(screen, cross, corners)
         draw_route_lines(screen, state, corners)
-        draw_balls(screen, balls, corners)
+        draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
         draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered)
-        for point in get_cross_approach_points(cross):
+        for point in get_cross_approach_points(cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
-
+        for point in get_cross_approach_points(cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET):
+            pygame.draw.circle(screen, C_FINAL_POINTS, field_to_screen(point, corners), 5)
         pygame.display.flip()
 
     pygame.quit()
