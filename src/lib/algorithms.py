@@ -21,18 +21,16 @@ def drive_forward_ms(distance: float) -> int:
         forward_ms = 300
     elif distance < 20:
         forward_ms = 500
-    elif distance < 30:
-        forward_ms = 600
-    elif distance < 40:
-        forward_ms = 800
     else:
-        forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 2500))
+        forward_ms = int(min(20 * distance, 2000))
+    # else:
+    #     forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 2500))
 
     return forward_ms
 
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
-    return max(30, min(100, int(distance * 1.0)))
+    return max(30, min(100, int(distance * 1.2)))
 
 def burst_forward_ms(distance: float) -> int:
     """returns the time as a function of the distance to the target"""
