@@ -39,7 +39,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
 def drive_to_goal(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_goal")
 
-    goal: tuple[float, float] = (ARENA_WIDTH_CM, ARENA_HEIGHT_CM / 2)
+    goal: tuple[float, float] = (ARENA_WIDTH_CM, ARENA_HEIGHT_CM / 2 + 2)
     with state.lock:
         state.target_point = goal
 
