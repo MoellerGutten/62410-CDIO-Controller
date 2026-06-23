@@ -47,6 +47,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     if ball.distance_to_nearest_corner() > 12 and is_edge_ball:
         robot = await_robot(state, connection)
         ball_nearest_edge = ball.nearest_edge()
+        ball_nearest_corner = ball.nearest_corner()
 
         # this corner ball is a candidate for being treated as an edge ball, its far from the corner along its adjacent edge
         if robot.is_facing_edge(ball_nearest_edge):
@@ -55,7 +56,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
             collect_edge_ball(state, ball, connection, edge_ball_staging_point)
             return
 
-        if robot.is_facing_edge(get_other_corner_edge(ball_nearest_edge)):
+        if robot.is_facing_edge(get_other_corner_edge(ball_nearest_corner, ball_nearest_edge)):
             logger.debug("Wall hugging not needed, turning and treating ball as edge ball")
             burst_backward(state, connection)
             turn_to_point(state, connection, edge_ball_staging_point, precise_mode=False)
