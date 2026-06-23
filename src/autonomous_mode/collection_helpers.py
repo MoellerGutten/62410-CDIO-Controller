@@ -1,13 +1,17 @@
 from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
+from src.model.arena_edge import get_other_corner_edge
 from src.model.ball import Ball
 from src.model.cross import Cross
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import BACKWARD_MS, BACKWARD_SPEED, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
+from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, \
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, \
+GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
@@ -44,14 +48,28 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     go_to(state, connection, staging_point)
 
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
-    if ball.distance_to_nearest_corner() > 12 and is_edge_ball and await_robot(state, connection).is_facing_edge(ball.nearest_edge()):
-        logger.debug("Wall hugging not needed, proceeding with edge ball collection")
-        _start_ball_intake(connection)
-        collect_edge_ball(state, ball, connection, edge_ball_staging_point)
-        return
+    if ball.distance_to_nearest_corner() > 12 and is_edge_ball:
+        robot = await_robot(state, connection)
+        ball_nearest_edge = ball.nearest_edge()
+        ball_nearest_corner = ball.nearest_corner()
+
+        # this corner ball is a candidate for being treated as an edge ball, its far from the corner along its adjacent edge
+        if robot.is_facing_edge(ball_nearest_edge):
+            logger.debug("Wall hugging not needed, robot already facing ball and ball far from corner along ball's adjacent edge. Treating ball as edge ball")
+            _start_ball_intake(connection)
+            collect_edge_ball(state, ball, connection, edge_ball_staging_point)
+            return
+
+        if robot.is_facing_edge(get_other_corner_edge(ball_nearest_corner, ball_nearest_edge)):
+            logger.debug("Wall hugging not needed, turning and treating ball as edge ball")
+            burst_backward(state, connection)
+            turn_to_point(state, connection, edge_ball_staging_point, precise_mode=False)
+            _start_ball_intake(connection)
+            collect_edge_ball(state, ball, connection, edge_ball_staging_point)
+            return
     
     logger.debug(f"Turning to staging heading {staging_heading}")
-    turn_to_heading(state, connection, staging_heading)
+    turn_to_heading(state, connection, staging_heading)    
 
     logger.debug("Backing to wall and adjusting heading")
     try:
