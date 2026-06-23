@@ -67,12 +67,6 @@ TURN_TO_POINT_PRECISE_TOLERANCE = 2.0
 TURN_TO_POINT_TOLERANCE = 6.0
 """Tolerance used to determine if robot is facing point when not in precise mode"""
 
-TURN_TO_POINT_PRECISE_SPEED = 10
-"""Speed used when turning robot in precise mode"""
-
-TURN_TO_POINT_PRECISE_MS = 100
-"""Milliseconds to turn robot for in precise mode"""
-
 ############################
 # burst_backward constants #
 ############################
@@ -110,9 +104,6 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 ###########################
 # drive_to_goal constants #
 ###########################
-
-DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
-"""When driving to goal, the robot is considered to be close to the goal when within this distance"""
 
 GOAL_DELIVERY_POINT = (151.5, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
