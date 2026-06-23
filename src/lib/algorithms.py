@@ -34,6 +34,17 @@ def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
     return max(30, min(100, int(distance * 1.0)))
 
+def burst_forward_ms(distance: float) -> int:
+    """returns the time as a function of the distance to the target"""
+    if distance < 12:
+        burst_ms = 100
+    elif distance < 14:
+        burst_ms = 350
+    else:
+        burst_ms = 450
+
+    return burst_ms
+
 ##################################################
 # corner ball backwards staging point algorithms #
 ##################################################
@@ -44,15 +55,3 @@ def backward_ms(distance: float) -> int:
 def backward_speed(distance: float) -> int:
     return drive_forward_speed(distance)
 
-###
-# burst ms
-##
-def burst_forward_ms(distance: float) -> int:
-    if distance < 12:
-        burst_ms = 100
-    elif distance < 14:
-        burst_ms = 350
-    else:
-        burst_ms = 450
-
-    return burst_ms
