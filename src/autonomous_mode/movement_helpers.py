@@ -153,12 +153,9 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     robot = await_robot(state, connection)
 
     distance = robot.distance_to_point(point)
-    burst_ms = BURST_FORWARD_MS
     if distance < 12:
         burst_ms = 100
     elif distance < 14:
-        burst_ms = 250
-    elif distance < 16:
         burst_ms = 350
     else:
         burst_ms = 450
