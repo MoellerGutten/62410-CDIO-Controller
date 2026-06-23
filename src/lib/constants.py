@@ -163,7 +163,7 @@ CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
 # half-length of a cross arm, used to size the cross zone bounding box
 CROSS_ARM_LENGTH = 10
 # extra padding added around the cross arms when deciding if a ball is "in the cross zone"
-CROSS_ZONE_PADDING = 0.75
+CROSS_ZONE_PADDING = -0.5
 
 # gentle, short retreat after collecting next to the cross
 CROSS_ZONE_BACKWARD_SPEED = 30
