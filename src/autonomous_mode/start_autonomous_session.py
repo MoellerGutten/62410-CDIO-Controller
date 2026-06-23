@@ -89,7 +89,7 @@ def start_autonomous_session(state: ArenaState) -> None:
         if _is_hail_mary_time(state):
             logger.debug("Hail mary time")
             deliver_balls(state, connection)
-            _stop_ball_intake(connection)
+            _send_win_message(connection)
             with state.lock:
                 state.all_balls_delivered = True
             break
