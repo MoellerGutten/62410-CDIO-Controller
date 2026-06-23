@@ -26,7 +26,7 @@ def drive_forward_ms(distance: float) -> int:
     elif distance < 40:
         forward_ms = 500
     else:
-        forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 1500))
+        forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 2500))
 
     return forward_ms
 
