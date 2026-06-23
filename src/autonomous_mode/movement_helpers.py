@@ -8,7 +8,7 @@ from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, \
 BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, BURST_FORWARD_MS, GO_TO_MAX_MOVES, GO_TO_DISTANCE_TOLERANCE, \
-DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
+DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, GENTLE_BURST_DEFAULT_MAX_ITER
 from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
@@ -254,9 +254,8 @@ def handle_balls_in_radius(state, connection, ball):
             burst_backward(state, connection)
             await_robot(state, connection)
 
-def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float], target_range: float):
+def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float], target_range: float, max_iter: float = GENTLE_BURST_DEFAULT_MAX_ITER):
     logger = get_logger("gentle_burst")
-    max_iter = 10
     _iter = 0
     while True:
         distance_to_target = await_robot(state, connection).distance_to_point(target_point)

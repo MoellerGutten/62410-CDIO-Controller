@@ -1,5 +1,5 @@
 from math import hypot
-from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM
+from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, EDGE_BALL_STAGING_POINT_OFFSET
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 
@@ -31,13 +31,13 @@ class Ball:
         width = ARENA_WIDTH_CM
         height = ARENA_HEIGHT_CM
         if self.position[0] >= width - EDGE_THRESHOLD:
-            return [True, (width - 18, self.position[1])]
+            return [True, (width - EDGE_BALL_STAGING_POINT_OFFSET, self.position[1])]
         if self.position[0] <= EDGE_THRESHOLD:
-            return [True, (18, self.position[1])]
+            return [True, (EDGE_BALL_STAGING_POINT_OFFSET, self.position[1])]
         if self.position[1] >= height - EDGE_THRESHOLD:
-            return [True, (self.position[0], height - 18)]
+            return [True, (self.position[0], height - EDGE_BALL_STAGING_POINT_OFFSET)]
         if self.position[1] <= EDGE_THRESHOLD:
-            return [True, (self.position[0], 18)]
+            return [True, (self.position[0], EDGE_BALL_STAGING_POINT_OFFSET)]
         return [False, self.position]
     
     def is_corner_ball(self) -> bool:

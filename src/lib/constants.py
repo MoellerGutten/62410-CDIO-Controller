@@ -166,6 +166,9 @@ EDGE_THRESHOLD = 13
 EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
 """The target range used for gentle bursting towards an edge ball"""
 
+EDGE_BALL_STAGING_POINT_OFFSET = 24
+"""The staging point's distance from the edge"""
+
 #############################
 # corner handling constants #
 #############################
@@ -188,11 +191,14 @@ CORNER_COLLECTION_STAGING_POINT = (51, 18)
 CORNER_BALL_TARGET_POINT_OFFSET = 12
 """Amount to offset true corner ball target points from the corner"""
 
-CORNER_BALL_GENTLE_BURST_TARGET_RANGE = 21
+CORNER_BALL_GENTLE_BURST_TARGET_RANGE = 23
 """The target range used for gentle bursting towards a corner ball"""
 
 TRUE_CORNER_BALL_THRESHOLD = 3
 """The distance from the corner within which balls are considered true corner balls"""
+
+GENTLE_BURST_DEFAULT_MAX_ITER = 10
+"""The default max attempts used in gentle_burst"""
 
 #####################
 # heading constants #
