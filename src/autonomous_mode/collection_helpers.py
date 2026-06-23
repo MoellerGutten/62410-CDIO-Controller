@@ -1,7 +1,7 @@
 from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_backward_speed_ms, drive_forward, escape_cross_zone, go_to, burst_into_ball, move_slowly_towards_point, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.ball import Ball
 from src.model.cross import Cross
@@ -15,6 +15,7 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
     go_to(state, connection, staging_point)
     turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
+    _start_ball_intake(connection)
     gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, 20)
     burst_backward(state, connection)
 
@@ -28,6 +29,7 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
+    _start_ball_intake(connection)
     burst_into_ball(state, connection, ball.position)
 
     if ball.is_within_waypoint_zone(state):
@@ -44,6 +46,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
     if ball.distance_to_nearest_corner() > 12 and is_edge_ball and await_robot(state, connection).is_facing_edge(ball.nearest_edge()):
         logger.debug("Wall hugging not needed, proceeding with edge ball collection")
+        _start_ball_intake(connection)
         collect_edge_ball(state, ball, connection, edge_ball_staging_point)
         return
     
@@ -59,6 +62,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
         return
 
     logger.debug("Going to collect ball")
+    _start_ball_intake(connection)
     advance_to_corner_ball(state, connection, ball, true_corner_target_point)
 
 def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
@@ -82,6 +86,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
+    _start_ball_intake(connection)
     burst_into_ball_slightly_smaller(state, connection, ball.position)
     escape_cross_zone(state, connection)
 
@@ -184,6 +189,7 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
 
     logger.debug(f"Going to staging point at {staging_point}")
     go_to(state, connection, staging_point)
+    _start_ball_intake(connection)
     final_points = get_cross_approach_points(state.cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET)
     target = min(final_points, key=ball.distance_to_point)
     with state.lock:
