@@ -24,14 +24,14 @@ def drive_forward_ms(distance: float) -> int:
     elif distance < 30:
         forward_ms = 300
     elif distance < 40:
-        forward_ms = 400
+        forward_ms = 600
     else:
-        forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 1500))
+        forward_ms = int(min(100 + (6/5) ** (2 / 3 * distance), 2500))
 
     return forward_ms
 
 
-    return int(min(100 + (6/5) ** (2 / 3 * distance), 1500))
+    return int(min(100 + (6/5) ** (2 / 3 * distance), 2500))
 
 def drive_forward_speed(distance: float) -> int:
     """Determine the speed with which to drive forwards based on the distance to the target"""
