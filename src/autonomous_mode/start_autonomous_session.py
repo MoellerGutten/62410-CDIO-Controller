@@ -9,7 +9,7 @@ from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update
 from time import time
 from src.autonomous_mode.collection_helpers import collect_cross_zone_ball, collect_edge_ball, collect_normal_ball, collect_corner_ball, collect_waypoint_zone_ball
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
+from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS
 
 _last_ball_count_update_time = 0
 
@@ -86,6 +86,14 @@ def start_autonomous_session(state: ArenaState) -> None:
     while True:
         _tick(state)
 
+        if _is_hail_mary_time(state):
+            logger.debug("Hail mary time")
+            deliver_balls(state, connection)
+            _stop_ball_intake(connection)
+            with state.lock:
+                state.all_balls_delivered = True
+            break
+
         with state.lock:
             state.estimated_balls_in_robot = total_balls - state.estimated_ball_count - state.estimated_balls_delivered
 
@@ -131,3 +139,9 @@ def _send_win_message(connection: RobotConnection) -> None:
         args=Arguments(talk=WIN_MESSAGE),
     )
     connection.send_message(Message(instruction=inst))
+
+def _is_hail_mary_time(state: ArenaState) -> bool:
+    if state.start_time is None:
+        return False
+    time_left = MATCH_DURATION_SECONDS - (time() - state.start_time)
+    return time_left <= HAIL_MARY_TIME_LEFT_SECONDS

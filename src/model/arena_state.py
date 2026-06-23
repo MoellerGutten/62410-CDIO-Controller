@@ -19,6 +19,7 @@ class ArenaState:
         self.corners: list[Corner] = []
         self.all_balls_delivered: bool = False
         self.target_point: tuple[float, float] | None = None
+        self.start_time: float | None = None
 
     def __repr__(self) -> str:
         ball_strs = ", ".join(repr(b) for b in self.balls)
