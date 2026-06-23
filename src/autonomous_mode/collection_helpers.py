@@ -1,13 +1,17 @@
-from math import hypot
+from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
 from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.arena_edge import get_other_corner_edge
 from src.model.ball import Ball
+from src.model.cross import Cross
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_WAYPOINT_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET
+from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, \
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, \
+GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
@@ -83,11 +87,16 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     logger = get_logger("collect_waypoint_zone_ball")
     inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET+10)
     target = min(inflated_waypoint_points, key=ball.distance_to_point)
-    logger.debug(f"Going to staging point at {target}")
-    handle_balls_in_radius(state, connection, ball)
-    go_to(state, connection, target)
 
-    turn_to_point(state, connection, ball.position, precise_mode=True)
+    handle_balls_in_radius(state, connection, ball)
+
+    if state.cross is not None and _is_on_same_cross_side(state.robot.position, ball.position, state.cross):
+        logger.debug("Robot and ball are on the same side of the cross; skipping waypoint staging.")
+    else:
+        logger.debug(f"Going to staging point at {target}")
+        go_to(state, connection, target)
+
+    turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
     robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
@@ -96,63 +105,35 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
     _start_ball_intake(connection)
-    burst_into_ball(state, connection, ball.position)
+    burst_into_ball_slightly_smaller(state, connection, ball.position)
     escape_cross_zone(state, connection)
 
 
-def _get_waypoint_zone_staging_point(
-    corners: list[tuple[float, float]],
-    ball: Ball,
-) -> tuple[float, float]:
-    """
-    Find the bbox edge closest to `ball`'s position, then return a staging point at
-    the midpoint of that edge, pushed outward along the edge's
-    normal (away from the box center).
-    """
-    n = len(corners)
-    cx = sum(c[0] for c in corners) / n
-    cy = sum(c[1] for c in corners) / n
+def _is_on_same_cross_side(robot_position: tuple[float, float], ball_position: tuple[float, float], cross: Cross) -> bool:
+    if cross is None:
+        return False
 
-    best_dist_sq = None
-    best_mid = None
-    best_normal = None
+    cx, cy = cross.position
+    heading = radians(cross.orientation - 90)
+    axis_x = (cos(heading), sin(heading))
+    axis_y = (-axis_x[1], axis_x[0])
 
-    for i in range(n):
-        a = corners[i]
-        b = corners[(i + 1) % n]
+    def quadrant_signs(point: tuple[float, float]) -> tuple[int, int] | None:
+        dx = point[0] - cx
+        dy = point[1] - cy
+        proj_x = dx * axis_x[0] + dy * axis_x[1]
+        proj_y = dx * axis_y[0] + dy * axis_y[1]
+        epsilon = 1e-6
+        if abs(proj_x) < epsilon or abs(proj_y) < epsilon:
+            return None
+        return (1 if proj_x > 0 else -1, 1 if proj_y > 0 else -1)
 
-        mid = ((a[0] + b[0]) / 2, (a[1] + b[1]) / 2)
+    robot_quad = quadrant_signs(robot_position)
+    ball_quad = quadrant_signs(ball_position)
+    if robot_quad is None or ball_quad is None:
+        return False
 
-        # distance from point to this edge's line (closest point on segment)
-        ax, ay = a
-        bx, by = b
-        abx, aby = bx - ax, by - ay
-        ab_len_sq = abx * abx + aby * aby
-        if ab_len_sq == 0:
-            continue  # degenerate edge, skip
-
-        t = ((ball.position[0] - ax) * abx + (ball.position[1] - ay) * aby) / ab_len_sq
-        t = max(0.0, min(1.0, t))
-        closest = (ax + t * abx, ay + t * aby)
-        dist_sq = (closest[0] - ball.position[0]) ** 2 + (closest[1] - ball.position[1]) ** 2
-
-        if best_dist_sq is None or dist_sq < best_dist_sq:
-            # outward normal: perpendicular to edge, pointing away from centroid
-            nx, ny = -aby, abx
-            norm_len = hypot(nx, ny)
-            nx, ny = nx / norm_len, ny / norm_len
-
-            if (mid[0] - cx) * nx + (mid[1] - cy) * ny < 0:
-                nx, ny = -nx, -ny
-
-            best_dist_sq = dist_sq
-            best_mid = mid
-            best_normal = (nx, ny)
-
-    return (
-        best_mid[0] + best_normal[0] * WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET,
-        best_mid[1] + best_normal[1] * WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET,
-    )
+    return robot_quad == ball_quad
 
 
 def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: float) -> Ball | None:
@@ -160,15 +141,6 @@ def nearest_ball_within(state: ArenaState, point: tuple[float, float], radius: f
     if not candidates:
         return None
     return min(candidates, key=lambda b: b.distance_to_point(point))
-
-def _push_outward(center: tuple[float, float], point: tuple[float, float], distance: float) -> tuple[float, float]:
-    """Move `point` `distance` cm further from `center`, along the center->point direction."""
-    dx, dy = point[0] - center[0], point[1] - center[1]
-    length = hypot(dx, dy)
-    if length == 0:
-        return point
-    scale = (length + distance) / length
-    return (center[0] + dx * scale, center[1] + dy * scale)
 
 def distance_between_points(p1, p2):
     return hypot(p1[0] - p2[0], p1[1] - p2[1])

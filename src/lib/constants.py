@@ -18,6 +18,12 @@ ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 10 + ARUCO_OFFSET_X
 BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS = 10
 """The amount of seconds after which an estimate of ball count is invalid and must be re-estimated"""
 
+MATCH_DURATION_SECONDS = 480
+"""The total length of a match in seconds"""
+
+HAIL_MARY_TIME_LEFT_SECONDS = 30
+"""When this many seconds (or fewer) remain in the match, abandon strategy and deliver whatever balls we have"""
+
 WIN_MESSAGE = "I did it"
 """Message said aloud by the robot when finishing"""
 
@@ -84,6 +90,8 @@ BACKWARD_MS = 500
 BURST_FORWARD_SPEED = 75
 """The speed at which to burst forward when collecting a ball"""
 
+
+
 ###################
 # go_to constants #
 ###################
@@ -112,7 +120,7 @@ GOAL_DELIVERY_POINT = (148, 121.5/2)
 # ball count estimation constants #
 ###################################
 
-BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
+BALL_COUNT_ESTIMATION_SNAPSHOTS = 10
 """The amount of images to capture and analyze when estimating ball count"""
 
 #########################
@@ -148,7 +156,7 @@ WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET = 20
 
 CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 9.5
 
-CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 40
+CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 32
 
 CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9.5
 
@@ -161,7 +169,7 @@ CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
 # half-length of a cross arm, used to size the cross zone bounding box
 CROSS_ARM_LENGTH = 10
 # extra padding added around the cross arms when deciding if a ball is "in the cross zone"
-CROSS_ZONE_PADDING = 1.5
+CROSS_ZONE_PADDING = -0.5
 
 # gentle, short retreat after collecting next to the cross
 CROSS_ZONE_BACKWARD_SPEED = 30
@@ -182,6 +190,8 @@ CROSS_ZONE_CREEP_STEP_SPEED = 30
 CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 5
+
+WAYPOINT_ZONE_COLLECTION_RANGE = 15
 
 ###########################
 # edge handling constants #
