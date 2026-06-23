@@ -53,6 +53,6 @@ def _calculate_intermediate_points(cross: Cross, h_offset, v_offset) -> tuple[fl
     vert_c_to_i = v_offset * sin(radians(45 - cross.orientation)) # vertical distance between cross' center and AB or CD
 
     # distance from intermediate points to approach points
-    hori_i_to_a = h_offset * cos(radians(cross.orientation + 45))    # horizontal distance from AB or CD to approach point
-    vert_i_to_a = h_offset * sin(radians(cross.orientation + 45))    # vertical distance from AB or CD to approach point
+    hori_i_to_a = h_offset * cos(radians(cross.orientation - 45))    # horizontal distance from AB or CD to approach point
+    vert_i_to_a = h_offset * sin(radians(cross.orientation - 45))    # vertical distance from AB or CD to approach point
     return (hori_c_to_i, vert_c_to_i, hori_i_to_a, vert_i_to_a)
