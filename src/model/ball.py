@@ -1,5 +1,7 @@
 from math import hypot
-from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, EDGE_BALL_STAGING_POINT_OFFSET
+from src.lib.cross_waypoints import get_cross_waypoints
+from src.model.cross import Cross
+from src.lib.constants import EDGE_THRESHOLD, CORNER_THRESHOLD, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, EDGE_BALL_STAGING_POINT_OFFSET, CROSS_ARM_LENGTH, CROSS_ZONE_PADDING
 from src.model.arena_corner import ArenaCorner
 from src.model.arena_edge import ArenaEdge
 
@@ -125,6 +127,94 @@ class Ball:
             return min(x, width - x)
 
         return float("inf") # not a corner ball
+
+    def is_within_cross_zone(self, cross: Cross) -> bool:
+        """Check whether the ball is within the cross zone. Returns False if cross is not found."""
+        if cross is None:
+            return False
+
+        cx, cy = cross.position
+
+        offset = CROSS_ARM_LENGTH + CROSS_ZONE_PADDING
+
+        cross_zone_corners = [
+            (cx - offset, cy - offset),  # top-left
+            (cx + offset, cy - offset),  # top-right
+            (cx + offset, cy + offset),  # bottom-right
+            (cx - offset, cy + offset),  # bottom-left
+        ]
+
+        return self._is_within_box(cross_zone_corners)
+
+    def is_within_waypoint_zone(self, state) -> bool:
+        """Check whether the ball is within the waypoint zone. Returns False if cross is not found."""
+        if state.cross is None:
+            return False
+
+        waypoint_zone_corners = get_cross_waypoints(state.cross)
+        return self._is_within_box(waypoint_zone_corners)
+
+    def _is_within_box(self, box_corners: list[tuple[float, float]]):
+        """
+        Check whether `self.position` lies inside the quadrilateral defined by `box_corners`.
+        `box_corners` must be ordered sequentially around the perimeter (CW or CCW).
+        Uses the ray-casting algorithm, so it works for any convex or concave
+        simple polygon, not just axis-aligned rectangles.
+        """
+        x, y = self.position
+        inside = False
+        n = len(box_corners)
+
+        for i in range(n):
+            x1, y1 = box_corners[i]
+            x2, y2 = box_corners[(i + 1) % n]
+
+            if (y1 > y) != (y2 > y):
+                x_intersect = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+                if x < x_intersect:
+                    inside = not inside
+
+        return inside
+
+
+    def is_within_cross_zone(self, cross: Cross) -> bool:
+        if cross is None:
+            return False
+
+        cx, cy = cross.position
+
+        offset = CROSS_ARM_LENGTH + CROSS_ZONE_PADDING
+
+        cross_zone_corners = [
+            (cx - offset, cy - offset),  # top-left
+            (cx + offset, cy - offset),  # top-right
+            (cx + offset, cy + offset),  # bottom-right
+            (cx - offset, cy + offset),  # bottom-left
+        ]
+
+        return self._is_within_box(cross_zone_corners)
+
+    def _is_within_box(self, box_corners: list[tuple[float, float]]) -> bool:
+        """
+        Check whether `self.position` lies inside the quadrilateral defined by `box_corners`.
+        `box_corners` must be ordered sequentially around the perimeter (CW or CCW).
+        Uses the ray-casting algorithm, so it works for any convex or concave
+        simple polygon, not just axis-aligned rectangles.
+        """
+        x, y = self.position
+        inside = False
+        n = len(box_corners)
+
+        for i in range(n):
+            x1, y1 = box_corners[i]
+            x2, y2 = box_corners[(i + 1) % n]
+
+            if (y1 > y) != (y2 > y):
+                x_intersect = x1 + (y - y1) * (x2 - x1) / (y2 - y1)
+                if x < x_intersect:
+                    inside = not inside
+
+        return inside
 
     def __repr__(self) -> str:
         return f"Ball(position={self.position}, is_vip={self.is_vip})"

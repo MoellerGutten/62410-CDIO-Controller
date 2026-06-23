@@ -67,12 +67,6 @@ TURN_TO_POINT_PRECISE_TOLERANCE = 2.0
 TURN_TO_POINT_TOLERANCE = 6.0
 """Tolerance used to determine if robot is facing point when not in precise mode"""
 
-TURN_TO_POINT_PRECISE_SPEED = 10
-"""Speed used when turning robot in precise mode"""
-
-TURN_TO_POINT_PRECISE_MS = 100
-"""Milliseconds to turn robot for in precise mode"""
-
 ############################
 # burst_backward constants #
 ############################
@@ -86,9 +80,6 @@ BACKWARD_MS = 500
 #############################
 # burst_into_ball constants #
 #############################
-
-BURST_FORWARD_MS = 450
-"""The amount of miliseconds for which to burst forward when collecting a ball"""
 
 BURST_FORWARD_SPEED = 75
 """The speed at which to burst forward when collecting a ball"""
@@ -114,13 +105,7 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 # drive_to_goal constants #
 ###########################
 
-DRIVE_TO_GOAL_AT_GOAL_RANGE = 17 + ARUCO_OFFSET_X
-"""When driving to goal, the robot is considered to be at the goal when within this distance"""
-
-DRIVE_TO_GOAL_CLOSE_TO_GOAL_RANGE = 25 + ARUCO_OFFSET_X
-"""When driving to goal, the robot is considered to be close to the goal when within this distance"""
-
-GOAL_DELIVERY_POINT = (152.5, 121.5/2)
+GOAL_DELIVERY_POINT = (148, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
 ###################################
@@ -148,13 +133,55 @@ CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 9
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 
+CROSS_ARM_LENGTH = 10
+"""The length from the center of the cross to the end of a cross arm"""
+
+CROSS_ZONE_PADDING = 1.5
+"""The cross zone is extended with this padding from the bounding box that is tight around the cross"""
+
+WAYPOINT_ZONE_COLLECTION_STAGING_POINT_OFFSET = 20
+"""The distance from a waypoint zone collection staging point to the closts waypoint zone edge"""
+
 #######################################
 # get_cross_approach_points constants #
 #######################################
 
-CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 5
+CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 9.5
 
-CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 10
+CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 40
+
+CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9.5
+
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
+
+#######################################
+# cross zone collection constants     #
+#######################################
+
+# half-length of a cross arm, used to size the cross zone bounding box
+CROSS_ARM_LENGTH = 10
+# extra padding added around the cross arms when deciding if a ball is "in the cross zone"
+CROSS_ZONE_PADDING = 1.5
+
+# gentle, short retreat after collecting next to the cross
+CROSS_ZONE_BACKWARD_SPEED = 30
+CROSS_ZONE_BACKWARD_MS = 1500
+
+# how close a detected ball must be to the target to count as "still the ball we're chasing"
+CROSS_ZONE_VERIFY_RADIUS = 20.0
+
+# tighter go_to tolerance for the waypoint/staging approach near the cross.
+CROSS_ZONE_WAYPOINT_TOLERANCE = 4.0 + ARUCO_OFFSET_X
+
+# when collecting a cross-zone ball, push the chosen waypoint this many cm further out along its diagonal
+
+CROSS_WAYPOINT_DIAGONAL_EXTENSION = 20.0
+
+# incremental creep towards a cross-zone ball: drive one short step, then re-detect & re-aim.
+CROSS_ZONE_CREEP_STEP_SPEED = 30
+CROSS_ZONE_CREEP_STEP_MS = 150
+# safety bound so the creep can't drive forward forever
+CROSS_ZONE_MAX_CREEP_STEPS = 5
 
 ###########################
 # edge handling constants #
@@ -166,7 +193,7 @@ EDGE_THRESHOLD = 13
 EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
 """The target range used for gentle bursting towards an edge ball"""
 
-EDGE_BALL_STAGING_POINT_OFFSET = 24
+EDGE_BALL_STAGING_POINT_OFFSET = 31
 """The staging point's distance from the edge"""
 
 #############################
