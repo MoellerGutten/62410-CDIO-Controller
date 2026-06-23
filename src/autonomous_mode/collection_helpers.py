@@ -35,7 +35,7 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
     go_to(state, connection, staging_point)
 
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
-    if ball.distance_to_nearest_corner() > 12 and is_edge_ball:
+    if ball.distance_to_nearest_corner() > 12 and is_edge_ball and await_robot(state, connection).is_facing_edge(ball.nearest_edge()):
         logger.debug("Wall hugging not needed, proceeding with edge ball collection")
         collect_edge_ball(state, ball, connection, edge_ball_staging_point)
         return
