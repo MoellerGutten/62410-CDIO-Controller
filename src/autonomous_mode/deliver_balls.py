@@ -22,7 +22,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_center")
 
     robot = await_robot(state, connection)
-    center_line_point: tuple[float, float] = (ARENA_WIDTH_CM * 3/4, ARENA_HEIGHT_CM / 2)
+    center_line_point: tuple[float, float] = (ARENA_WIDTH_CM * 0.70, ARENA_HEIGHT_CM / 2)
 
     logger.debug("Commence drive to center")
 
