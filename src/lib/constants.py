@@ -90,6 +90,8 @@ BACKWARD_MS = 500
 BURST_FORWARD_SPEED = 75
 """The speed at which to burst forward when collecting a ball"""
 
+
+
 ###################
 # go_to constants #
 ###################
@@ -118,7 +120,7 @@ GOAL_DELIVERY_POINT = (148, 121.5/2)
 # ball count estimation constants #
 ###################################
 
-BALL_COUNT_ESTIMATION_SNAPSHOTS = 20
+BALL_COUNT_ESTIMATION_SNAPSHOTS = 10
 """The amount of images to capture and analyze when estimating ball count"""
 
 #########################
@@ -167,7 +169,7 @@ CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
 # half-length of a cross arm, used to size the cross zone bounding box
 CROSS_ARM_LENGTH = 10
 # extra padding added around the cross arms when deciding if a ball is "in the cross zone"
-CROSS_ZONE_PADDING = 1.5
+CROSS_ZONE_PADDING = -0.5
 
 # gentle, short retreat after collecting next to the cross
 CROSS_ZONE_BACKWARD_SPEED = 30
@@ -188,6 +190,8 @@ CROSS_ZONE_CREEP_STEP_SPEED = 30
 CROSS_ZONE_CREEP_STEP_MS = 150
 # safety bound so the creep can't drive forward forever
 CROSS_ZONE_MAX_CREEP_STEPS = 5
+
+WAYPOINT_ZONE_COLLECTION_RANGE = 15
 
 ###########################
 # edge handling constants #

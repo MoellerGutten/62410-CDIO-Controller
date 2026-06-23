@@ -11,8 +11,6 @@ from src.autonomous_mode.collection_helpers import collect_cross_zone_ball, coll
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
 from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS
 
-_last_ball_count_update_time = 0
-
 
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
@@ -60,8 +58,6 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         collect_cross_zone_ball(state, ball, connection)
     else: 
         collect_normal_ball(state, ball, connection)
-        
-    update_ball_count_estimate(state)
 
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:
@@ -77,15 +73,16 @@ def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_b
 
 def start_autonomous_session(state: ArenaState) -> None:
     logger = get_logger("start_autonomous_session")
-    global _last_ball_count_update_time
 
     connection = RobotConnection()
     _start_ball_intake(connection)
 
-    total_balls = update_ball_count_estimate(state)
-    _last_ball_count_update_time = time()
+    total_balls = update_ball_count_estimate(state) # TODO: remove this for the competition
+    with state.lock:
+        state._last_ball_count_update_time = time()
 
     while True:
+        # update ball count estimate of current estimate is more than 10 seconds old
         _tick(state)
 
         if _is_hail_mary_time(state):
@@ -127,11 +124,12 @@ def start_autonomous_session(state: ArenaState) -> None:
 
 
 def _tick(state: ArenaState) -> None:
-    global _last_ball_count_update_time
-
-    if time() - _last_ball_count_update_time >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
+    time_since_last_ball_count_update = time() - state._last_ball_count_update_time
+    if time_since_last_ball_count_update >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
+        get_logger("_tick").debug(f"{round(time_since_last_ball_count_update, 2)} seconds since last ball count estimate update, updating now.")
         update_ball_count_estimate(state)
-        _last_ball_count_update_time = time()
+        with state.lock:
+            state._last_ball_count_update_time = time()
 
 
 def _send_win_message(connection: RobotConnection) -> None:

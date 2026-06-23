@@ -9,7 +9,7 @@ from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, \
 GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
-from src.lib.algorithms import burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
+from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 
@@ -188,6 +188,24 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
 
     distance = robot.distance_to_point(point)
     burst_ms = burst_forward_ms(distance)
+    burst_speed = BURST_FORWARD_SPEED
+
+    logger = get_logger("burst_into_ball")
+    logger.debug(f"Busting. burst ms: {burst_ms}, burst distance: {distance} cm")
+
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+
+def burst_into_ball_slightly_smaller(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+    robot = await_robot(state, connection)
+
+    distance = robot.distance_to_point(point)
+    burst_ms = small_burst_forward_ms(distance)
     burst_speed = BURST_FORWARD_SPEED
 
     logger = get_logger("burst_into_ball")
