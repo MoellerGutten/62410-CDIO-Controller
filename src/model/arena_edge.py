@@ -22,4 +22,4 @@ def get_corner_edges(corner: ArenaCorner) -> tuple[ArenaEdge, ArenaEdge]:
 
 def get_other_corner_edge(corner: ArenaCorner, edge: ArenaEdge) -> ArenaEdge:
     corner_edges = get_corner_edges(corner)
-    return corner_edges[0] if edge == corner_edges[0] else corner_edges[1]
+    return corner_edges[1] if edge == corner_edges[0] else corner_edges[0]
