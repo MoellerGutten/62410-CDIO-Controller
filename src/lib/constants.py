@@ -166,7 +166,7 @@ EDGE_THRESHOLD = 13
 EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
 """The target range used for gentle bursting towards an edge ball"""
 
-EDGE_BALL_STAGING_POINT_OFFSET = 24
+EDGE_BALL_STAGING_POINT_OFFSET = 31
 """The staging point's distance from the edge"""
 
 #############################
