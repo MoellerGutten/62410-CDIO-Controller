@@ -127,7 +127,7 @@ def draw_cross_bounding_box(surf, pos, size, angle_deg, colour, width=10):
     width is the thickness of the cross arms.
     """
     cx, cy = pos
-    rad = math.radians(angle_deg)
+    rad = math.radians(-angle_deg)
 
     half_size = size * 3/4
     arm_thickness = width / 2
