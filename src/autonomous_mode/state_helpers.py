@@ -53,7 +53,7 @@ def update_ball_count_estimate(state: ArenaState) -> int:
     estimated_ball_count = round(sum(ball_counts) / len(ball_counts))
     with state.lock:
         state.estimated_ball_count = estimated_ball_count
-    get_logger().debug(f"update_ball_count_estimate took {time() - begin}s with {BALL_COUNT_ESTIMATION_SNAPSHOTS} snapshots")
+    get_logger().debug(f"update_ball_count_estimate took {round(time() - begin, 2)} seconds ({BALL_COUNT_ESTIMATION_SNAPSHOTS} snapshots)")
     return estimated_ball_count
 
 

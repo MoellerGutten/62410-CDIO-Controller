@@ -186,4 +186,3 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         logger.warning("Reached max creep steps without confirming collection")
 
     escape_cross_zone(state, connection)
-    update_ball_count_estimate(state)
