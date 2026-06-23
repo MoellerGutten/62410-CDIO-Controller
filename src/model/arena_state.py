@@ -21,6 +21,7 @@ class ArenaState:
         self.target_point: tuple[float, float] | None = None
         self.start_time = None 
         self.finish_time = None
+        self.is_final_delivery = False
         
 
     def __repr__(self) -> str:

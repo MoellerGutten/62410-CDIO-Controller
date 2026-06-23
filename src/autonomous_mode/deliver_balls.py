@@ -14,11 +14,12 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     drive_to_goal(state, connection)
     _start_ejaculation(connection)
 
-    if getattr(state, "is_final_delivery", False):
+    if state.is_final_delivery:
         with state.lock:
             if state.finish_time is None:
                 state.finish_time = time()
-                
+
+
     burst_backward(state, connection)
 
     logger.debug("Delivery done\n")
