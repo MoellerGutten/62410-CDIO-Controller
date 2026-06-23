@@ -12,6 +12,7 @@ from src.model.arena_state import ArenaState
 from math import floor
 from time import time
 from src.lib.cross_approach_points import get_cross_approach_points
+from src.state.arena_tracker import ArenaTracker
 # ---------------------------------------------------------------------------
 # Colours
 # ---------------------------------------------------------------------------
@@ -415,6 +416,8 @@ def run_gui(state: ArenaState):
     clock  = pygame.time.Clock()
     _start_time = time()
 
+    tracker = ArenaTracker()
+
     font_sm = pygame.font.SysFont("monospace", 13)
     font_md = pygame.font.SysFont("monospace", 15, bold=True)
     font_lg = pygame.font.SysFont("monospace", 20, bold=True)
@@ -430,6 +433,12 @@ def run_gui(state: ArenaState):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
+                try:
+                    path = tracker.dump_frame()
+                    print(f"Saved {path}")
+                except RuntimeError as e:
+                    print(f"Can't dump yet: {e}")
 
         with state.lock:
             robot = state.robot

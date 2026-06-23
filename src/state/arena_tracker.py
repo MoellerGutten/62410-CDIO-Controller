@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import math
 import os
+import time
 import platform
 import threading as _threading
 from typing import Optional
@@ -87,20 +88,37 @@ class ArenaTracker:
         self._M_inv:          Optional[np.ndarray]       = None
         self._cam_mtx:        Optional[np.ndarray]       = None
         self._cam_dist:       Optional[np.ndarray]       = None
+        self.dumped_image:    Optional[np.ndarray]       = None
         self._running:        bool                       = False
         self._resolved_index: int                        = 0
         self._scan_lock:      _threading.Lock            = _threading.Lock()
+        self._clahe                                      = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
 
         self.logger = get_logger("ArenaTracker")
 
         try:
             self._aruco_dict     = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             self._aruco_params   = cv2.aruco.DetectorParameters()
+            self._configure_aruco_params(self._aruco_params)
             self._aruco_detector = cv2.aruco.ArucoDetector(self._aruco_dict, self._aruco_params)
         except AttributeError:
             self._aruco_dict     = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
             self._aruco_params   = cv2.aruco.DetectorParameters()
+            self._configure_aruco_params(self._aruco_params)
             self._aruco_detector = None
+
+    @staticmethod
+    def _configure_aruco_params(params: cv2.aruco.DetectorParameters) -> None:
+        params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
+        params.cornerRefinementWinSize = 5
+        params.cornerRefinementMaxIterations = 50
+        params.cornerRefinementMinAccuracy = 0.01
+        params.perspectiveRemovePixelPerCell = 8
+        params.perspectiveRemoveIgnoredMarginPerCell = 0.20
+        params.errorCorrectionRate = 0.8
+        params.adaptiveThreshWinSizeMin = 3
+        params.adaptiveThreshWinSizeMax = 35
+        params.adaptiveThreshWinSizeStep = 4
 
     # ------------------------------------------------------------------ #
     #  Public API                                                          #
@@ -138,7 +156,20 @@ class ArenaTracker:
             raise RuntimeError("Call start() before scan().")
         with self._scan_lock:
             frame = self._grab_frame()
+            self.dumped_image = frame
             return self._process_frame(frame)
+        
+    def dump_frame(self, path: Optional[str] = None) -> str:
+        if getattr(self, "dumped_image", None) is None:
+            raise RuntimeError("No frame has been captured yet.")
+        if path is None:
+            os.makedirs("logs/images", exist_ok=True)
+            path = f"logs/images/frame_{int(time.time()*1000)}.png"
+        ok = cv2.imwrite(path, self.dumped_image)
+        if not ok:
+            raise IOError(f"Failed to write {path}")
+        self.logger.info(f"Dumped frame to {path}")
+        return path
 
     def stop(self) -> None:
         if hasattr(self, "_camera_reader"):
@@ -372,15 +403,18 @@ class ArenaTracker:
 
         return (
             cx + (mx - cx) * scale,
-            cy + (my - cy) * scale,
+            cy + (my - cy) * scale, 
         )
 
     def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
+        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray = self._clahe.apply(gray)
+
         if self._aruco_detector:
-            corners, ids, _ = self._aruco_detector.detectMarkers(frame)
+            corners, ids, _ = self._aruco_detector.detectMarkers(gray)
         else:
             corners, ids, _ = cv2.aruco.detectMarkers(
-                frame, self._aruco_dict, parameters=self._aruco_params
+                gray, self._aruco_dict, parameters=self._aruco_params
             )
 
         if ids is None:
