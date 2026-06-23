@@ -108,11 +108,15 @@ def turn_to_heading(
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     robot = await_robot(state, connection)
+
     logger = get_logger("drive_forward")
+
     distance = robot.distance_to_point(point)
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
+
     logger.debug(f"forward speed {fwd_ms} m/s forward time: {fwd_ms}")
+
     inst = Instruction(
         name=CommandName.FORWARD,
         type=InstructionType.COMMAND,
