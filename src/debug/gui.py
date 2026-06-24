@@ -1,6 +1,7 @@
 import math
 import sys
 import cv2
+import numpy as np
 import pygame
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
@@ -334,6 +335,7 @@ def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[in
 def frame_to_surface(frame_bgr, target_size):
     small = cv2.resize(frame_bgr, target_size, interpolation=cv2.INTER_AREA)
     rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+    rgb = np.ascontiguousarray(rgb)
     return pygame.image.frombuffer(rgb.tobytes(), target_size, "RGB")
 
 # ---------------------------------------------------------------------------
@@ -416,6 +418,8 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
 
+    return y
+
 # ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
@@ -435,7 +439,13 @@ def run_gui(state: ArenaState):
     font_md = pygame.font.SysFont("monospace", 15, bold=True)
     font_lg = pygame.font.SysFont("monospace", 20, bold=True)
 
-    # Animation state
+    # video feed config
+    VIDEO_W = PANEL_W - FIELD_MARGIN // 2          # match panel content width
+    VIDEO_H = int(VIDEO_W * 3 / 4)                 # 4:3
+    VIDEO_X = WINDOW_W - PANEL_W + 15
+    _last_frame_id = -1
+    _video_surf = None
+
     t = 0.0
 
     running = True
@@ -477,11 +487,25 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered, state)
+        panel_end_y = draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners,
+                                  estimated_ball_count, estimated_balls_in_robot,
+                                  estimated_balls_delivered, state.all_balls_delivered, state)
+
         for point in get_cross_approach_points(cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
         for point in get_cross_approach_points(cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_FINAL_POINTS, field_to_screen(point, corners), 5)
+
+        # Video feed
+        VIDEO_Y = panel_end_y + 10
+        raw_frame, frame_id = tracker.get_latest_frame_with_id()
+        if raw_frame is not None and frame_id != _last_frame_id:
+            _video_surf = frame_to_surface(raw_frame, (VIDEO_W, VIDEO_H))
+            _last_frame_id = frame_id
+        if _video_surf is not None:
+            screen.blit(_video_surf, (VIDEO_X, VIDEO_Y))
+            pygame.draw.rect(screen, C_BORDER, (VIDEO_X, VIDEO_Y, VIDEO_W, VIDEO_H), 2)
+
         pygame.display.flip()
 
     pygame.quit()

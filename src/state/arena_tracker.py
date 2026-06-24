@@ -24,6 +24,7 @@ class CameraReader:
     def __init__(self, cap: cv2.VideoCapture) -> None:
         self._cap     = cap
         self._frame:  Optional[np.ndarray] = None
+        self._frame_id: int = 0
         self._lock    = _threading.Lock()
         self._running = True
         self._ready = _threading.Event()
@@ -39,11 +40,16 @@ class CameraReader:
             if ret:
                 with self._lock:
                     self._frame = frame
+                    self._frame_id += 1
                 self._ready.set()
 
     def get_latest(self) -> Optional[np.ndarray]:
         with self._lock:
             return None if self._frame is None else self._frame.copy()
+
+    def get_latest_with_id(self) -> tuple[Optional[np.ndarray], int]:
+        with self._lock:
+            return (None, -1) if self._frame is None else (self._frame.copy(), self._frame_id)
 
     def stop(self) -> None:
         self._running = False
@@ -179,11 +185,11 @@ class ArenaTracker:
         self._running = False
         self.logger.info("Stopped")
 
-    def get_latest_frame(self) -> Optional[np.ndarray]:
-        """Raw BGR frame straight from the camera thread, no YOLO/ArUco involved."""
-        if not self._running or not hasattr(self, "_camera_reader"):
-            return None
-        return self._camera_reader.get_latest()
+    def get_latest_frame_with_id(self) -> tuple[Optional[np.ndarray], int]:
+        """Raw BGR frame straight from the camera thread — no YOLO/ArUco involved."""
+        if not self._running or not hasattr(self, "_camera_reader") or self._camera_reader is None:
+            return None, -1
+        return self._camera_reader.get_latest_with_id()
 
     def __enter__(self) -> "ArenaTracker":
         self.start()
