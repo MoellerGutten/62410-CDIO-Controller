@@ -59,6 +59,8 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
     else: 
         collect_normal_ball(state, ball, connection)
 
+    update_ball_count_estimate(state)
+
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:
     """
@@ -77,9 +79,9 @@ def start_autonomous_session(state: ArenaState) -> None:
     connection = RobotConnection()
     _start_ball_intake(connection)
 
-    total_balls = update_ball_count_estimate(state) # TODO: remove this for the competition
-    with state.lock:
-        state._last_ball_count_update_time = time()
+    total_balls = update_ball_count_estimate(state) # TODO: hardcode 11 here for the competition
+    with state.lock: # outcomment this line for competition
+        state._last_ball_count_update_time = time() # outcomment this line for competition
 
     while True:
         # update ball count estimate of current estimate is more than 10 seconds old
