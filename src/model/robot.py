@@ -1,5 +1,7 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 import numpy as np
+
+from autonomous_mode.cross_avoidance_helpers import dist_to_point
 from src.lib.constants import ARENA_HEIGHT_CM, ARENA_WIDTH_CM, ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
 from src.model.arena_edge import ArenaEdge
@@ -219,3 +221,12 @@ class Robot:
         """True if driving backward `distance` cm keeps the robot's full
         footprint inside the arena and clear of the cross."""
         return self._can_safely_drive(cross, distance, direction_sign=-1)
+
+    def get_point_in_from(self):
+        heading = self.orientation
+        heading_rad = radians(heading)
+        p0 = self.position
+        dist_to_new_point = 50
+        point_in_front = (cos(heading_rad) * dist_to_new_point + p0[0], sin(heading_rad) * dist_to_new_point + p0[1])
+        return point_in_front
+
