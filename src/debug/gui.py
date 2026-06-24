@@ -1,5 +1,6 @@
 import math
 import sys
+import cv2
 import pygame
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
@@ -329,6 +330,11 @@ def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[in
     x = int(lerp(tl[0], tr[0], pos[0] / ARENA_WIDTH_CM))
     y = int(lerp(bl[1], tl[1], pos[1] / ARENA_HEIGHT_CM))  # y flipped: 0 = bottom
     return (x, y)
+
+def frame_to_surface(frame_bgr, target_size):
+    small = cv2.resize(frame_bgr, target_size, interpolation=cv2.INTER_AREA)
+    rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+    return pygame.image.frombuffer(rgb.tobytes(), target_size, "RGB")
 
 # ---------------------------------------------------------------------------
 # Side panel
