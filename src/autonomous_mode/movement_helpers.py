@@ -356,3 +356,57 @@ def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: t
         connection.send_message(Message(instruction=inst))
         sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
         _iter += 1
+
+def gentle_burst_edge_ball(
+    state: ArenaState,
+    connection: RobotConnection,
+    target_point: tuple[float, float],
+    target_range: float,
+    max_iter: int = 20,
+):
+    logger = get_logger("gentle_burst_edge_ball")
+
+    _iter = 0
+
+    while True:
+        distance = await_robot(state, connection).distance_to_point(target_point)
+
+        if _iter >= max_iter:
+            logger.debug("Reached max iterations")
+            break
+
+        if distance <= target_range:
+            logger.debug("Distance within limit")
+            break
+
+        
+
+        if distance > 24:
+            burst_ms = 100
+            burst_speed = 30
+        elif distance > 20:
+            burst_ms = 75
+            burst_speed = 25
+        else:
+            burst_ms = 50
+            burst_speed = 20
+
+        logger.debug(
+    f"distance={distance:.1f}, "
+    f"burst_ms={burst_ms}, "
+    f"burst_speed={burst_speed}"
+)
+
+        inst = Instruction(
+            name=CommandName.FORWARD,
+            type=InstructionType.COMMAND,
+            args=Arguments(
+                seconds=ms_to_seconds(burst_ms),
+                speed=burst_speed,
+            ),
+        )
+
+        connection.send_message(Message(instruction=inst))
+        sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+
+        _iter += 1

@@ -204,8 +204,10 @@ CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
-EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 18
+EDGE_BALL_GENTLE_BURST_VERTICAL = 19
 """The target range used for gentle bursting towards an edge ball"""
+
+EDGE_BALL_GENTLE_BURST_HORIZONTAL = 18
 
 EDGE_BALL_STAGING_POINT_OFFSET = 31
 """The staging point's distance from the edge"""
@@ -213,6 +215,7 @@ EDGE_BALL_STAGING_POINT_OFFSET = 31
 #############################
 # corner handling constants #
 #############################
+
 
 CORNER_THRESHOLD = 24
 """If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""
