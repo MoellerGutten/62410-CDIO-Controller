@@ -12,6 +12,7 @@ from protocol import Instruction, InstructionType, CommandName, Arguments, Messa
 from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS
 
 
+
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
     """
     Return the next ball to collect, or None if nothing is reachable.
@@ -59,27 +60,41 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
     else: 
         collect_normal_ball(state, ball, connection)
 
+    update_ball_count_estimate(state)
+
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:
     """
     Deliver balls, recount estimated ball count, and return updated balls_delivered_so_far.
     """
     balls_in_arena_before = total_balls - balls_delivered_so_far
-    deliver_balls(state, connection)
+
+    state.is_final_delivery = (
+    balls_in_arena_before <= BALLS_PER_DELIVERY
+)
+   
+
+    
+
+    deliver_balls(state, connection)            
     balls_in_arena_after = update_ball_count_estimate(state)
     newly_delivered = balls_in_arena_before - balls_in_arena_after
+
     return balls_delivered_so_far + newly_delivered
+ 
 
 
 def start_autonomous_session(state: ArenaState) -> None:
     logger = get_logger("start_autonomous_session")
 
+   
+ 
     connection = RobotConnection()
     _start_ball_intake(connection)
 
-    total_balls = update_ball_count_estimate(state) # TODO: remove this for the competition
-    with state.lock:
-        state._last_ball_count_update_time = time()
+    total_balls = update_ball_count_estimate(state) # TODO: hardcode 11 here for the competition
+    with state.lock: # outcomment this line for competition
+        state._last_ball_count_update_time = time() # outcomment this line for competition
 
     while True:
         # update ball count estimate of current estimate is more than 10 seconds old
@@ -97,6 +112,7 @@ def start_autonomous_session(state: ArenaState) -> None:
             state.estimated_balls_in_robot = total_balls - state.estimated_ball_count - state.estimated_balls_delivered
 
         if _all_balls_delivered(state.estimated_balls_in_robot, state):
+            
             logger.debug("All balls delivered, stopping.")
             _stop_ball_intake(connection)
             _send_win_message(connection)

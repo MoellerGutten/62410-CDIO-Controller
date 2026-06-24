@@ -16,27 +16,40 @@ from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
 def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection, staging_point: tuple[float, float]):
+    logger = get_logger("collect_edge_ball")
+    logger.debug("Collecting edge ball, going to staging point")
     go_to(state, connection, staging_point)
+    logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position)
+    logger.debug("Going to ball position")
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
     _start_ball_intake(connection)
+    logger.debug("Bursting gently")
     gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, 20)
+    logger.debug("Backing away")
     burst_backward(state, connection)
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
+    logger = get_logger("collect_normal_ball")
+    logger.debug("Collecting normal ball, first checking if ball is in radius")
     handle_balls_in_radius(state, connection, ball)
 
+    logger.debug("Going to ball position")
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
     robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
+        logger.debug("Ball is in a galaxy far, far away")
         update_ball_count_estimate(state)
         return
+    logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position, precise_mode=True)
     _start_ball_intake(connection)
+    logger.debug("Bursting into ball")
     burst_into_ball(state, connection, ball.position)
 
     if ball.is_within_waypoint_zone(state):
+        logger.debug("Ball is within waypoint zone, escaping zone")
         escape_cross_zone(state, connection)
 
 def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ball) -> None:
@@ -85,6 +98,8 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
 
 def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_waypoint_zone_ball")
+    logger.debug("Collecting waypoint zone ball")
+
     inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET+10)
     target = min(inflated_waypoint_points, key=ball.distance_to_point)
 
@@ -101,6 +116,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
+        logger.debug("Robot is in a galaxy far, far away")
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
@@ -147,6 +163,8 @@ def distance_between_points(p1, p2):
 
 def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_cross_zone_ball")
+    logger.debug("Collecting cross zone ball")
+
     approach_points = get_cross_approach_points(state.cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET)
     staging_point = min(approach_points, key=ball.distance_to_point)
 
