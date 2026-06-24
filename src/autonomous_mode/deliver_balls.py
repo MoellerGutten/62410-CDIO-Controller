@@ -5,7 +5,7 @@ from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
 from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, \
-    FINAL_GOAL_DELIVERY_POINT
+    FINAL_GOAL_DELIVERY_POINT, GET_REAL_CLOSE_MAX_ITER
 
 from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, BALLS_PER_DELIVERY
 from time import time
@@ -76,7 +76,7 @@ def get_real_close(state: ArenaState, connection: RobotConnection):
     turn_to_point(state, connection, goal, precise_mode=True)
     await_robot(state, connection)
     _iter = 0 # for debug only
-    while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0]:
+    while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0] or _iter > GET_REAL_CLOSE_MAX_ITER:
         logger.debug(f"creeping - iter: {_iter}")
         creep_forward_step(state, connection)
         robot = await_robot(state, connection)
