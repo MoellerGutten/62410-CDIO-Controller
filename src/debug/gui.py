@@ -1,6 +1,9 @@
 import math
 import sys
+import cv2
+import numpy as np
 import pygame
+from src.debug.log import get_logger
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
 from src.autonomous_mode.start_autonomous_session import _select_next_ball
@@ -330,6 +333,12 @@ def field_to_screen(pos: tuple[float, float], corners: list[Corner]) -> tuple[in
     y = int(lerp(bl[1], tl[1], pos[1] / ARENA_HEIGHT_CM))  # y flipped: 0 = bottom
     return (x, y)
 
+def frame_to_surface(frame_bgr, target_size):
+    small = cv2.resize(frame_bgr, target_size, interpolation=cv2.INTER_AREA)
+    rgb = cv2.cvtColor(small, cv2.COLOR_BGR2RGB)
+    rgb = np.ascontiguousarray(rgb)
+    return pygame.image.frombuffer(rgb.tobytes(), target_size, "RGB")
+
 # ---------------------------------------------------------------------------
 # Side panel
 # ---------------------------------------------------------------------------
@@ -410,15 +419,15 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
 
-    #score for run
+    # score for run
+    # assuming that we always deliver orange ball first, and that we dont get any penalties
     heading("Score")
-    score = state.estimated_balls_delivered*150 + (8*60*3-elapsed) + 200
+    score = state.estimated_balls_delivered*150 + (8*60*3-elapsed*3) + 200
 
     row("Score: ", f"{score}")
-    row("(without penalties & always", "")
-    row("assuming +200 ", "")
-    row("for orange bonus)", "")
     y += 16
+
+    return y
 
 # ---------------------------------------------------------------------------
 # Main
@@ -426,6 +435,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
 def run_gui(state: ArenaState):
     #global _start_time
+    logger = get_logger("run_gui")
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
@@ -439,7 +449,17 @@ def run_gui(state: ArenaState):
     font_md = pygame.font.SysFont("monospace", 15, bold=True)
     font_lg = pygame.font.SysFont("monospace", 20, bold=True)
 
-    # Animation state
+    # video feed config
+    VIDEO_W = PANEL_W - FIELD_MARGIN // 2          # match panel content width
+    VIDEO_H = int(VIDEO_W * 3 / 4)                 # 4:3
+    VIDEO_X = WINDOW_W - PANEL_W + 15
+    _last_frame_id = -1
+    _video_surf = None
+
+    # recording
+    _seen_start_time = None
+    _seen_finish_time = None
+
     t = 0.0
 
     running = True
@@ -453,9 +473,9 @@ def run_gui(state: ArenaState):
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 try:
                     path = tracker.dump_frame()
-                    print(f"Saved {path}")
+                    logger.debug(f"Saved {path}")
                 except RuntimeError as e:
-                    print(f"Can't dump yet: {e}")
+                    logger.debug(f"Can't dump yet: {e}")
 
         with state.lock:
             robot = state.robot
@@ -465,6 +485,25 @@ def run_gui(state: ArenaState):
             estimated_ball_count = state.estimated_ball_count
             estimated_balls_in_robot = state.estimated_balls_in_robot
             estimated_balls_delivered = state.estimated_balls_delivered
+
+            start_time = state.start_time
+            finish_time = state.finish_time
+
+        # ---- auto start/stop recording on match timer ----
+        if start_time is not None and _seen_start_time is None and not tracker.is_recording:
+            try:
+                path = tracker.start_recording()
+                logger.debug(print(f"Recording started -> {path}"))
+            except RuntimeError as e:
+                logger.debug(f"Can't start recording: {e}")
+        _seen_start_time = start_time
+
+        if finish_time is not None and _seen_finish_time is None and tracker.is_recording:
+            path = tracker.stop_recording()
+            logger.debug(f"Recording stopped -> {path}")
+        _seen_finish_time = finish_time
+
+        tracker._record_tick()
 
         # ------------------------------------------------------------------
         # Draw
@@ -481,14 +520,30 @@ def run_gui(state: ArenaState):
         draw_balls(screen, balls, corners, state)
         if robot is not None:
             draw_robot(screen, robot, corners)
-        draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners, estimated_ball_count, estimated_balls_in_robot, estimated_balls_delivered, state.all_balls_delivered, state)
+        panel_end_y = draw_panel(screen, font_sm, font_md, font_lg, robot, balls, cross, corners,
+                                  estimated_ball_count, estimated_balls_in_robot,
+                                  estimated_balls_delivered, state.all_balls_delivered, state)
+
         for point in get_cross_approach_points(cross, CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_BALL_VIP, field_to_screen(point, corners), 5)
         for point in get_cross_approach_points(cross, CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET):
             pygame.draw.circle(screen, C_FINAL_POINTS, field_to_screen(point, corners), 5)
+
+        # Video feed
+        VIDEO_Y = panel_end_y + 10
+        raw_frame, frame_id = tracker.get_latest_frame_with_id()
+        if raw_frame is not None and frame_id != _last_frame_id:
+            _video_surf = frame_to_surface(raw_frame, (VIDEO_W, VIDEO_H))
+            _last_frame_id = frame_id
+        if _video_surf is not None:
+            screen.blit(_video_surf, (VIDEO_X, VIDEO_Y))
+            pygame.draw.rect(screen, C_BORDER, (VIDEO_X, VIDEO_Y, VIDEO_W, VIDEO_H), 2)
+
         pygame.display.flip()
 
     pygame.quit()
+    if tracker.is_recording:
+        tracker.stop_recording()
     sys.exit()
 
 def get_test_field_state():
