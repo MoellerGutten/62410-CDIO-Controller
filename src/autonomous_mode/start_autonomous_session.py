@@ -10,10 +10,9 @@ from time import time
 from src.autonomous_mode.collection_helpers import (collect_cross_zone_ball, collect_edge_ball, collect_normal_ball,
                                                     collect_corner_ball, collect_waypoint_zone_ball)
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.constants import (BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS,
-                               WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS, ROBOT_BALL_CAPACITY)
 from src.lib.constants import (BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE,
-                               MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS, OPENING_NORMAL_BALL_COUNT)
+                               MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS, ROBOT_BALL_CAPACITY,
+                               OPENING_NORMAL_BALL_COUNT)
 
 
 
