@@ -297,8 +297,8 @@ def go_to(state: ArenaState
         logger.debug(f"Turning to {escape_heading}")
         turn_to_heading(state, connection, escape_heading)
         while waypoint_zone.contains(Point(robot.position)):
-            # dumb fucking hack: set a target point far away for max speed
-            escape_point = robot.get_point_in_front()
+            escape_point = robot.get_point_in_front(30)
+            logger.debug(f"Escaping towards {escape_point}")
             drive_forward(state, connection, escape_point)
             robot = await_robot(state, connection)
         logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
