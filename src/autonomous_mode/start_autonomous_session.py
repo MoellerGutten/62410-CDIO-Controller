@@ -10,10 +10,19 @@ from time import time
 from src.autonomous_mode.collection_helpers import (collect_cross_zone_ball, collect_edge_ball, collect_normal_ball,
                                                     collect_corner_ball, collect_waypoint_zone_ball)
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
+from src.lib.constants import (BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS,
+                               WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS, ROBOT_BALL_CAPACITY)
 from src.lib.constants import (BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE,
                                MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS, OPENING_NORMAL_BALL_COUNT)
 
 
+
+def still_needs_vip(balls_in_robot: int, state: ArenaState) -> bool:
+    return (
+        has_vip_balls(state)
+        and balls_in_robot >= BALLS_PER_DELIVERY
+        and balls_in_robot < ROBOT_BALL_CAPACITY
+    )
 
 def _is_normal_ball(ball: Ball, state: ArenaState) -> bool:
     if ball.is_corner_ball():
@@ -38,6 +47,14 @@ def _select_opening_ball(robot: Robot, balls_in_robot: int, state: ArenaState) -
 
 
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
+    """
+    Return the next ball to collect, or None if nothing is reachable.
+    """
+    if still_needs_vip(balls_in_robot, state):
+        next_ball = robot.get_nearest_vip_ball(state.balls)
+        get_logger("_select_next_ball").debug(f"Still need VIP, going for it: {next_ball!r}, balls_in_robot: {balls_in_robot}")
+        return next_ball
+
     if state.estimated_balls_delivered == 0:
         opening_ball = _select_opening_ball(robot, balls_in_robot, state)
         if opening_ball is not None:
@@ -45,6 +62,7 @@ def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
             return opening_ball
 
     vips_on_field = has_vip_balls(state)
+    # if vip is on field and 3 balls (or none other left on field) in robot, select nearest vip ball, otherwise go for nearest ball
 
     if not vips_on_field:
         next_ball = robot.get_nearest_non_vip_ball(state.balls)
@@ -60,6 +78,8 @@ def _should_deliver(balls_in_robot: int, state: ArenaState) -> bool:
     """
     Return True when the robot should head to the goal and deliver.
     """
+    if still_needs_vip(balls_in_robot, state):
+        return False
     return balls_in_robot >= BALLS_PER_DELIVERY or state.estimated_ball_count == 0
 
 def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
