@@ -39,8 +39,11 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
     logger.debug("Commence drive to center")
 
     go_to(state, connection, center_line_point)
+    goal: tuple[float, float] = (ARENA_WIDTH_CM, ARENA_HEIGHT_CM / 2)
 
-    logger.debug("At center\n")
+    logger.debug("At center")
+    turn_to_point(state, connection, goal)
+    logger.debug("Turned to goal")
 
         
 def drive_to_goal(state: ArenaState, connection: RobotConnection):
