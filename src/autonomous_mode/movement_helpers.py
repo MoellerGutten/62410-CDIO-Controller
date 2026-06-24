@@ -331,7 +331,7 @@ def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotCon
                 return #return, not break
 
             drive_forward(state, connection, ball.position)
-            await_robot(state, connection)
+            robot = await_robot(state, connection)
             _iter += 1
 
     elif robot.is_point_within_turning_hit_radius(ball.position):
@@ -347,7 +347,7 @@ def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotCon
                 return
 
             burst_backward(state, connection)
-            await_robot(state, connection)
+            robot = await_robot(state, connection)
             _iter += 1
 
 
