@@ -1,8 +1,5 @@
-from math import hypot, radians, sin, cos
-
-from lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, WEST_HEADING, \
-    EAST_HEADING
-from lib.cross_approach_points import get_cross_approach_points
+from math import hypot
+from src.lib.constants import WEST_HEADING, EAST_HEADING
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
@@ -277,17 +274,20 @@ def go_to(state: ArenaState
     logger = get_logger("go_to")
 
     waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
-    waypoint_zone = Polygon(waypoints)
+    waypoint_zone = Polygon(get_cross_waypoints(state.cross))
     robot = await_robot(state, connection)
     if waypoint_zone.contains(Point(robot.position)) and state.cross is not None:
+        logger.debug("Robot is in waypoint zone, escape before going to target")
         # robot is in waypoint zone, escape before going to target
         cross_quadrant = state.cross.get_point_quadrant(robot.position)
         escape_heading = EAST_HEADING if cross_quadrant == 1 or cross_quadrant == 4 else WEST_HEADING
+        logger.debug(f"Turning to {escape_heading}")
         turn_to_heading(state, connection, escape_heading)
-        while waypoint_zone.contains(robot.position) and robot.can_safely_drive_forward(state.cross, 10):
+        while waypoint_zone.contains(Point(robot.position)):
             # dumb fucking hack: set a target point far away for max speed
             drive_forward(state, connection, (1000, 1000))
             await_robot(state, connection)
+        logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
         waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
 
     waypoints.append(point)
