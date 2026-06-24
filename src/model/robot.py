@@ -1,10 +1,10 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 import numpy as np
-from src.lib.constants import ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
+from src.lib.constants import ARENA_HEIGHT_CM, ARENA_WIDTH_CM, ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
 from src.model.arena_edge import ArenaEdge
 from src.model.ball import Ball
-from shapely.geometry import Point, Polygon
+from shapely.geometry import Point, Polygon, box
 
 class Robot:
     """Represents the robot on the field."""
@@ -153,3 +153,69 @@ class Robot:
         if polygon.contains(Point(point)):
             return True
         return False
+    
+    # ------------------------------------------------------------------
+    # Drive safety helpers
+    # ------------------------------------------------------------------
+
+    def _get_swept_footprint(self, distance: float, direction_sign: int) -> Polygon:
+        """
+        Footprint swept while driving `distance` cm in a straight line,
+        forward (direction_sign=+1) or backward (direction_sign=-1).
+
+        `self.position` is the rear-axle midpoint (turning axis), not the
+        body center, so the nose and tail are NOT equidistant from it.
+        Whichever end is leading stays fixed and the trailing end extends
+        by `distance`; padding included since hitting a wall is costly.
+        """
+        AXIS_TO_NOSE_CM = 20.0
+        AXIS_TO_BACK_CM = 6.0
+        PADDING_LENGTH_CM = 3.0
+        PADDING_WIDTH_CM = 3.0
+
+        heading_rad = radians(self.orientation)
+        forward_dir = np.array([cos(heading_rad), sin(heading_rad)])
+        perp = np.array([-sin(heading_rad), cos(heading_rad)])
+
+        if direction_sign >= 0:  # driving forward: nose extends, tail fixed
+            back_extent = AXIS_TO_BACK_CM + PADDING_LENGTH_CM
+            front_extent = AXIS_TO_NOSE_CM + distance + PADDING_LENGTH_CM
+        else:  # driving backward: tail extends, nose fixed
+            back_extent = AXIS_TO_BACK_CM + distance + PADDING_LENGTH_CM
+            front_extent = AXIS_TO_NOSE_CM + PADDING_LENGTH_CM
+
+        half_width = self.robot_width_cm / 2 + PADDING_WIDTH_CM
+
+        p0 = np.array(self.position)
+        near = p0 - back_extent * forward_dir
+        far = p0 + front_extent * forward_dir
+
+        p1 = far + half_width * perp
+        p2 = far - half_width * perp
+        p3 = near - half_width * perp
+        p4 = near + half_width * perp
+        return Polygon([p1, p2, p3, p4])
+
+    def _can_safely_drive(self, cross, distance: float, direction_sign: int) -> bool:
+        footprint = self._get_swept_footprint(distance, direction_sign)
+
+        arena = box(0, 0, ARENA_WIDTH_CM, ARENA_HEIGHT_CM)
+        if not arena.covers(footprint):
+            return False
+
+        if cross is not None:
+            cross_zone = Point(cross.position).buffer(cross.side_length)
+            if footprint.intersects(cross_zone):
+                return False
+
+        return True
+
+    def can_safely_drive_forward(self, cross, distance: float) -> bool:
+        """True if driving forward `distance` cm keeps the robot's full
+        footprint inside the arena and clear of the cross."""
+        return self._can_safely_drive(cross, distance, direction_sign=1)
+
+    def can_safely_drive_backward(self, cross, distance: float) -> bool:
+        """True if driving backward `distance` cm keeps the robot's full
+        footprint inside the arena and clear of the cross."""
+        return self._can_safely_drive(cross, distance, direction_sign=-1)

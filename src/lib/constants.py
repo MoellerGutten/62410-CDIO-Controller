@@ -113,9 +113,10 @@ DRIVE_TO_CENTER_DISTANCE_TOLERANCE = 10 + ARUCO_OFFSET_X
 # drive_to_goal constants #
 ###########################
 
-GOAL_DELIVERY_POINT = (148, 121.5/2)
+GOAL_DELIVERY_POINT = (141, 121.5/2)
 """The point where the robot is considered at the goal for deliveries"""
 
+FINAL_GOAL_DELIVERY_POINT = (139, 121.5/2)
 ###################################
 # ball count estimation constants #
 ###################################
@@ -158,9 +159,9 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 9.5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 32
 
-CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9.5
+CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9
 
-CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 4.5
 
 #######################################
 # cross zone collection constants     #
@@ -192,6 +193,9 @@ CROSS_ZONE_CREEP_STEP_MS = 150
 CROSS_ZONE_MAX_CREEP_STEPS = 5
 
 WAYPOINT_ZONE_COLLECTION_RANGE = 15
+
+CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
+"""The distance in the cross zone where the robot is considered on top of the final destination point"""
 
 ###########################
 # edge handling constants #
