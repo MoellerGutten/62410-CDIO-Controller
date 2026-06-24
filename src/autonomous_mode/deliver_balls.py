@@ -1,3 +1,5 @@
+from http.cookiejar import debug
+
 from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation, \
     _stop_ball_intake, creep_forward_step
 from src.autonomous_mode.state_helpers import await_robot
@@ -63,8 +65,11 @@ def get_real_close(state: ArenaState, connection: RobotConnection):
 
     turn_to_point(state, connection, goal, precise_mode=True)
     await_robot(state, connection)
+    _iter = 0 # for debug only
     while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0]:
+        logger.debug(f"creeping - iter: {_iter}")
         creep_forward_step(state, connection)
         robot = await_robot(state, connection)
+    logger.debug("At final goal position")
     turn_to_point(state, connection, goal, precise_mode=True)
     logger.debug("At goal\n")
