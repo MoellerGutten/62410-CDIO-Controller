@@ -16,9 +16,16 @@ from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 
 def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection, staging_point: tuple[float, float]):
+   
     go_to(state, connection, staging_point)
     turn_to_point(state, connection, ball.position)
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
+    turn_to_point(
+    state,
+    connection,
+    ball.position,
+    precise_mode=True,
+)
     _start_ball_intake(connection)
     gentle_burst(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_TARGET_RANGE, 20)
     burst_backward(state, connection)
