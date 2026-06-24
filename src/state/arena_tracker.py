@@ -179,6 +179,12 @@ class ArenaTracker:
         self._running = False
         self.logger.info("Stopped")
 
+    def get_latest_frame(self) -> Optional[np.ndarray]:
+        """Raw BGR frame straight from the camera thread, no YOLO/ArUco involved."""
+        if not self._running or not hasattr(self, "_camera_reader"):
+            return None
+        return self._camera_reader.get_latest()
+
     def __enter__(self) -> "ArenaTracker":
         self.start()
         return self
