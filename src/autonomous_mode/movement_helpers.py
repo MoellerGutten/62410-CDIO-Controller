@@ -315,22 +315,32 @@ def go_to(state: ArenaState
 
 def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotConnection, ball: Ball):
     logger = get_logger("handle_balls_in_radius")
+    _max_iter = 3
+    _iter = 0
+
     if robot.is_point_in_area_behind(ball.position):
-        if not robot.can_safely_drive_forward(state.cross, 10):
-            logger.debug("Robot can not safely drive forwards, skipping balls in radius handling")
-            return
         logger.debug("Ball is in area behind robot, driving forwards")
-        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
+
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT) and not _iter >= _max_iter:
+            if not robot.can_safely_drive_forward(state.cross, 10):
+                logger.debug("Robot can not safely drive forwards, stop driving")
+                return # return, not break
+
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
+            _iter += 1
+
     elif robot.is_point_within_turning_hit_radius(ball.position):
-        if not robot.can_safely_drive_backward(state.cross, 10):
-            logger.debug("Robot can not safely drive backwards, skipping balls in radius handling")
-            return
         logger.debug("Ball is in radius, driving backwards")
-        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
+
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK) and not _iter >= _max_iter:
+            if not robot.can_safely_drive_backward(state.cross, 10):
+                logger.debug("Robot can not safely drive backwards, stop backing")
+                return # return, not break
             burst_backward(state, connection)
             await_robot(state, connection)
+            _iter += 1
+
 
 def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: tuple[float, float], target_range: float, max_iter: float = GENTLE_BURST_DEFAULT_MAX_ITER):
     logger = get_logger("gentle_burst")
