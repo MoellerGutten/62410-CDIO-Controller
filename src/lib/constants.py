@@ -127,6 +127,9 @@ FINAL_GOAL_DELIVERY_POINT = (139, 121.5/2)
 BALL_COUNT_ESTIMATION_SNAPSHOTS = 10
 """The amount of images to capture and analyze when estimating ball count"""
 
+GET_REAL_CLOSE_MAX_ITER = 5
+"""The max number of iterations rob is allowed to creep forward when trying to deliver"""
+
 #########################
 # await_robot constants #
 #########################

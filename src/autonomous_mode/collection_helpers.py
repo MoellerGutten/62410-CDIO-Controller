@@ -1,7 +1,8 @@
 from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
+from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, \
+    burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius, gentle_burst
 from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius,gentle_burst_edge_ball
 from src.model.arena_state import ArenaState
 from src.model.arena_edge import get_other_corner_edge
@@ -9,9 +10,12 @@ from src.model.ball import Ball
 from src.model.cross import Cross
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
-from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, \
-CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, \
-GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_HORIZONTAL, EDGE_BALL_GENTLE_BURST_VERTICAL
+from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, \
+    CROSS_AVOIDANCE_WAYPOINTS_OFFSET, \
+    CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, \
+    CROSS_ZONE_VERIFY_RADIUS, \
+    GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_HORIZONTAL, \
+    EDGE_BALL_GENTLE_BURST_VERTICAL, CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
 from src.model.arena_edge import ArenaEdge
@@ -50,8 +54,6 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
     
     burst_backward(state, connection)
 
-   
-
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_normal_ball")
@@ -65,13 +67,13 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Ball is in a galaxy far, far away")
-        update_ball_count_estimate(state)
         return
     logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position, precise_mode=True)
     _start_ball_intake(connection)
     logger.debug("Bursting into ball")
     burst_into_ball(state, connection, ball.position)
+    burst_backward(state, connection)
 
     if ball.is_within_waypoint_zone(state):
         logger.debug("Ball is within waypoint zone, escaping zone")
@@ -144,7 +146,6 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Robot is in a galaxy far, far away")
-        update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
     _start_ball_intake(connection)
