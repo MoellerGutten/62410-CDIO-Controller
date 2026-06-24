@@ -13,7 +13,7 @@ class ArenaConfig:
     #  YOLO-model                                                        #
     # ------------------------------------------------------------------ #
     model_path:     str   = "runs/pose/train17/weights/best.pt"
-    detection_conf: float = 0.50
+    detection_conf: float = 0.30
 
     # ------------------------------------------------------------------ #
     #  Kamera                                                            #
@@ -26,9 +26,9 @@ class ArenaConfig:
     # ------------------------------------------------------------------ #
     # Kamera position og aruco højde                                     #
     # ------------------------------------------------------------------ #
-    camera_height: int = 145.5
-    camera_x:      int = 91
-    camera_y:      int = 55.5
+    camera_height: int = 149.5
+    camera_x:      int = 82
+    camera_y:      int = 55
     aruco_height:  int = 12
 
     # ------------------------------------------------------------------ #

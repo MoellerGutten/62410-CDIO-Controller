@@ -6,10 +6,10 @@ from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
 from time import sleep
-from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
+from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, \
-GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED
-from src.lib.algorithms import turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed, burst_forward_ms
+GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
+from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 from time import time
@@ -119,9 +119,13 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     robot = await_robot(state, connection)
         
 
+    logger = get_logger("drive_forward")
+
     distance = robot.distance_to_point(point)
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
+
+    logger.debug(f"forward speed {fwd_ms} m/s forward time: {fwd_ms}")
 
     inst = Instruction(
         name=CommandName.FORWARD,
@@ -207,6 +211,24 @@ def burst_into_ball(state: ArenaState, connection: RobotConnection, point: tuple
     connection.send_message(Message(instruction=inst))
     sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
 
+def burst_into_ball_slightly_smaller(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+    robot = await_robot(state, connection)
+
+    distance = robot.distance_to_point(point)
+    burst_ms = small_burst_forward_ms(distance)
+    burst_speed = BURST_FORWARD_SPEED
+
+    logger = get_logger("burst_into_ball")
+    logger.debug(f"Busting. burst ms: {burst_ms}, burst distance: {distance} cm")
+
+    inst = Instruction(
+        name=CommandName.FORWARD,
+        type=InstructionType.COMMAND,
+        args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed),
+    )
+    connection.send_message(Message(instruction=inst))
+    sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
+
 def move_slowly_towards_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
     logger = get_logger("move_slowly_towards_point")
     robot = await_robot(state, connection)
@@ -243,7 +265,6 @@ def go_to(state: ArenaState
     with state.lock:
         state.target_point = point
     logger = get_logger("go_to")
-    logger.debug(f"Go_to point: ({point[0]:.1f}, {point[1]:.1f})  with approach radius: {approach_radius}")
 
     waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
     waypoints.append(point)
@@ -255,10 +276,7 @@ def go_to(state: ArenaState
         robot = await_robot(state, connection)
         current_target = waypoint
 
-        logger.debug(f"target Waypoint: ({current_target[0]:.1f}, {current_target[1]:.2f})  current wp number: {i}")
-
         if approach_radius > 0.0 and i == len(waypoints) - 1:
-            logger.debug(f"Approaching final waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             # TODO: flyt det her ud til helper
             dx = waypoint[0] - robot.position[0]
             dy = waypoint[1] - robot.position[1]
@@ -275,29 +293,29 @@ def go_to(state: ArenaState
                 return
 
         distance = dist_to_point(robot.position, current_target)
-
-        logger.debug(f"current waypoint: {waypoint}, current target point: ({current_target[0]:.1f}, {current_target[1]:.1f})")
-
+        logger.debug(f"rob's pos: {robot.position[0]:.1f}, {robot.position[1]:.1f} target: {current_target} distance to target: {distance:.1f}")
         while distance > GO_TO_DISTANCE_TOLERANCE and _iter <= GO_TO_MAX_MOVES:
-            if _iter == 0: # for debug
-                logger.debug(f"Starting to move towards waypoint: ({current_target[0]:.1f}, {current_target[1]:.1f})  rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
             turn_to_point(state, connection, current_target)
             drive_forward(state, connection, current_target)
 
             robot = await_robot(state, connection)
             distance = dist_to_point(robot.position, current_target)
+            logger.debug(f"rob's pos: {robot.position[0]:.1f}, {robot.position[1]:.1f} target: {current_target} distance to target: {distance:.1f}")
+
             _iter += 1
 
         logger.debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
-    logger.debug(f"distance to point {robot.distance_to_point(point)}")
 
 
 def handle_balls_in_radius(state, connection, ball):
+    logger = get_logger("handle_balls_in_radius")
     if state.robot.is_point_in_area_behind(ball.position):
+        logger.debug("Ball is in radius, driving forwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
     elif state.robot.is_point_within_turning_hit_radius(ball.position):
+        logger.debug("Ball is in radius, driving backwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
             await_robot(state, connection)

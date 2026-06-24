@@ -9,9 +9,7 @@ from src.autonomous_mode.state_helpers import await_robot, has_vip_balls, update
 from time import time
 from src.autonomous_mode.collection_helpers import collect_cross_zone_ball, collect_edge_ball, collect_normal_ball, collect_corner_ball, collect_waypoint_zone_ball
 from protocol import Instruction, InstructionType, CommandName, Arguments, Message
-from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE
-
-_last_ball_count_update_time = 0
+from src.lib.constants import BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS, WIN_MESSAGE, MATCH_DURATION_SECONDS, HAIL_MARY_TIME_LEFT_SECONDS
 
 
 
@@ -48,6 +46,8 @@ def _all_balls_delivered(balls_in_robot: int, state: ArenaState):
 def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) -> None:
     """Navigate to and collect a single ball."""
     is_edge_ball, edge_ball_staging_point = ball.is_edge_ball()
+    if ball.is_vip:
+        _stop_ball_intake(connection)
 
     if ball.is_corner_ball():
         collect_corner_ball(state, connection, ball)
@@ -59,7 +59,7 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
         collect_cross_zone_ball(state, ball, connection)
     else: 
         collect_normal_ball(state, ball, connection)
-        
+
     update_ball_count_estimate(state)
 
 
@@ -86,18 +86,27 @@ def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_b
 
 def start_autonomous_session(state: ArenaState) -> None:
     logger = get_logger("start_autonomous_session")
-    global _last_ball_count_update_time
 
    
  
     connection = RobotConnection()
     _start_ball_intake(connection)
 
-    total_balls = update_ball_count_estimate(state)
-    _last_ball_count_update_time = time()
+    total_balls = update_ball_count_estimate(state) # TODO: hardcode 11 here for the competition
+    with state.lock: # outcomment this line for competition
+        state._last_ball_count_update_time = time() # outcomment this line for competition
 
     while True:
+        # update ball count estimate of current estimate is more than 10 seconds old
         _tick(state)
+
+        if _is_hail_mary_time(state):
+            logger.debug("Hail mary time")
+            deliver_balls(state, connection)
+            _send_win_message(connection)
+            with state.lock:
+                state.all_balls_delivered = True
+            break
 
         with state.lock:
             state.estimated_balls_in_robot = total_balls - state.estimated_ball_count - state.estimated_balls_delivered
@@ -131,11 +140,12 @@ def start_autonomous_session(state: ArenaState) -> None:
 
 
 def _tick(state: ArenaState) -> None:
-    global _last_ball_count_update_time
-
-    if time() - _last_ball_count_update_time >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
+    time_since_last_ball_count_update = time() - state._last_ball_count_update_time
+    if time_since_last_ball_count_update >= BALL_COUNT_ESTIMATE_INVALIDATION_SECONDS:
+        get_logger("_tick").debug(f"{round(time_since_last_ball_count_update, 2)} seconds since last ball count estimate update, updating now.")
         update_ball_count_estimate(state)
-        _last_ball_count_update_time = time()
+        with state.lock:
+            state._last_ball_count_update_time = time()
 
 
 def _send_win_message(connection: RobotConnection) -> None:
@@ -145,3 +155,9 @@ def _send_win_message(connection: RobotConnection) -> None:
         args=Arguments(talk=WIN_MESSAGE),
     )
     connection.send_message(Message(instruction=inst))
+
+def _is_hail_mary_time(state: ArenaState) -> bool:
+    if state.start_time is None:
+        return False
+    time_left = MATCH_DURATION_SECONDS - (time() - state.start_time)
+    return time_left <= HAIL_MARY_TIME_LEFT_SECONDS
