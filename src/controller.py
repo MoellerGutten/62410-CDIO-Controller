@@ -48,11 +48,12 @@ def run_controller(state: ArenaState, args: Namespace) -> None:
     if args.it:
         start_interactive_session()
     else:
-        start_autonomous_session(state)
+        start_autonomous_session(state, args.test)
 
 
 def parse_args() -> Namespace:
     parser = ArgumentParser()
     parser.add_argument("--gui", action="store_true", help="Show pygame field renderer")
     parser.add_argument("--it",  action="store_true", help="Run interactive session")
+    parser.add_argument("--test", action="store_true", help="Run in test mode, meaning ball count is grabbed from image")
     return parser.parse_args()
