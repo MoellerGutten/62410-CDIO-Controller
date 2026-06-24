@@ -84,17 +84,21 @@ def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_b
  
 
 
-def start_autonomous_session(state: ArenaState) -> None:
+def start_autonomous_session(state: ArenaState, test_mode: bool) -> None:
     logger = get_logger("start_autonomous_session")
-
-   
  
     connection = RobotConnection()
     _start_ball_intake(connection)
 
-    total_balls = update_ball_count_estimate(state) # TODO: hardcode 11 here for the competition
-    with state.lock: # outcomment this line for competition
-        state._last_ball_count_update_time = time() # outcomment this line for competition
+    total_balls = 11 # outside test mode this is hardcoded to 11
+
+    if test_mode:
+        # in test mode run update ball count estimate on startup
+        total_balls = update_ball_count_estimate(state)
+        with state.lock:
+            state._last_ball_count_update_time = time()
+
+    logger.debug(f"Starting with a total ball count of {total_balls} (test mode: {test_mode})")
 
     while True:
         # update ball count estimate of current estimate is more than 10 seconds old
