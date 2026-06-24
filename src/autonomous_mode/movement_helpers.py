@@ -298,11 +298,14 @@ def go_to(state: ArenaState
 
 
 def handle_balls_in_radius(state, connection, ball):
+    logger = get_logger("handle_balls_in_radius")
     if state.robot.is_point_in_area_behind(ball.position):
+        logger.debug("Ball is in radius, driving forwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
     elif state.robot.is_point_within_turning_hit_radius(ball.position):
+        logger.debug("Ball is in radius, driving backwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
             await_robot(state, connection)
