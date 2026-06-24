@@ -193,6 +193,10 @@ CROSS_ZONE_MAX_CREEP_STEPS = 5
 
 WAYPOINT_ZONE_COLLECTION_RANGE = 15
 
+CROSS_BALL_PROXIMITY_DISTANCE = 20
+"""The distance in the cross zone where a ball is considered in proximity of the robot. If it is outside, the ball might have been
+pushed away, so cancel the forward movements."""
+
 ###########################
 # edge handling constants #
 ###########################
