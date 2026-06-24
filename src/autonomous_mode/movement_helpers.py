@@ -286,7 +286,7 @@ def go_to(state: ArenaState
         while waypoint_zone.contains(Point(robot.position)):
             # dumb fucking hack: set a target point far away for max speed
             drive_forward(state, connection, (1000, 1000))
-            await_robot(state, connection)
+            robot = await_robot(state, connection)
         logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
         waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
 
