@@ -470,6 +470,9 @@ def run_gui(state: ArenaState):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+
+                with state.lock:
+                    state.is_active = False
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 try:
                     path = tracker.dump_frame()
@@ -544,7 +547,7 @@ def run_gui(state: ArenaState):
     pygame.quit()
     if tracker.is_recording:
         tracker.stop_recording()
-    sys.exit()
+    sys.exit(0)
 
 def get_test_field_state():
     state = ArenaState()
