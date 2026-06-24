@@ -31,12 +31,13 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_normal_ball")
+
     logger.debug("Collecting normal ball, first checking if ball is in radius")
-    handle_balls_in_radius(state, connection, ball)
+    robot = await_robot(state, connection)
+    handle_balls_in_radius(state, robot, connection, ball) # reposition robot before collection if the ball is directly behind or to the side of the robot
 
     logger.debug("Going to ball position")
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
-    robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Ball is in a galaxy far, far away")

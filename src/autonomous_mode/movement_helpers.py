@@ -12,6 +12,8 @@ GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, 
 from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
+from src.model.ball import Ball
+from src.model.robot import Robot
 
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -126,8 +128,12 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     sleep(ms_to_seconds(fwd_ms) + SLEEP_BUFFER_SECONDS)
 
 def burst_backward(state: ArenaState, connection: RobotConnection) -> None:
+    logger = get_logger("burst_backward")
+
     if state.robot is None:
         return
+
+    logger.debug("Bursting backwards")
 
     bwd_ms = BACKWARD_MS
     bwd_speed =  BACKWARD_SPEED
@@ -297,14 +303,14 @@ def go_to(state: ArenaState
         logger.debug(f"At waypoint - iterations to get to wp: {_iter} rob's pos: ({robot.position[0]:.1f}, {robot.position[1]:.1f})")
 
 
-def handle_balls_in_radius(state, connection, ball):
+def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotConnection, ball: Ball):
     logger = get_logger("handle_balls_in_radius")
-    if state.robot.is_point_in_area_behind(ball.position):
-        logger.debug("Ball is in radius, driving forwards")
+    if robot.is_point_in_area_behind(ball.position):
+        logger.debug("Ball is in area behind robot, driving forwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
-    elif state.robot.is_point_within_turning_hit_radius(ball.position):
+    elif robot.is_point_within_turning_hit_radius(ball.position):
         logger.debug("Ball is in radius, driving backwards")
         while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
