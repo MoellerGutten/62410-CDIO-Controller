@@ -16,10 +16,6 @@ from src.lib.constants import (BALLS_PER_DELIVERY, BALL_COUNT_ESTIMATE_INVALIDAT
 
 
 def _is_normal_ball(ball: Ball, state: ArenaState) -> bool:
-    """
-    A 'normal' ball: not a corner, edge, cross-zone, or waypoint-zone ball.
-    Mirrors the dispatch branches in _collect_ball so the two can't diverge.
-    """
     if ball.is_corner_ball():
         return False
     if ball.is_edge_ball()[0]:
@@ -32,26 +28,16 @@ def _is_normal_ball(ball: Ball, state: ArenaState) -> bool:
 
 
 def _select_opening_ball(robot: Robot, balls_in_robot: int, state: ArenaState) -> Ball | None:
-    """
-    Opening strategy: collect OPENING_NORMAL_BALL_COUNT normal balls, then the VIP ball.
-    Returns None when the ideal ball type isn't available so the caller can fall back.
-    """
     if balls_in_robot < OPENING_NORMAL_BALL_COUNT:
         normal_balls = [b for b in state.balls if not b.is_vip and _is_normal_ball(b, state)]
         if not normal_balls:
             return None
         return min(normal_balls, key=lambda b: robot.distance_to_point(b.position))
 
-    # OPENING_NORMAL_BALL_COUNT normal balls held -> go for the VIP ball
     return robot.get_nearest_vip_ball(state.balls)
 
 
 def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
-    """
-    Return the next ball to collect, or None if nothing is reachable.
-    """
-    # Opening (first delivery only): collect normal balls, then the VIP ball.
-    # Falls through to the default logic if the ideal ball type isn't available.
     if state.estimated_balls_delivered == 0:
         opening_ball = _select_opening_ball(robot, balls_in_robot, state)
         if opening_ball is not None:
@@ -59,7 +45,6 @@ def _select_next_ball(robot: Robot, balls_in_robot: int, state: ArenaState):
             return opening_ball
 
     vips_on_field = has_vip_balls(state)
-    # if vip is on field and 3 balls (or none other left on field) in robot, select nearest vip ball, otherwise go for nearest ball
 
     if not vips_on_field:
         next_ball = robot.get_nearest_non_vip_ball(state.balls)
