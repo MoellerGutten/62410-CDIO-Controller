@@ -3,6 +3,7 @@ import sys
 import cv2
 import numpy as np
 import pygame
+from src.debug.log import get_logger
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path
 from src.autonomous_mode.start_autonomous_session import _select_next_ball
@@ -426,6 +427,7 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
 def run_gui(state: ArenaState):
     #global _start_time
+    logger = get_logger("run_gui")
 
     pygame.init()
     screen = pygame.display.set_mode((WINDOW_W, WINDOW_H))
@@ -463,9 +465,9 @@ def run_gui(state: ArenaState):
             elif event.type == pygame.KEYDOWN and event.key == pygame.K_s:
                 try:
                     path = tracker.dump_frame()
-                    print(f"Saved {path}")
+                    logger.debug(f"Saved {path}")
                 except RuntimeError as e:
-                    print(f"Can't dump yet: {e}")
+                    logger.debug(f"Can't dump yet: {e}")
 
         with state.lock:
             robot = state.robot
@@ -483,14 +485,14 @@ def run_gui(state: ArenaState):
         if start_time is not None and _seen_start_time is None and not tracker.is_recording:
             try:
                 path = tracker.start_recording()
-                print(f"Recording started -> {path}")
+                logger.debug(print(f"Recording started -> {path}"))
             except RuntimeError as e:
-                print(f"Can't start recording: {e}")
+                logger.debug(f"Can't start recording: {e}")
         _seen_start_time = start_time
 
         if finish_time is not None and _seen_finish_time is None and tracker.is_recording:
             path = tracker.stop_recording()
-            print(f"Recording stopped -> {path}")
+            logger.debug(f"Recording stopped -> {path}")
         _seen_finish_time = finish_time
 
         tracker._record_tick()
