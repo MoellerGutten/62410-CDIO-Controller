@@ -446,6 +446,10 @@ def run_gui(state: ArenaState):
     _last_frame_id = -1
     _video_surf = None
 
+    # recording
+    _seen_start_time = None
+    _seen_finish_time = None
+
     t = 0.0
 
     running = True
@@ -471,6 +475,22 @@ def run_gui(state: ArenaState):
             estimated_ball_count = state.estimated_ball_count
             estimated_balls_in_robot = state.estimated_balls_in_robot
             estimated_balls_delivered = state.estimated_balls_delivered
+
+        # ---- auto start/stop recording on match timer ----
+        if start_time is not None and _seen_start_time is None and not tracker.is_recording:
+            try:
+                path = tracker.start_recording()
+                print(f"Recording started -> {path}")
+            except RuntimeError as e:
+                print(f"Can't start recording: {e}")
+        _seen_start_time = start_time
+
+        if finish_time is not None and _seen_finish_time is None and tracker.is_recording:
+            path = tracker.stop_recording()
+            print(f"Recording stopped -> {path}")
+        _seen_finish_time = finish_time
+
+        tracker._record_tick()
 
         # ------------------------------------------------------------------
         # Draw
@@ -509,6 +529,8 @@ def run_gui(state: ArenaState):
         pygame.display.flip()
 
     pygame.quit()
+    if tracker.is_recording:
+        tracker.stop_recording()
     sys.exit()
 
 def get_test_field_state():
