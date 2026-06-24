@@ -12,6 +12,9 @@ ARUCO_OFFSET_X = 12
 BALLS_PER_DELIVERY = 4
 """How many balls to collect before delivering"""
 
+ROBOT_BALL_CAPACITY = 5
+"""Maximum number of balls the robot can physically hold."""
+
 ROBOT_TO_POINT_DISTANCE_BEFORE_BURST = 10 + ARUCO_OFFSET_X
 """The distance within which the robot must be of the robot before bursting forwards to collect the ball"""
 
