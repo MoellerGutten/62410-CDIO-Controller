@@ -1,4 +1,8 @@
 from math import hypot, radians, sin, cos
+
+from lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, WEST_HEADING, \
+    EAST_HEADING
+from lib.cross_approach_points import get_cross_approach_points
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
@@ -15,7 +19,7 @@ from src.autonomous_mode.state_helpers import await_robot
 from src.model.ball import Ball
 from src.model.robot import Robot
 from time import time
-
+from shapely.geometry import Point, Polygon
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
 
@@ -273,6 +277,24 @@ def go_to(state: ArenaState
     logger = get_logger("go_to")
 
     waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
+    waypoint_zone = Polygon(waypoints)
+    robot = await_robot(state, connection)
+    if waypoint_zone.contains(Point(robot.position)) and state.cross is not None:
+        # robot is in waypoint zone, escape before going to target
+        """cross_approach_points = get_cross_approach_points(CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET)
+        nearest_cross_approach_point = min(cross_approach_points, key=lambda p: robot.distance_to_point(p))
+        turn_to_point(state, connection, nearest_cross_approach_point)
+        while waypoint_zone.contains(robot.position) and robot.can_safely_drive_forward(state.cross, 10):
+            drive_forward(state, connection, nearest_cross_approach_point)
+            robot = await_robot(state, connection)"""
+        cross_quadrant = state.cross.get_point_quadrant(robot.position)
+        escape_heading = EAST_HEADING if cross_quadrant == 1 or cross_quadrant == 4 else WEST_HEADING
+        turn_to_heading(state, connection, escape_heading)
+        while waypoint_zone.contains(robot.position) and robot.can_safely_drive_forward(state.cross, 10):
+            # dumb fucking hack: set a target point far away for max speed
+            drive_forward(state, connection, (1000, 1000))
+            await_robot(state, connection)
+
     waypoints.append(point)
 
     logger.debug(f"Waypoints: {waypoints}")
