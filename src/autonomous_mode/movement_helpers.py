@@ -1,21 +1,19 @@
 from math import hypot
-from src.lib.constants import WEST_HEADING, EAST_HEADING
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, \
-GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
+GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, WEST_HEADING, EAST_HEADING
 from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.ball import Ball
 from src.model.robot import Robot
-from time import time
+from time import time, sleep
 from shapely.geometry import Point, Polygon
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -285,7 +283,7 @@ def go_to(state: ArenaState
         turn_to_heading(state, connection, escape_heading)
         while waypoint_zone.contains(Point(robot.position)):
             # dumb fucking hack: set a target point far away for max speed
-            escape_point = robot.get_point_in_from()
+            escape_point = robot.get_point_in_front()
             drive_forward(state, connection, escape_point)
             robot = await_robot(state, connection)
         logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
