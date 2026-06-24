@@ -6,6 +6,7 @@ from src.model.arena_edge import ArenaEdge
 from src.model.ball import Ball
 from shapely.geometry import Point, Polygon, box
 
+
 class Robot:
     """Represents the robot on the field."""
 
@@ -219,3 +220,11 @@ class Robot:
         """True if driving backward `distance` cm keeps the robot's full
         footprint inside the arena and clear of the cross."""
         return self._can_safely_drive(cross, distance, direction_sign=-1)
+
+    def get_point_in_front(self, distance_to_new_point: float = 50.0):
+        """Get a point in front of the robot with a given distance to the robot (defaults to 50)"""
+        heading = self.orientation
+        heading_rad = radians(heading)
+        p0 = self.position
+        point_in_front = (cos(heading_rad) * distance_to_new_point + p0[0], sin(heading_rad) * distance_to_new_point + p0[1])
+        return point_in_front

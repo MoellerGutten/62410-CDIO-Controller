@@ -1,21 +1,20 @@
-from math import hypot, radians, sin, cos
+from math import hypot
 from src.autonomous_mode.cross_avoidance_helpers import calculate_shortest_waypoint_path, dist_to_point
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.lib.connection import RobotConnection
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from time import sleep
 from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, \
-GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK
+GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, WEST_HEADING, EAST_HEADING
 from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
 from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.ball import Ball
 from src.model.robot import Robot
-from time import time
-
+from time import time, sleep
+from shapely.geometry import Point, Polygon
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
 
@@ -273,6 +272,23 @@ def go_to(state: ArenaState
     logger = get_logger("go_to")
 
     waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
+    waypoint_zone = Polygon(get_cross_waypoints(state.cross))
+    robot = await_robot(state, connection)
+    if waypoint_zone.contains(Point(robot.position)) and state.cross is not None:
+        logger.debug("Robot is in waypoint zone, escape before going to target")
+        # robot is in waypoint zone, escape before going to target
+        cross_quadrant = state.cross.get_point_quadrant(robot.position)
+        escape_heading = EAST_HEADING if cross_quadrant == 1 or cross_quadrant == 4 else WEST_HEADING
+        logger.debug(f"Turning to {escape_heading}")
+        turn_to_heading(state, connection, escape_heading)
+        while waypoint_zone.contains(Point(robot.position)):
+            # dumb fucking hack: set a target point far away for max speed
+            escape_point = robot.get_point_in_front()
+            drive_forward(state, connection, escape_point)
+            robot = await_robot(state, connection)
+        logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
+        waypoints = calculate_shortest_waypoint_path(state, point) if state.cross is not None else []
+
     waypoints.append(point)
 
     logger.debug(f"Waypoints: {waypoints}")
@@ -321,24 +337,33 @@ def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotCon
     if robot.is_point_in_area_behind(ball.position):
         logger.debug("Ball is in area behind robot, driving forwards")
 
-        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT) and not _iter >= _max_iter:
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             if not robot.can_safely_drive_forward(state.cross, 10):
                 logger.debug("Robot can not safely drive forwards, stop driving")
                 return # return, not break
+            
+            if _iter >= _max_iter:
+                logger.debug(f"Reached {_iter} iterations, stopping")
+                return #return, not break
 
             drive_forward(state, connection, ball.position)
-            await_robot(state, connection)
+            robot = await_robot(state, connection)
             _iter += 1
 
     elif robot.is_point_within_turning_hit_radius(ball.position):
         logger.debug("Ball is in radius, driving backwards")
 
-        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK) and not _iter >= _max_iter:
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             if not robot.can_safely_drive_backward(state.cross, 10):
                 logger.debug("Robot can not safely drive backwards, stop backing")
                 return # return, not break
+            
+            if _iter >= _max_iter:
+                logger.debug(f"Reached {_iter} iterations, stopping")
+                return
+
             burst_backward(state, connection)
-            await_robot(state, connection)
+            robot = await_robot(state, connection)
             _iter += 1
 
 

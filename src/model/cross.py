@@ -72,5 +72,18 @@ class Cross:
         arms = self.arm_angles()
         return min(arms, key=lambda a: abs((a - angle + 180) % 360 - 180))
 
+    def get_point_quadrant(self, point: tuple[float, float]) -> int:
+        dx = point[0] - self.position[0]
+        dy = point[1] - self.position[1]
+
+        if dx >= 0 and dy >= 0:
+            return 1
+        elif dx < 0 and dy >= 0:
+            return 2
+        elif dx < 0 and dy < 0:
+            return 3
+        else:
+            return 4
+
     def __repr__(self) -> str:
         return f"Cross(position={self.position}, orientation={self.orientation:.1f}°, bounding_box={self.bounding_box})"
