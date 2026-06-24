@@ -158,9 +158,9 @@ CROSS_APPROACH_POINTS_VERTICAL_OFFSET = 9.5
 
 CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET = 32
 
-CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9.5
+CROSS_FINAL_APPROACH_VERTICAL_OFFSET = 9
 
-CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 6
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET = 4.5
 
 #######################################
 # cross zone collection constants     #
@@ -192,6 +192,9 @@ CROSS_ZONE_CREEP_STEP_MS = 150
 CROSS_ZONE_MAX_CREEP_STEPS = 5
 
 WAYPOINT_ZONE_COLLECTION_RANGE = 15
+
+CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
+"""The distance in the cross zone where the robot is considered on top of the final destination point"""
 
 ###########################
 # edge handling constants #

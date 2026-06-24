@@ -127,7 +127,7 @@ def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[f
     fwd_ms = drive_forward_ms(distance)
     fwd_speed =  drive_forward_speed(distance)
 
-    logger.debug(f"forward speed {fwd_ms} m/s forward time: {fwd_ms}")
+    logger.debug(f"forward speed {fwd_speed} m/s forward time: {fwd_ms}")
 
     inst = Instruction(
         name=CommandName.FORWARD,

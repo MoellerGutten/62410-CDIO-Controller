@@ -9,7 +9,7 @@ from src.model.cross import Cross
 from src.debug.log import get_logger
 from src.lib.connection import RobotConnection
 from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET, CROSS_AVOIDANCE_WAYPOINTS_OFFSET, \
-CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, \
+CROSS_FINAL_APPROACH_HORIZONTAL_OFFSET, CROSS_FINAL_APPROACH_VERTICAL_OFFSET, CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE, CROSS_ZONE_MAX_CREEP_STEPS, CROSS_ZONE_VERIFY_RADIUS, \
 GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_TARGET_RANGE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn, gentle_burst
 from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
@@ -179,13 +179,11 @@ def collect_cross_zone_ball(state: ArenaState, ball: Ball, connection: RobotConn
         state.target_point = target
 
     for step in range(CROSS_ZONE_MAX_CREEP_STEPS):
-        if state.robot.distance_to_point(target) > 8:
+        if state.robot.distance_to_point(target) > 8 and ball.is_within_cross_zone(state.cross):
             logger.debug("Inching towards ball, iteration: " + str(step))
 
             turn_to_point(state, connection, target, precise_mode=True)
-            drive_forward(state, connection, target)
-
-            #creep_forward_step(state, connection, ms=CROSS_ZONE_CREEP_STEP_MS, speed=CROSS_ZONE_CREEP_STEP_SPEED)
+            gentle_burst(state, connection, target, CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE)
 
             await_robot(state, connection)
             remaining = nearest_ball_within(state, target, CROSS_ZONE_VERIFY_RADIUS)
