@@ -24,6 +24,7 @@ class CameraReader:
     def __init__(self, cap: cv2.VideoCapture) -> None:
         self._cap     = cap
         self._frame:  Optional[np.ndarray] = None
+        self._frame_id: int = 0
         self._lock    = _threading.Lock()
         self._running = True
         self._ready = _threading.Event()
@@ -39,11 +40,16 @@ class CameraReader:
             if ret:
                 with self._lock:
                     self._frame = frame
+                    self._frame_id += 1
                 self._ready.set()
 
     def get_latest(self) -> Optional[np.ndarray]:
         with self._lock:
             return None if self._frame is None else self._frame.copy()
+
+    def get_latest_with_id(self) -> tuple[Optional[np.ndarray], int]:
+        with self._lock:
+            return (None, -1) if self._frame is None else (self._frame.copy(), self._frame_id)
 
     def stop(self) -> None:
         self._running = False
@@ -93,6 +99,9 @@ class ArenaTracker:
         self._resolved_index: int                        = 0
         self._scan_lock:      _threading.Lock            = _threading.Lock()
         self._clahe                                      = cv2.createCLAHE(clipLimit=3.0, tileGridSize=(8, 8))
+        self._video_writer: Optional[cv2.VideoWriter]    = None
+        self._recording_frame_id: int                    = -1
+        self._recording_path: Optional[str]              = None
 
         self.logger = get_logger("ArenaTracker")
 
@@ -172,12 +181,20 @@ class ArenaTracker:
         return path
 
     def stop(self) -> None:
+        if self.is_recording:
+            self.stop_recording()
         if hasattr(self, "_camera_reader"):
             self._camera_reader.stop()
             self._camera_reader = None
         self._cap = None   # cap ejes nu af CameraReader
         self._running = False
         self.logger.info("Stopped")
+
+    def get_latest_frame_with_id(self) -> tuple[Optional[np.ndarray], int]:
+        """Raw BGR frame straight from the camera thread — no YOLO/ArUco involved."""
+        if not self._running or not hasattr(self, "_camera_reader") or self._camera_reader is None:
+            return None, -1
+        return self._camera_reader.get_latest_with_id()
 
     def __enter__(self) -> "ArenaTracker":
         self.start()
@@ -406,24 +423,42 @@ class ArenaTracker:
             cy + (my - cy) * scale, 
         )
 
-    def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = self._clahe.apply(gray)
+    @staticmethod
+    def _reduce_contrast(gray: np.ndarray, alpha: float = 0.6) -> np.ndarray:
+        """
+        Software-only contrast reduction, anchored at mid-gray (128) so it
+        doesn't shift overall brightness. alpha < 1 compresses the dynamic
+        range, pulling clipped highlights (e.g. specular glare on the ArUco
+        marker) back down into a separable range.
 
-        if self._aruco_detector:
-            corners, ids, _ = self._aruco_detector.detectMarkers(gray)
-        else:
-            corners, ids, _ = cv2.aruco.detectMarkers(
-                gray, self._aruco_dict, parameters=self._aruco_params
-            )
+        Only ever applied to the grayscale copy used for marker detection —
+        the original BGR frame used for ball-color YOLO detection is
+        untouched, so this can't bleed into orange/white classification.
+        """
+        beta = 128 * (1 - alpha)
+        return cv2.convertScaleAbs(gray, alpha=alpha, beta=beta)
+
+    def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
+        gray_raw         = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_lowcontrast = self._reduce_contrast(gray_raw)
+        gray_clahe       = self._clahe.apply(gray_raw)
+
+        corners = ids = None
+        for gray in (gray_lowcontrast, gray_clahe, gray_raw):
+            if self._aruco_detector:
+                c, i, _ = self._aruco_detector.detectMarkers(gray)
+            else:
+                c, i, _ = cv2.aruco.detectMarkers(
+                    gray, self._aruco_dict, parameters=self._aruco_params
+                )
+            if i is not None and self._cfg.aruco_target_id in i.flatten():
+                corners, ids = c, i
+                break
 
         if ids is None:
             return None
 
         ids_flat = ids.flatten()
-        if self._cfg.aruco_target_id not in ids_flat:
-            return None
-
         idx = np.where(ids_flat == self._cfg.aruco_target_id)[0][0]
         marker_px = corners[idx][0]
 
@@ -443,12 +478,9 @@ class ArenaTracker:
             aruco_height=self._cfg.aruco_height,
         )
 
-        # Offset the robot center of the robot compared to the center of the ArUco marker.
-        # Offset values can be found in arena_config.py
         rad = math.radians(heading)
         robot_center_x = corrected_x + self._cfg.aruco_offset_x * math.cos(rad) - self._cfg.aruco_offset_y * math.sin(rad)
         robot_center_y = corrected_y + self._cfg.aruco_offset_x * math.sin(rad) + self._cfg.aruco_offset_y * math.cos(rad)
-
 
         return Robot(position=(round(robot_center_x, 1), round(robot_center_y, 1)), orientation=heading)
 
@@ -593,6 +625,57 @@ class ArenaTracker:
             last_shape = shape
         if shape is None:
             raise RuntimeError("Camera never produced a frame during warm-up.")
+        
+    def start_recording(self, path: Optional[str] = None) -> str:
+        if self._video_writer is not None:
+            raise RuntimeError("Already recording.")
+        if not self._running or not hasattr(self, "_camera_reader") or self._camera_reader is None:
+            raise RuntimeError("Camera not running yet.")
+
+        frame, _ = self._camera_reader.get_latest_with_id()
+        if frame is None:
+            raise RuntimeError("No frame available yet.")
+        h, w = frame.shape[:2]
+
+        if path is None:
+            os.makedirs("logs/videos", exist_ok=True)
+            path = f"logs/videos/rec_{int(time.time())}.mp4"
+
+        fourcc = cv2.VideoWriter_fourcc(*"mp4v")
+        fps = self._cfg.frame_fps or 30
+        self._video_writer = cv2.VideoWriter(path, fourcc, fps, (w, h))
+        if not self._video_writer.isOpened():
+            self._video_writer = None
+            raise RuntimeError(f"Failed to open video writer for {path}")
+
+        self._recording_path = path
+        self._recording_frame_id = -1
+        self.logger.info(f"Recording started -> {path}")
+        return path
+
+    def stop_recording(self) -> Optional[str]:
+        if self._video_writer is None:
+            return None
+        self._video_writer.release()
+        path = self._recording_path
+        self._video_writer = None
+        self._recording_path = None
+        self.logger.info(f"Recording saved -> {path}")
+        return path
+
+    @property
+    def is_recording(self) -> bool:
+        return self._video_writer is not None
+
+    def _record_tick(self) -> None:
+        """Call once per GUI iteration. Writes a frame only if recording and it's new."""
+        if self._video_writer is None or not hasattr(self, "_camera_reader") or self._camera_reader is None:
+            return
+        frame, frame_id = self._camera_reader.get_latest_with_id()
+        if frame is None or frame_id == self._recording_frame_id:
+            return
+        self._recording_frame_id = frame_id
+        self._video_writer.write(frame)
 
     # ------------------------------------------------------------------ #
     #  Interactive arena setup                                             #

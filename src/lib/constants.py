@@ -141,7 +141,7 @@ MAX_ROBOT_DETECTION_ATTEMPTS = 5
 CROSS_AVOIDANCE_WAYPOINTS_OFFSET = 12
 """The amount of padding for the bounding box around the cross. Used for setting waypoints in the corners of the bounding box"""
 
-CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 9.5
+CROSS_WAYPOINT_OFFSET = CROSS_AVOIDANCE_WAYPOINTS_OFFSET + 10
 """The distance from center of cross to the corner of the waypoint zone. Distance is the avoidance
     zone plus size of cross"""
 
@@ -213,13 +213,12 @@ EDGE_BALL_GENTLE_BURST_VERTICAL = 18.5
 EDGE_BALL_GENTLE_BURST_HORIZONTAL = 17.5
 """The target range used for gentle bursting towards an edge ball on a horizontal edge"""
 
-EDGE_BALL_STAGING_POINT_OFFSET = 31
+EDGE_BALL_STAGING_POINT_OFFSET = 25
 """The staging point's distance from the edge"""
 
 #############################
 # corner handling constants #
 #############################
-
 
 CORNER_THRESHOLD = 24
 """If a ball is within this distance of a corner measured along the wall that the ball is adjacent to, it is considered a corner ball"""

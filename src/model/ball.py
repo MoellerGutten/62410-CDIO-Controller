@@ -32,14 +32,35 @@ class Ball:
         """Returns a boolean based on if the ball is next to an edge"""
         width = ARENA_WIDTH_CM
         height = ARENA_HEIGHT_CM
-        if self.position[0] >= width - EDGE_THRESHOLD:
-            return [True, (width - EDGE_BALL_STAGING_POINT_OFFSET, self.position[1])]
-        if self.position[0] <= EDGE_THRESHOLD:
-            return [True, (EDGE_BALL_STAGING_POINT_OFFSET, self.position[1])]
-        if self.position[1] >= height - EDGE_THRESHOLD:
-            return [True, (self.position[0], height - EDGE_BALL_STAGING_POINT_OFFSET)]
-        if self.position[1] <= EDGE_THRESHOLD:
-            return [True, (self.position[0], EDGE_BALL_STAGING_POINT_OFFSET)]
+        x, y = self.position
+
+        # offset is padded with the ball's distance to the wall
+
+        # Ball is near the EAST edge (x close to arena width)
+        if x >= width - EDGE_THRESHOLD:
+            dist_to_wall = width - x
+            offset = EDGE_BALL_STAGING_POINT_OFFSET + dist_to_wall
+            return [True, (width - offset, y)]
+
+        # Ball is near the WEST edge (x close to 0)
+        if x <= EDGE_THRESHOLD:
+            dist_to_wall = x
+            offset = EDGE_BALL_STAGING_POINT_OFFSET + dist_to_wall
+            return [True, (offset, y)]
+
+        # Ball is near the NORTH edge (y close to arena height, y increases northward)
+        if y >= height - EDGE_THRESHOLD:
+            dist_to_wall = height - y
+            offset = EDGE_BALL_STAGING_POINT_OFFSET + dist_to_wall
+            return [True, (x, height - offset)]
+
+        # Ball is near the SOUTH edge (y close to 0)
+        if y <= EDGE_THRESHOLD:
+            dist_to_wall = y
+            offset = EDGE_BALL_STAGING_POINT_OFFSET + dist_to_wall
+            return [True, (x, offset)]
+
+        # Not near any edge — return original position unchanged
         return [False, self.position]
     
     def is_corner_ball(self) -> bool:
