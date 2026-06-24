@@ -476,6 +476,9 @@ def run_gui(state: ArenaState):
             estimated_balls_in_robot = state.estimated_balls_in_robot
             estimated_balls_delivered = state.estimated_balls_delivered
 
+            start_time = state.start_time
+            finish_time = state.finish_time
+
         # ---- auto start/stop recording on match timer ----
         if start_time is not None and _seen_start_time is None and not tracker.is_recording:
             try:
