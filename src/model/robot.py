@@ -292,6 +292,35 @@ class Robot:
     def can_safely_turn_to_heading(self, cross: Cross, target_heading: float) -> bool:
         turn_angle = self.angle_to_heading(target_heading)
         return self._can_safely_rotate(turn_angle, cross)
+    
+    def can_safely_turn_to_point_any_way(self, cross: Cross, target_point: tuple[float, float]) -> bool:
+        short = self.angle_to_point(target_point)
+
+        if abs(short) < 1e-3:
+            return True
+
+        # Normalize long way around
+        if short > 0:
+            long = short - 360.0
+        else:
+            long = short + 360.0
+
+        # Evaluate both rotation paths
+        return self._can_safely_rotate(short, cross) or self._can_safely_rotate(long, cross)
+    
+    def can_safely_turn_to_heading_any_way(self, cross, target_heading: float) -> bool:
+        short = self.angle_to_heading(target_heading)
+
+        if abs(short) < 1e-3:
+            return True
+
+        if short > 0:
+            long = short - 360.0
+        else:
+            long = short + 360.0
+
+        return self._can_safely_rotate(short, cross) or self._can_safely_rotate(long, cross)
+
 
     def get_point_in_front(self, distance_to_new_point: float = 50.0):
         """Get a point in front of the robot with a given distance to the robot (defaults to 50)"""

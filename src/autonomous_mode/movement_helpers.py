@@ -66,6 +66,12 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         r_speed = -turn_speed if angle > 0 else turn_speed
 
         if not robot.can_safely_turn_to_point(state.cross, point):
+            if not robot.can_safely_turn_to_point_any_way(state.cross, point):
+                logger.debug("Can't safely turn to point in any direction, backing up")
+                burst_backward(state, connection)
+                robot = await_robot(state, connection)
+                continue
+
             logger.debug("Can't safely turn to point in the shortest direction, going the other way around")
             l_speed *= -1.3
             r_speed *= -1.3
@@ -100,6 +106,12 @@ def turn_to_heading(
         r_speed = -turn_speed if angle > 0 else turn_speed
 
         if not robot.can_safely_turn_to_heading(state.cross, heading_deg):
+            if not robot.can_safely_turn_to_heading_any_way(state.cross, heading_deg):
+                logger.debug("Can't safely turn to heading in any direction, backing up")
+                burst_backward(state, connection)
+                robot = await_robot(state, connection)
+                continue
+
             logger.debug("Can't safely turn to heading in the shortest direction, going the other way around")
             l_speed *= -1.3
             r_speed *= -1.3
