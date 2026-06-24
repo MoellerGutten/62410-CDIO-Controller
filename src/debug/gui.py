@@ -504,6 +504,8 @@ def run_gui(state: ArenaState):
         if finish_time is not None and _seen_finish_time is None and tracker.is_recording:
             path = tracker.stop_recording()
             logger.debug(f"Recording stopped -> {path}")
+            with state.lock:
+                state.is_active = False
         _seen_finish_time = finish_time
 
         tracker._record_tick()

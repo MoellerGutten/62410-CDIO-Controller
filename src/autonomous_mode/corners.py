@@ -79,7 +79,7 @@ def back_towards_wall_and_turn(state: ArenaState, connection: RobotConnection, a
 
         # back to wall
         ms = backward_ms(distance_to_wall)
-        speed = backward_speed(distance_to_wall)
+        speed = backward_speed(distance_to_wall) / 2
         drive_backward_speed_ms(state, connection, speed, ms)
         sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
         _iter += 1

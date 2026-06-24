@@ -98,8 +98,8 @@ def collect_corner_ball(state: ArenaState, connection: RobotConnection, ball: Ba
 
         if robot.is_facing_edge(get_other_corner_edge(ball_nearest_corner, ball_nearest_edge)):
             logger.debug("Wall hugging not needed, turning and treating ball as edge ball")
-            burst_backward(state, connection)
-            turn_to_point(state, connection, edge_ball_staging_point, precise_mode=False)
+            #burst_backward(state, connection)
+            #turn_to_point(state, connection, edge_ball_staging_point, precise_mode=False)
             _start_ball_intake(connection)
             collect_edge_ball(state, ball, connection, edge_ball_staging_point)
             return

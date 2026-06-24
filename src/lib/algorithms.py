@@ -17,7 +17,9 @@ def turn_to_point_turn_speed(angle: float) -> int:
 
 def drive_forward_ms(distance: float) -> int:
     """Determine for how many milliseconds to drive forwards based on the distance to the target"""
-    if distance < 15:
+    if distance < 12:
+        forward_ms = 200
+    elif distance < 15:
         forward_ms = 400
     elif distance < 20:
         forward_ms = 600

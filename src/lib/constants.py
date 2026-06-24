@@ -207,7 +207,7 @@ CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
-EDGE_BALL_GENTLE_BURST_VERTICAL = 18.5
+EDGE_BALL_GENTLE_BURST_VERTICAL = 19
 """The target range used for gentle bursting towards an edge ball on a vertical edge"""
 
 EDGE_BALL_GENTLE_BURST_HORIZONTAL = 17.5
@@ -232,7 +232,7 @@ WALL_THRESHOLD = 14
 CORNER_BALL_COLLECTION_APPROACH_RADIUS = 17
 """Approach radius used in go_to when collecting corner ball"""
 
-CORNER_COLLECTION_STAGING_POINT = (51, 18)
+CORNER_COLLECTION_STAGING_POINT = (30, 21) # (51, 18)
 """Stating point for south-west corner balls adjacent to the west wall"""
 
 CORNER_BALL_TARGET_POINT_OFFSET = 12

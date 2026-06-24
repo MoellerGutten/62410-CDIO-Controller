@@ -20,9 +20,9 @@ class ArenaState:
         self.all_balls_delivered: bool = False
         self.target_point: tuple[float, float] | None = None
         self._last_ball_count_update_time: float = 0
-        self.start_time = None 
-        self.finish_time = None
-        self.is_final_delivery = False
+        self.start_time: int | None = None
+        self.finish_time: int | None = None
+        self.is_final_delivery: bool = False
         
 
     def __repr__(self) -> str:
