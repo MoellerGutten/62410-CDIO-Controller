@@ -395,11 +395,11 @@ def gentle_burst_edge_ball(
             burst_ms = 100
             burst_speed = 30
         elif distance > 20:
-            burst_ms = 75
-            burst_speed = 25
+            burst_ms = 100
+            burst_speed = 33
         else:
-            burst_ms = 50
-            burst_speed = 20
+            burst_ms = 100
+            burst_speed = 10
 
         logger.debug(
     f"distance={distance:.1f}, "

@@ -1,9 +1,7 @@
 from math import hypot, cos, sin, radians
-
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, \
-    burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius, gentle_burst
-from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius,gentle_burst_edge_ball
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, escape_cross_zone, gentle_burst, go_to, burst_into_ball, \
+turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius,gentle_burst_edge_ball
 from src.model.arena_state import ArenaState
 from src.model.arena_edge import get_other_corner_edge
 from src.model.ball import Ball
@@ -17,7 +15,7 @@ from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APP
     GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_HORIZONTAL, \
     EDGE_BALL_GENTLE_BURST_VERTICAL, CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn
-from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
+from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_edge import ArenaEdge
 
 
