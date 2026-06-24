@@ -106,7 +106,7 @@ def start_autonomous_session(state: ArenaState, test_mode: bool) -> None:
         # update ball count estimate of current estimate is more than 10 seconds old
         _tick(state)
 
-        if _is_hail_mary_time(state):
+        if _is_hail_mary_time(state) and not state.all_balls_delivered >= total_balls:
             logger.debug("Hail mary time")
             deliver_balls(state, connection)
             _send_win_message(connection)
