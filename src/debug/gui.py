@@ -419,14 +419,12 @@ def draw_panel(surf, font_sm, font_md, font_lg,
 
     row("Passed", f"{elapsed // 60:02d}:{elapsed % 60:02d}")
 
-    #score for run
+    # score for run
+    # assuming that we always deliver orange ball first, and that we dont get any penalties
     heading("Score")
-    score = state.estimated_balls_delivered*150 + (8*60*3-elapsed) + 200
+    score = state.estimated_balls_delivered*150 + (8*60*3-elapsed*3) + 200
 
     row("Score: ", f"{score}")
-    row("(without penalties & always", "")
-    row("assuming +200 ", "")
-    row("for orange bonus)", "")
     y += 16
 
     return y

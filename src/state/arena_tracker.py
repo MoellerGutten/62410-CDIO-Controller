@@ -423,24 +423,42 @@ class ArenaTracker:
             cy + (my - cy) * scale, 
         )
 
-    def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
-        gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        gray = self._clahe.apply(gray)
+    @staticmethod
+    def _reduce_contrast(gray: np.ndarray, alpha: float = 0.6) -> np.ndarray:
+        """
+        Software-only contrast reduction, anchored at mid-gray (128) so it
+        doesn't shift overall brightness. alpha < 1 compresses the dynamic
+        range, pulling clipped highlights (e.g. specular glare on the ArUco
+        marker) back down into a separable range.
 
-        if self._aruco_detector:
-            corners, ids, _ = self._aruco_detector.detectMarkers(gray)
-        else:
-            corners, ids, _ = cv2.aruco.detectMarkers(
-                gray, self._aruco_dict, parameters=self._aruco_params
-            )
+        Only ever applied to the grayscale copy used for marker detection —
+        the original BGR frame used for ball-color YOLO detection is
+        untouched, so this can't bleed into orange/white classification.
+        """
+        beta = 128 * (1 - alpha)
+        return cv2.convertScaleAbs(gray, alpha=alpha, beta=beta)
+
+    def _get_aruco_robot(self, frame: np.ndarray) -> Optional[Robot]:
+        gray_raw         = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        gray_lowcontrast = self._reduce_contrast(gray_raw)
+        gray_clahe       = self._clahe.apply(gray_raw)
+
+        corners = ids = None
+        for gray in (gray_lowcontrast, gray_clahe, gray_raw):
+            if self._aruco_detector:
+                c, i, _ = self._aruco_detector.detectMarkers(gray)
+            else:
+                c, i, _ = cv2.aruco.detectMarkers(
+                    gray, self._aruco_dict, parameters=self._aruco_params
+                )
+            if i is not None and self._cfg.aruco_target_id in i.flatten():
+                corners, ids = c, i
+                break
 
         if ids is None:
             return None
 
         ids_flat = ids.flatten()
-        if self._cfg.aruco_target_id not in ids_flat:
-            return None
-
         idx = np.where(ids_flat == self._cfg.aruco_target_id)[0][0]
         marker_px = corners[idx][0]
 
@@ -460,12 +478,9 @@ class ArenaTracker:
             aruco_height=self._cfg.aruco_height,
         )
 
-        # Offset the robot center of the robot compared to the center of the ArUco marker.
-        # Offset values can be found in arena_config.py
         rad = math.radians(heading)
         robot_center_x = corrected_x + self._cfg.aruco_offset_x * math.cos(rad) - self._cfg.aruco_offset_y * math.sin(rad)
         robot_center_y = corrected_y + self._cfg.aruco_offset_x * math.sin(rad) + self._cfg.aruco_offset_y * math.cos(rad)
-
 
         return Robot(position=(round(robot_center_x, 1), round(robot_center_y, 1)), orientation=heading)
 
