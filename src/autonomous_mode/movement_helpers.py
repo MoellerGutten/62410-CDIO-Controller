@@ -281,12 +281,6 @@ def go_to(state: ArenaState
     robot = await_robot(state, connection)
     if waypoint_zone.contains(Point(robot.position)) and state.cross is not None:
         # robot is in waypoint zone, escape before going to target
-        """cross_approach_points = get_cross_approach_points(CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APPROACH_POINTS_VERTICAL_OFFSET)
-        nearest_cross_approach_point = min(cross_approach_points, key=lambda p: robot.distance_to_point(p))
-        turn_to_point(state, connection, nearest_cross_approach_point)
-        while waypoint_zone.contains(robot.position) and robot.can_safely_drive_forward(state.cross, 10):
-            drive_forward(state, connection, nearest_cross_approach_point)
-            robot = await_robot(state, connection)"""
         cross_quadrant = state.cross.get_point_quadrant(robot.position)
         escape_heading = EAST_HEADING if cross_quadrant == 1 or cross_quadrant == 4 else WEST_HEADING
         turn_to_heading(state, connection, escape_heading)
