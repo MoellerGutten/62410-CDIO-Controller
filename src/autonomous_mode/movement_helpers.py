@@ -306,13 +306,19 @@ def go_to(state: ArenaState
 def handle_balls_in_radius(state: ArenaState, robot: Robot, connection: RobotConnection, ball: Ball):
     logger = get_logger("handle_balls_in_radius")
     if robot.is_point_in_area_behind(ball.position):
+        if not robot.can_safely_drive_forward(state.cross, 10):
+            logger.debug("Robot can not safely drive forwards, skipping balls in radius handling")
+            return
         logger.debug("Ball is in area behind robot, driving forwards")
-        while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT):
             drive_forward(state, connection, ball.position)
             await_robot(state, connection)
     elif robot.is_point_within_turning_hit_radius(ball.position):
+        if not robot.can_safely_drive_backward(state.cross, 10):
+            logger.debug("Robot can not safely drive backwards, skipping balls in radius handling")
+            return
         logger.debug("Ball is in radius, driving backwards")
-        while (state.robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
+        while (robot.distance_to_point(ball.position) < DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK):
             burst_backward(state, connection)
             await_robot(state, connection)
 
