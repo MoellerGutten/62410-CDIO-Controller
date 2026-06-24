@@ -70,7 +70,7 @@ def get_real_close(state: ArenaState, connection: RobotConnection):
         logger.debug(f"creeping - iter: {_iter}")
         creep_forward_step(state, connection)
         robot = await_robot(state, connection)
-        iter += 1
+        _iter += 1
     logger.debug("At final goal position")
     turn_to_point(state, connection, goal, precise_mode=True)
     logger.debug("At goal\n")
