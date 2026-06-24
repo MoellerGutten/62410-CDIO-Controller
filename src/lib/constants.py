@@ -213,7 +213,7 @@ EDGE_BALL_GENTLE_BURST_VERTICAL = 18.5
 EDGE_BALL_GENTLE_BURST_HORIZONTAL = 17.5
 """The target range used for gentle bursting towards an edge ball on a horizontal edge"""
 
-EDGE_BALL_STAGING_POINT_OFFSET = 31
+EDGE_BALL_STAGING_POINT_OFFSET = 25
 """The staging point's distance from the edge"""
 
 #############################
