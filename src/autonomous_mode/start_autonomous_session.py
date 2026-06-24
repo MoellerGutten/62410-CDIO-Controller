@@ -93,6 +93,8 @@ def start_autonomous_session(state: ArenaState, test_mode: bool) -> None:
     total_balls = 11 # outside test mode this is hardcoded to 11
     with state.lock:
         state._last_ball_count_update_time = time()
+        if state.start_time is None:
+            state.start_time = time()
 
     if test_mode:
         # in test mode run update ball count estimate on startup

@@ -44,11 +44,6 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     _start_ball_intake(connection) # start intake after ejaculation
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
-    
-    if state.start_time is None:
-        with state.lock:
-            state.start_time = time()
-
     robot = await_robot(state, connection)
 
     while True:
