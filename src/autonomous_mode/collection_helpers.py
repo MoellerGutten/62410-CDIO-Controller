@@ -21,35 +21,33 @@ from src.model.arena_edge import ArenaEdge
 
 def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection, staging_point: tuple[float, float]):
     logger = get_logger("collect_edge_ball")
+
     logger.debug("Collecting edge ball, going to staging point")
     go_to(state, connection, staging_point)
+
     logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position)
+
     logger.debug("Going to ball position")
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
-    turn_to_point(
-    state,
-    connection,
-    ball.position,
-    precise_mode=True,
-)
+
+    logger.debug("Turning to ball position")
+    turn_to_point(state, connection, ball.position, precise_mode=True)
+
     _start_ball_intake(connection)
 
     if ball.nearest_edge() in [ArenaEdge.NORTH, ArenaEdge.SOUTH]:
-     gentle_burst_edge_ball(
-        state,
-        connection,
-        ball.position,
-        EDGE_BALL_GENTLE_BURST_HORIZONTAL,
-    )
+        logger.debug("Gentle burst towards horizontal edge")
+        with state.lock:
+            state.target_point = ball.position # set the target point in the GUI
+        gentle_burst_edge_ball(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_HORIZONTAL)
     else:
-     gentle_burst_edge_ball(
-        state,
-        connection,
-        ball.position,
-        EDGE_BALL_GENTLE_BURST_VERTICAL,
-    )
-    
+        logger.debug("Gentle burst towards vertical edge")
+        with state.lock:
+            state.target_point = ball.position # set the target point in the GUI
+        gentle_burst_edge_ball(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_VERTICAL)
+
+    logger.debug("Backing off from edge")
     burst_backward(state, connection)
 
 
