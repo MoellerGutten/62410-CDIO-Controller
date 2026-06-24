@@ -1,9 +1,7 @@
 from math import hypot, cos, sin, radians
-
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, \
-    burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius, gentle_burst
-from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius,gentle_burst_edge_ball
+from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, escape_cross_zone, gentle_burst, go_to, burst_into_ball, \
+turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius,gentle_burst_edge_ball
 from src.model.arena_state import ArenaState
 from src.model.arena_edge import get_other_corner_edge
 from src.model.ball import Ball
@@ -17,41 +15,39 @@ from src.lib.constants import CROSS_APPROACH_POINTS_HORIZONTAL_OFFSET, CROSS_APP
     GO_TO_BALL_EDGE_APPROACH_RADIUS, GO_TO_BALL_APPROACH_RADIUS, EDGE_BALL_GENTLE_BURST_HORIZONTAL, \
     EDGE_BALL_GENTLE_BURST_VERTICAL, CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE
 from src.autonomous_mode.corners import advance_to_corner_ball, get_staging_data, back_towards_wall_and_turn
-from src.autonomous_mode.state_helpers import await_robot, update_ball_count_estimate
+from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_edge import ArenaEdge
 
 
 def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection, staging_point: tuple[float, float]):
     logger = get_logger("collect_edge_ball")
+
     logger.debug("Collecting edge ball, going to staging point")
     go_to(state, connection, staging_point)
+
     logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position)
+
     logger.debug("Going to ball position")
     go_to(state, connection, ball.position, GO_TO_BALL_EDGE_APPROACH_RADIUS)
-    turn_to_point(
-    state,
-    connection,
-    ball.position,
-    precise_mode=True,
-)
+
+    logger.debug("Turning to ball position")
+    turn_to_point(state, connection, ball.position, precise_mode=True)
+
     _start_ball_intake(connection)
 
     if ball.nearest_edge() in [ArenaEdge.NORTH, ArenaEdge.SOUTH]:
-     gentle_burst_edge_ball(
-        state,
-        connection,
-        ball.position,
-        EDGE_BALL_GENTLE_BURST_HORIZONTAL,
-    )
+        logger.debug("Gentle burst towards horizontal edge")
+        with state.lock:
+            state.target_point = ball.position # set the target point in the GUI
+        gentle_burst_edge_ball(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_HORIZONTAL)
     else:
-     gentle_burst_edge_ball(
-        state,
-        connection,
-        ball.position,
-        EDGE_BALL_GENTLE_BURST_VERTICAL,
-    )
-    
+        logger.debug("Gentle burst towards vertical edge")
+        with state.lock:
+            state.target_point = ball.position # set the target point in the GUI
+        gentle_burst_edge_ball(state, connection, ball.position, EDGE_BALL_GENTLE_BURST_VERTICAL)
+
+    logger.debug("Backing off from edge")
     burst_backward(state, connection)
 
 

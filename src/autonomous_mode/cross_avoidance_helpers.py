@@ -1,8 +1,5 @@
 from src.lib.cross_waypoints import get_cross_waypoints
-from src.lib.constants import CROSS_AVOIDANCE_WAYPOINTS_OFFSET
-from src.lib.connection import RobotConnection
 from src.model.arena_state import ArenaState
-from src.model.cross import Cross
 
 
 def calculate_shortest_waypoint_path(state: ArenaState, point: tuple[float, float]) -> list[tuple[float, float]]:
