@@ -14,6 +14,7 @@ from src.lib.time import ms_to_seconds
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.ball import Ball
 from src.model.robot import Robot
+from time import time
 
 
 # ── Movement Helpers ───────────────────────────────────────────────────────────────────
@@ -44,7 +45,13 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     _start_ball_intake(connection) # start intake after ejaculation
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
+    
+    if state.start_time is None:
+        with state.lock:
+            state.start_time = time()
+
     robot = await_robot(state, connection)
+
     while True:
         if point is None:
             break
@@ -109,7 +116,10 @@ def turn_to_heading(
 
 
 def drive_forward(state: ArenaState, connection: RobotConnection, point: tuple[float, float]) -> None:
+  
+
     robot = await_robot(state, connection)
+        
 
     logger = get_logger("drive_forward")
 
