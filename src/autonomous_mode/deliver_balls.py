@@ -1,8 +1,12 @@
-from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation,\
+    _stop_ball_intake, creep_forward_step
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
 from src.debug.log import get_logger
+from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, \
+    FINAL_GOAL_DELIVERY_POINT
+
 from src.lib.constants import DRIVE_TO_CENTER_DISTANCE_TOLERANCE, GOAL_DELIVERY_POINT, ARENA_WIDTH_CM, ARENA_HEIGHT_CM, BALLS_PER_DELIVERY
 from time import time
 def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
@@ -12,6 +16,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
     _stop_ball_intake(connection)
     drive_to_center(state, connection)
     drive_to_goal(state, connection)
+    get_real_close(state, connection)
     _start_ejaculation(connection)
 
     if state.is_final_delivery:
@@ -33,12 +38,7 @@ def drive_to_center(state: ArenaState, connection: RobotConnection):
 
     logger.debug("Commence drive to center")
 
-    turn_to_point(state, connection, center_line_point)
-    while True:
-        if robot.distance_to_point(center_line_point) < DRIVE_TO_CENTER_DISTANCE_TOLERANCE:
-            break
-        go_to(state, connection, center_line_point)
-        robot = await_robot(state, connection)
+    go_to(state, connection, center_line_point)
 
     logger.debug("At center\n")
 
@@ -57,5 +57,28 @@ def drive_to_goal(state: ArenaState, connection: RobotConnection):
     turn_to_point(state, connection, goal, precise_mode=True)
         
 
+    logger.debug("At goal\n")
+
+def get_real_close(state: ArenaState, connection: RobotConnection):
+    logger = get_logger("getting_real_close")
+    robot = await_robot(state, connection)
+
+    goal: tuple[float, float] = (ARENA_WIDTH_CM, ARENA_HEIGHT_CM / 2)
+
+    with state.lock:
+        state.target_point = goal
+
+    logger.debug("Commence get real close")
+
+    turn_to_point(state, connection, goal, precise_mode=True)
+    await_robot(state, connection)
+    _iter = 0 # for debug only
+    while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0]:
+        logger.debug(f"creeping - iter: {_iter}")
+        creep_forward_step(state, connection)
+        robot = await_robot(state, connection)
+        _iter += 1
+    logger.debug("At final goal position")
+    turn_to_point(state, connection, goal, precise_mode=True)
     logger.debug("At goal\n")
 

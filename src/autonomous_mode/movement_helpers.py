@@ -169,7 +169,7 @@ def drive_backward_speed_ms(state: ArenaState, connection: RobotConnection, spee
     sleep(ms_to_seconds(ms) + SLEEP_BUFFER_SECONDS)
 
 
-def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 200, speed: int = 30) -> None:
+def creep_forward_step(state: ArenaState, connection: RobotConnection, ms: int = 100, speed: int = 30) -> None:
     if state.robot is None:
         return
     inst = Instruction(
