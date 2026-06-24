@@ -200,7 +200,7 @@ WAYPOINT_ZONE_COLLECTION_RANGE = 15
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
-EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 22
+EDGE_BALL_GENTLE_BURST_TARGET_RANGE = 20
 """The target range used for gentle bursting towards an edge ball"""
 
 EDGE_BALL_STAGING_POINT_OFFSET = 31
