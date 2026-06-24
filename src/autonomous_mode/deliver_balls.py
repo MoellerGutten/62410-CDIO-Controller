@@ -31,7 +31,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 def _drive_to_center(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_center")
 
-    robot = await_robot(state, connection)
+    await_robot(state, connection)
     center_line_point: tuple[float, float] = (ARENA_WIDTH_CM * 0.70, ARENA_HEIGHT_CM / 2)
 
     logger.debug("Commence drive to center")
@@ -74,7 +74,7 @@ def _get_real_close(state: ArenaState, connection: RobotConnection):
     turn_to_point(state, connection, goal, precise_mode=True)
     await_robot(state, connection)
     _iter = 0 # for debug only
-    while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0] or _iter > GET_REAL_CLOSE_MAX_ITER:
+    while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0] and _iter < GET_REAL_CLOSE_MAX_ITER:
         logger.debug(f"creeping - iter: {_iter}")
         creep_forward_step(state, connection)
         robot = await_robot(state, connection)
