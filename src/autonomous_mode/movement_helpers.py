@@ -397,7 +397,7 @@ def gentle_burst_edge_ball(
     connection: RobotConnection,
     target_point: tuple[float, float],
     target_range: float,
-    max_iter: int = 20,
+    max_iter: int = 10,
 ):
     logger = get_logger("gentle_burst_edge_ball")
 
@@ -410,11 +410,10 @@ def gentle_burst_edge_ball(
             logger.debug("Reached max iterations")
             break
 
+        logger.debug(f"Distance to posision: {distance}, target_range: {target_point}")
         if distance <= target_range:
             logger.debug("Distance within limit")
             break
-
-        
 
         if distance > 24:
             burst_ms = 100
@@ -426,11 +425,7 @@ def gentle_burst_edge_ball(
             burst_ms = 100
             burst_speed = 10
 
-        logger.debug(
-    f"distance={distance:.1f}, "
-    f"burst_ms={burst_ms}, "
-    f"burst_speed={burst_speed}"
-)
+        logger.debug(f"distance={distance:.1f}, "f"burst_ms={burst_ms}, "f"burst_speed={burst_speed}")
 
         inst = Instruction(
             name=CommandName.FORWARD,

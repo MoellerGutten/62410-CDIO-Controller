@@ -207,7 +207,7 @@ CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
 EDGE_THRESHOLD = 13
 """If a ball is within this distance of an edge, it is considered an edge ball"""
 
-EDGE_BALL_GENTLE_BURST_VERTICAL = 18.5
+EDGE_BALL_GENTLE_BURST_VERTICAL = 19
 """The target range used for gentle bursting towards an edge ball on a vertical edge"""
 
 EDGE_BALL_GENTLE_BURST_HORIZONTAL = 17.5
