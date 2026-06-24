@@ -1,7 +1,6 @@
 from math import hypot, cos, sin, radians
 
 from src.lib.cross_approach_points import get_cross_approach_points
-from src.autonomous_mode.movement_helpers import _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.autonomous_mode.movement_helpers import burst_into_ball_slightly_smaller, _start_ball_intake, drive_forward, escape_cross_zone, go_to, burst_into_ball, turn_to_heading, turn_to_point, burst_backward, handle_balls_in_radius
 from src.model.arena_state import ArenaState
 from src.model.arena_edge import get_other_corner_edge
@@ -31,12 +30,13 @@ def collect_edge_ball(state: ArenaState, ball: Ball, connection: RobotConnection
 
 def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnection):
     logger = get_logger("collect_normal_ball")
+
     logger.debug("Collecting normal ball, first checking if ball is in radius")
-    handle_balls_in_radius(state, connection, ball)
+    robot = await_robot(state, connection)
+    handle_balls_in_radius(state, robot, connection, ball) # reposition robot before collection if the ball is directly behind or to the side of the robot
 
     logger.debug("Going to ball position")
     go_to(state, connection, ball.position, approach_radius=GO_TO_BALL_APPROACH_RADIUS)
-    robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Ball is in a galaxy far, far away")
@@ -100,10 +100,12 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     logger = get_logger("collect_waypoint_zone_ball")
     logger.debug("Collecting waypoint zone ball")
 
+    robot = await_robot(state, connection)
+
     inflated_waypoint_points = state.cross.inflate_bounding_box(inflation_cm=CROSS_AVOIDANCE_WAYPOINTS_OFFSET+10)
     target = min(inflated_waypoint_points, key=ball.distance_to_point)
 
-    handle_balls_in_radius(state, connection, ball)
+    handle_balls_in_radius(state, robot, connection, ball)
 
     if state.cross is not None and _is_on_same_cross_side(state.robot.position, ball.position, state.cross):
         logger.debug("Robot and ball are on the same side of the cross; skipping waypoint staging.")
