@@ -193,7 +193,7 @@ CROSS_ZONE_MAX_CREEP_STEPS = 5
 
 WAYPOINT_ZONE_COLLECTION_RANGE = 15
 
-CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 18
+CROSS_ZONE_FINAL_POINT_DIST_TOLERANCE = 16
 """The distance in the cross zone where the robot is considered on top of the final destination point"""
 
 ###########################
