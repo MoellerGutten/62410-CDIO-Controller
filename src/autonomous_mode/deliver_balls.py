@@ -1,4 +1,5 @@
-from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation, _stop_ball_intake
+from src.autonomous_mode.movement_helpers import burst_backward, go_to, turn_to_point, _start_ejaculation,\
+    _stop_ball_intake, creep_forward_step
 from src.autonomous_mode.state_helpers import await_robot
 from src.model.arena_state import ArenaState
 from src.lib.connection import RobotConnection
