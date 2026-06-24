@@ -116,6 +116,7 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     robot = await_robot(state, connection)
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
+        logger.debug("Robot is in a galaxy far, far away")
         update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)

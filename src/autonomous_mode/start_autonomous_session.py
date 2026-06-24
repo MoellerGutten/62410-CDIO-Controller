@@ -59,6 +59,8 @@ def _collect_ball(ball: Ball, connection: RobotConnection, state: ArenaState) ->
     else: 
         collect_normal_ball(state, ball, connection)
 
+    update_ball_count_estimate(state)
+
 
 def _deliver_and_recount(state: ArenaState, connection: RobotConnection, total_balls: int, balls_delivered_so_far: int) -> int:
     """
