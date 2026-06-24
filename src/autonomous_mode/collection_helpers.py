@@ -40,7 +40,6 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Ball is in a galaxy far, far away")
-        update_ball_count_estimate(state)
         return
     logger.debug("Turning to ball position")
     turn_to_point(state, connection, ball.position, precise_mode=True)
@@ -119,7 +118,6 @@ def collect_waypoint_zone_ball(state: ArenaState, ball: Ball, connection: RobotC
     if robot.distance_to_point(ball.position) > 28.0: # TODO: adjust and make constant
         # return early if ball is in a galaxy far far away.
         logger.debug("Robot is in a galaxy far, far away")
-        update_ball_count_estimate(state)
         return
     turn_to_point(state, connection, ball.position, precise_mode=True)
     _start_ball_intake(connection)
