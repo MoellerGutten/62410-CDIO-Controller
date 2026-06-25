@@ -496,10 +496,13 @@ def run_gui(state: ArenaState):
         if start_time is not None and _seen_start_time is None and not tracker.is_recording:
             try:
                 path = tracker.start_recording()
-                logger.debug(print(f"Recording started -> {path}"))
+                logger.debug(f"Recording started -> {path}")
+                _seen_start_time = start_time   # only mark as handled on success
             except RuntimeError as e:
-                logger.debug(f"Can't start recording: {e}")
-        _seen_start_time = start_time
+                logger.debug(f"Can't start recording yet: {e}")
+                # don't update _seen_start_time — retry next frame
+        else:
+            _seen_start_time = start_time
 
         if finish_time is not None and _seen_finish_time is None and tracker.is_recording:
             path = tracker.stop_recording()
