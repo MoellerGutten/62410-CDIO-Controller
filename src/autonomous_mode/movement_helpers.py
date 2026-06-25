@@ -38,7 +38,7 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.BALL_OUT,
         type=InstructionType.COMMAND,
-        args=Arguments(speed=EJACULATE_SPEED, seconds=5, block=True), # blocking to prevent short circuiting ejaculation
+        args=Arguments(speed=EJACULATE_SPEED, seconds=3, block=True), # blocking to prevent short circuiting ejaculation
     )
     connection.send_message(Message(instruction=inst))
     _start_ball_intake(connection) # start intake after ejaculation
