@@ -5,6 +5,7 @@ from src.lib.constants import ARENA_HEIGHT_CM, ARENA_WIDTH_CM, ROBOT_WIDTH, ROBO
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
 from src.model.arena_edge import ArenaEdge
 from src.model.ball import Ball
+from src.model.cross import Cross
 from shapely.geometry import Point, Polygon, box
 
 

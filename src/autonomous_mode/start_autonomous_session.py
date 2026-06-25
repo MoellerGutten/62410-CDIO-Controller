@@ -138,6 +138,8 @@ def start_autonomous_session(state: ArenaState, test_mode: bool) -> None:
     total_balls = 11 # outside test mode this is hardcoded to 11
     with state.lock:
         state._last_ball_count_update_time = time()
+        if state.start_time is None:
+            state.start_time = time()
 
     if test_mode:
         # in test mode run update ball count estimate on startup
@@ -149,7 +151,7 @@ def start_autonomous_session(state: ArenaState, test_mode: bool) -> None:
         # update ball count estimate of current estimate is more than 10 seconds old
         _tick(state)
 
-        if _is_hail_mary_time(state):
+        if _is_hail_mary_time(state) and not state.all_balls_delivered >= total_balls:
             logger.debug("Hail mary time")
             deliver_balls(state, connection)
             _send_win_message(connection)

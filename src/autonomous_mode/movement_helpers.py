@@ -44,11 +44,7 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     _start_ball_intake(connection) # start intake after ejaculation
 
 def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[float, float], precise_mode: bool = False) -> None:
-    
-    if state.start_time is None:
-        with state.lock:
-            state.start_time = time()
-
+    logger = get_logger("turn_to_point")
     robot = await_robot(state, connection)
 
     while True:
@@ -64,13 +60,21 @@ def turn_to_point(state: ArenaState, connection: RobotConnection, point: tuple[f
         turn_speed = turn_to_point_turn_speed(angle)
 
         turn_ms = turn_ms/(1 + precise_mode)
-
-        #logger = get_logger("turn_to_point")
-        #logger.debug(f"Turning to point. turn ms: {turn_ms}, turn speed: {turn_speed}, angel: {angle}")
     
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
+
+        if not robot.can_safely_turn_to_point(state.cross, point):
+            if not robot.can_safely_turn_to_point_any_way(state.cross, point):
+                logger.debug("Can't safely turn to point in any direction, backing up")
+                burst_backward(state, connection)
+                robot = await_robot(state, connection)
+                continue
+
+            logger.debug("Can't safely turn to point in the shortest direction, going the other way around")
+            l_speed *= -1.3
+            r_speed *= -1.3
 
         inst = Instruction(
             name=command,
@@ -100,6 +104,17 @@ def turn_to_heading(
         command = CommandName.TANK_RIGHT if angle > 0 else CommandName.TANK_LEFT
         l_speed = turn_speed if angle > 0 else -turn_speed
         r_speed = -turn_speed if angle > 0 else turn_speed
+
+        if not robot.can_safely_turn_to_heading(state.cross, heading_deg):
+            if not robot.can_safely_turn_to_heading_any_way(state.cross, heading_deg):
+                logger.debug("Can't safely turn to heading in any direction, backing up")
+                burst_backward(state, connection)
+                robot = await_robot(state, connection)
+                continue
+
+            logger.debug("Can't safely turn to heading in the shortest direction, going the other way around")
+            l_speed *= -1.3
+            r_speed *= -1.3
 
         inst = Instruction(
             name=command,
@@ -282,8 +297,8 @@ def go_to(state: ArenaState
         logger.debug(f"Turning to {escape_heading}")
         turn_to_heading(state, connection, escape_heading)
         while waypoint_zone.contains(Point(robot.position)):
-            # dumb fucking hack: set a target point far away for max speed
-            escape_point = robot.get_point_in_front()
+            escape_point = robot.get_point_in_front(30)
+            logger.debug(f"Escaping towards {escape_point}")
             drive_forward(state, connection, escape_point)
             robot = await_robot(state, connection)
         logger.debug("Escaped waypoint zone, recalculate waypoint path to target")
@@ -397,7 +412,7 @@ def gentle_burst_edge_ball(
     connection: RobotConnection,
     target_point: tuple[float, float],
     target_range: float,
-    max_iter: int = 20,
+    max_iter: int = 10,
 ):
     logger = get_logger("gentle_burst_edge_ball")
 
@@ -410,11 +425,10 @@ def gentle_burst_edge_ball(
             logger.debug("Reached max iterations")
             break
 
+        logger.debug(f"Distance to posision: {distance}, target_range: {target_point}")
         if distance <= target_range:
             logger.debug("Distance within limit")
             break
-
-        
 
         if distance > 24:
             burst_ms = 100
@@ -426,11 +440,7 @@ def gentle_burst_edge_ball(
             burst_ms = 100
             burst_speed = 10
 
-        logger.debug(
-    f"distance={distance:.1f}, "
-    f"burst_ms={burst_ms}, "
-    f"burst_speed={burst_speed}"
-)
+        logger.debug(f"distance={distance:.1f}, "f"burst_ms={burst_ms}, "f"burst_speed={burst_speed}")
 
         inst = Instruction(
             name=CommandName.FORWARD,
