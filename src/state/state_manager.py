@@ -23,6 +23,21 @@ def update_state(state: ArenaState) -> None:
         state.cross = new.cross
 
 
+def update_balls(state: ArenaState) -> None:
+    """
+    Lightweight scan that updates only ball (and cross) positions, skipping the
+    expensive ArUco robot detection. Use when the robot pose is not needed —
+    e.g. ball-count estimation while the robot is stationary. Leaves
+    ``state.robot`` untouched so it is never clobbered with a stale ``None``.
+    """
+    tracker = _get_tracker()
+    new     = tracker.scan(detect_robot=False)
+
+    with state.lock:
+        state.balls = new.balls
+        state.cross = new.cross
+
+
 def poll_state(state: ArenaState) -> None:
     """
     Continuous background loop: keeps scanning and updating state.

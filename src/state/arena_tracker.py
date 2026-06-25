@@ -160,13 +160,13 @@ class ArenaTracker:
             f"arena {self._cfg.width_cm} × {self._cfg.height_cm} cm"
         )
 
-    def scan(self) -> ArenaState:
+    def scan(self, detect_robot: bool = True) -> ArenaState:
         if not self._running:
             raise RuntimeError("Call start() before scan().")
         with self._scan_lock:
             frame = self._grab_frame()
             self.dumped_image = frame
-            return self._process_frame(frame)
+            return self._process_frame(frame, detect_robot=detect_robot)
         
     def dump_frame(self, path: Optional[str] = None) -> str:
         if getattr(self, "dumped_image", None) is None:
@@ -307,6 +307,7 @@ class ArenaTracker:
         frame: np.ndarray,
         *,
         model: Optional[YOLO] = None,
+        detect_robot: bool = True,
     ) -> ArenaState:
         model = model or self._model
 
@@ -317,7 +318,7 @@ class ArenaTracker:
 
         results    = model(masked, verbose=False, conf=self._cfg.detection_conf)[0]
         detections = self._parse_detections(results, model)
-        return self._build_state(detections, frame)
+        return self._build_state(detections, frame, detect_robot=detect_robot)
     
 
     def _parse_detections(self, results, model: YOLO) -> list[dict]:
@@ -367,11 +368,13 @@ class ArenaTracker:
         return out
 
 
-    def _build_state(self, detections: list[dict], frame: np.ndarray) -> ArenaState:
+    def _build_state(self, detections: list[dict], frame: np.ndarray, detect_robot: bool = True) -> ArenaState:
         state = ArenaState()
 
         # ---- Robot (ArUco only) ----------------------------------------
-        state.robot = self._get_aruco_robot(frame)
+        # Skipped when only ball/cross positions are needed (e.g. ball-count
+        # estimation): the ArUco pass is the most expensive part of a scan.
+        state.robot = self._get_aruco_robot(frame) if detect_robot else None
 
         # ---- Balls + Cross (YOLO only) ---------------------------------
         for d in detections:

@@ -1,4 +1,4 @@
-from src.state.state_manager import update_state
+from src.state.state_manager import update_state, update_balls
 from src.lib.connection import RobotConnection
 from protocol import CommandName, Arguments, Instruction, InstructionType, Message
 from src.model.arena_state import ArenaState
@@ -48,7 +48,7 @@ def update_ball_count_estimate(state: ArenaState) -> int:
     begin = time()
     ball_counts = []
     for _ in range(BALL_COUNT_ESTIMATION_SNAPSHOTS):
-        update_state(state)
+        update_balls(state)
         ball_counts.append(len(state.balls))
     estimated_ball_count = round(sum(ball_counts) / len(ball_counts))
     with state.lock:

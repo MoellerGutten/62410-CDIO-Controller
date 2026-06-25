@@ -64,7 +64,8 @@ FIELD_H  = FIELD_Y1 - FIELD_Y0
 BIG_GOAL_RATIO   = 0.131
 SMALL_GOAL_RATIO = 0.07
 
-FPS = 60
+FPS = 30  # 30 is plenty for the field render + 30fps camera feed; halves GUI
+          # CPU so the control thread's scans aren't starved during a match
 
 #_start_time = 0 #
 
