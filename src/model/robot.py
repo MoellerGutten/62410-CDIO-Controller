@@ -1,5 +1,6 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 import numpy as np
+from src.model.cross import Cross
 from src.lib.constants import ARENA_HEIGHT_CM, ARENA_WIDTH_CM, ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
 from src.model.arena_edge import ArenaEdge
@@ -220,6 +221,106 @@ class Robot:
         """True if driving backward `distance` cm keeps the robot's full
         footprint inside the arena and clear of the cross."""
         return self._can_safely_drive(cross, distance, direction_sign=-1)
+    
+    def _can_safely_rotate(self, turn_angle: float, cross: Cross) -> bool:
+        """
+        Core collision check for an in-place rotation by a signed angle.
+        Positive = CCW, negative = CW (consistent with your angle_to_* functions).
+        """
+
+        WALL_MARGIN_CM = 0
+        CROSS_MARGIN_CM = 0
+        ANGLE_STEP_DEG = 1.0
+
+        AXIS_TO_NOSE_CM = 20.0
+        AXIS_TO_BACK_CM = 6.0
+
+        if abs(turn_angle) < 1e-3:
+            return True
+
+        arena = box(
+            WALL_MARGIN_CM,
+            WALL_MARGIN_CM,
+            ARENA_WIDTH_CM - WALL_MARGIN_CM,
+            ARENA_HEIGHT_CM - WALL_MARGIN_CM,
+        )
+
+        cross_zone = None
+        if cross is not None:
+            cross_zone = Point(cross.position).buffer(
+                cross.side_length + CROSS_MARGIN_CM
+            )
+
+        half_width = self.robot_width_cm / 2.0
+        p0 = np.array(self.position)
+
+        steps = max(
+            1,
+            int(np.ceil(abs(turn_angle) / ANGLE_STEP_DEG))
+        )
+
+        for i in range(steps + 1):
+            frac = i / steps
+            heading = self.orientation + turn_angle * frac
+            heading_rad = radians(heading)
+
+            forward = np.array([cos(heading_rad), sin(heading_rad)])
+            perp = np.array([-sin(heading_rad), cos(heading_rad)])
+
+            nose = p0 + AXIS_TO_NOSE_CM * forward
+            tail = p0 - AXIS_TO_BACK_CM * forward
+
+            front_left  = nose + half_width * perp
+            front_right = nose - half_width * perp
+            back_right  = tail - half_width * perp
+            back_left   = tail + half_width * perp
+
+            robot = Polygon([front_left, front_right, back_right, back_left])
+
+            if not arena.covers(robot):
+                return False
+
+            if cross_zone is not None and robot.intersects(cross_zone):
+                return False
+
+        return True
+    
+    def can_safely_turn_to_point(self, cross: Cross, target_point: tuple[float, float]) -> bool:
+        turn_angle = self.angle_to_point(target_point)
+        return self._can_safely_rotate(turn_angle, cross)
+    
+    def can_safely_turn_to_heading(self, cross: Cross, target_heading: float) -> bool:
+        turn_angle = self.angle_to_heading(target_heading)
+        return self._can_safely_rotate(turn_angle, cross)
+    
+    def can_safely_turn_to_point_any_way(self, cross: Cross, target_point: tuple[float, float]) -> bool:
+        short = self.angle_to_point(target_point)
+
+        if abs(short) < 1e-3:
+            return True
+
+        # Normalize long way around
+        if short > 0:
+            long = short - 360.0
+        else:
+            long = short + 360.0
+
+        # Evaluate both rotation paths
+        return self._can_safely_rotate(short, cross) or self._can_safely_rotate(long, cross)
+    
+    def can_safely_turn_to_heading_any_way(self, cross, target_heading: float) -> bool:
+        short = self.angle_to_heading(target_heading)
+
+        if abs(short) < 1e-3:
+            return True
+
+        if short > 0:
+            long = short - 360.0
+        else:
+            long = short + 360.0
+
+        return self._can_safely_rotate(short, cross) or self._can_safely_rotate(long, cross)
+
 
     def get_point_in_front(self, distance_to_new_point: float = 50.0):
         """Get a point in front of the robot with a given distance to the robot (defaults to 50)"""

@@ -386,7 +386,7 @@ def gentle_burst(state: ArenaState, connection: RobotConnection, target_point: t
         inst = Instruction(
             name=CommandName.FORWARD,
             type=InstructionType.COMMAND,
-            args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed),
+            args=Arguments(seconds=ms_to_seconds(burst_ms), speed=burst_speed  * (3/2)),
         )
         connection.send_message(Message(instruction=inst))
         sleep(ms_to_seconds(burst_ms) + SLEEP_BUFFER_SECONDS)
@@ -437,7 +437,7 @@ def gentle_burst_edge_ball(
             type=InstructionType.COMMAND,
             args=Arguments(
                 seconds=ms_to_seconds(burst_ms),
-                speed=burst_speed,
+                speed=burst_speed * (3/2),
             ),
         )
 
