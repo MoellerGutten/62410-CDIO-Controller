@@ -1,5 +1,6 @@
 from math import hypot, degrees, atan2, radians, cos, sin
 import numpy as np
+from src.model.cross import Cross
 from src.lib.constants import ARENA_HEIGHT_CM, ARENA_WIDTH_CM, ROBOT_WIDTH, ROBOT_LENGTH, DISTANCE_TO_POINT_TO_WITHIN_TURNING_HIT_RADIUS, \
 DISTANCE_TO_ANGLE_TO_WITHIN_TURNING_HIT_RADIUS, LENGTH_OF_BOX_BEHIND_ROBOT, NORTH_HEADING, SOUTH_HEADING, WEST_HEADING, EAST_HEADING
 from src.model.arena_edge import ArenaEdge
@@ -228,8 +229,8 @@ class Robot:
         Positive = CCW, negative = CW (consistent with your angle_to_* functions).
         """
 
-        WALL_MARGIN_CM = 2.0
-        CROSS_MARGIN_CM = 2.0
+        WALL_MARGIN_CM = 0
+        CROSS_MARGIN_CM = 0
         ANGLE_STEP_DEG = 1.0
 
         AXIS_TO_NOSE_CM = 20.0
