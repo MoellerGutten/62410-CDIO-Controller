@@ -69,7 +69,7 @@ def collect_normal_ball(state: ArenaState, ball: Ball, connection: RobotConnecti
     _start_ball_intake(connection)
     logger.debug("Bursting into ball")
     burst_into_ball(state, connection, ball.position)
-    burst_backward(state, connection)
+    #burst_backward(state, connection)
 
     if ball.is_within_waypoint_zone(state):
         logger.debug("Ball is within waypoint zone, escaping zone")
