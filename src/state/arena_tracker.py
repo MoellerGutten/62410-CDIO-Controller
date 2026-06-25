@@ -116,18 +116,33 @@ class ArenaTracker:
             self._configure_aruco_params(self._aruco_params)
             self._aruco_detector = None
 
+    # Flip to False to restore the original (heavy, ~3x slower) detection params
+    # if the marker stops locking reliably under the venue's lighting.
+    FAST_ARUCO = True
+
     @staticmethod
     def _configure_aruco_params(params: cv2.aruco.DetectorParameters) -> None:
         params.cornerRefinementMethod = cv2.aruco.CORNER_REFINE_SUBPIX
         params.cornerRefinementWinSize = 5
-        params.cornerRefinementMaxIterations = 50
         params.cornerRefinementMinAccuracy = 0.01
         params.perspectiveRemovePixelPerCell = 8
         params.perspectiveRemoveIgnoredMarginPerCell = 0.20
         params.errorCorrectionRate = 0.8
-        params.adaptiveThreshWinSizeMin = 3
-        params.adaptiveThreshWinSizeMax = 35
-        params.adaptiveThreshWinSizeStep = 4
+
+        if ArenaTracker.FAST_ARUCO:
+            # ~3x faster per detection: the adaptive-threshold sweep is the
+            # dominant cost — 3 window sizes instead of 9 — plus fewer corner
+            # refinement iterations. This runs on every navigation scan.
+            params.cornerRefinementMaxIterations = 30
+            params.adaptiveThreshWinSizeMin = 5
+            params.adaptiveThreshWinSizeMax = 21
+            params.adaptiveThreshWinSizeStep = 8
+        else:
+            # Original heavy params (more robust to lighting/glare, slower).
+            params.cornerRefinementMaxIterations = 50
+            params.adaptiveThreshWinSizeMin = 3
+            params.adaptiveThreshWinSizeMax = 35
+            params.adaptiveThreshWinSizeStep = 4
 
     # ------------------------------------------------------------------ #
     #  Public API                                                          #
