@@ -31,7 +31,7 @@ def deliver_balls(state: ArenaState, connection: RobotConnection) -> None:
 def _drive_to_center(state: ArenaState, connection: RobotConnection):
     logger = get_logger("drive_to_center")
 
-    await_robot(state, connection)
+    # go_to() does its own await_robot() scan first, so no leading scan needed here.
     center_line_point: tuple[float, float] = (ARENA_WIDTH_CM * 0.70, ARENA_HEIGHT_CM / 2)
 
     logger.debug("Commence drive to center")
@@ -55,14 +55,13 @@ def _drive_to_goal(state: ArenaState, connection: RobotConnection):
 
     turn_to_point(state, connection, GOAL_DELIVERY_POINT)
     go_to(state, connection, GOAL_DELIVERY_POINT)
-    turn_to_point(state, connection, goal, precise_mode=True)
-        
+    # Final precise alignment is done by _get_real_close() right after this with
+    # no movement in between, so doing it here too is a redundant turn sequence.
 
     logger.debug("At goal\n")
 
 def _get_real_close(state: ArenaState, connection: RobotConnection):
     logger = get_logger("getting_real_close")
-    robot = await_robot(state, connection)
 
     goal: tuple[float, float] = (ARENA_WIDTH_CM, ARENA_HEIGHT_CM / 2)
 
@@ -72,7 +71,9 @@ def _get_real_close(state: ArenaState, connection: RobotConnection):
     logger.debug("Commence get real close")
 
     turn_to_point(state, connection, goal, precise_mode=True)
-    await_robot(state, connection)
+    # Single fresh scan after the turn — feeds the creep loop with the robot's
+    # actual post-turn position (previously the loop checked a stale pre-turn pose).
+    robot = await_robot(state, connection)
     _iter = 0 # for debug only
     while robot.position[0] < FINAL_GOAL_DELIVERY_POINT[0] and _iter < GET_REAL_CLOSE_MAX_ITER:
         logger.debug(f"creeping - iter: {_iter}")

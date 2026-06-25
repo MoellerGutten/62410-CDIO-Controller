@@ -5,7 +5,7 @@ from src.lib.connection import RobotConnection
 from src.lib.cross_waypoints import get_cross_waypoints
 from src.model.arena_state import ArenaState
 from src.debug.log import get_logger
-from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, GENTLE_BURST_DEFAULT_MAX_ITER, \
+from src.lib.constants import BALL_INTAKE_ON_FOR_SECONDS, BALL_INTAKE_SPEED, CROSS_ZONE_BACKWARD_MS, CROSS_ZONE_BACKWARD_SPEED, EJACULATE_SPEED, EJACULATE_SECONDS, GENTLE_BURST_DEFAULT_MAX_ITER, \
 TURN_TO_POINT_PRECISE_TOLERANCE, TURN_TO_POINT_TOLERANCE, SLEEP_BUFFER_SECONDS, BACKWARD_SPEED, BACKWARD_MS, BURST_FORWARD_SPEED, GO_TO_MAX_MOVES, \
 GO_TO_DISTANCE_TOLERANCE, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_FRONT, DISTANCE_OF_WHEN_ROBOT_OUTSIDE_BALL_HIT_RADIUS_BACK, WEST_HEADING, EAST_HEADING
 from src.lib.algorithms import burst_forward_ms, small_burst_forward_ms, turn_to_point_turn_ms, turn_to_point_turn_speed, drive_forward_ms, drive_forward_speed
@@ -38,7 +38,7 @@ def _start_ejaculation(connection: RobotConnection) -> None:
     inst = Instruction(
         name=CommandName.BALL_OUT,
         type=InstructionType.COMMAND,
-        args=Arguments(speed=EJACULATE_SPEED, seconds=5, block=True), # blocking to prevent short circuiting ejaculation
+        args=Arguments(speed=EJACULATE_SPEED, seconds=EJACULATE_SECONDS, block=True), # blocking to prevent short circuiting ejaculation
     )
     connection.send_message(Message(instruction=inst))
     _start_ball_intake(connection) # start intake after ejaculation
