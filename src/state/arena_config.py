@@ -26,9 +26,9 @@ class ArenaConfig:
     # ------------------------------------------------------------------ #
     # Kamera position og aruco højde                                     #
     # ------------------------------------------------------------------ #
-    camera_height: int = 147
-    camera_x:      int = 77
-    camera_y:      int = 55
+    camera_height: int = 146.5
+    camera_x:      int = 74
+    camera_y:      int = 57
     aruco_height:  int = 12
 
     # ------------------------------------------------------------------ #
