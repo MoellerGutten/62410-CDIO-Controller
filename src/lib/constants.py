@@ -59,7 +59,7 @@ BALL_INTAKE_SPEED = 100
 EJACULATE_SPEED = 100
 """The speed with which the ball collection motor will run when spitting out balls"""
 
-EJACULATE_SECONDS = 5
+EJACULATE_SECONDS = 3
 """How long the ejection motor runs per delivery (blocking). This is the single
 largest fixed cost in a delivery. Lowering it speeds up every delivery, but if it
 is too short balls stay in the robot and the delivery is lost — verify on the
